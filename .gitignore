@@ -1,7 +1,25 @@
+# Python
 __pycache__/
 *.py[cod]
-.env
+*$py.class
+
+# Virtual environments
+.venv/
 venv/
+**/venv/
+
+# macOS
 .DS_Store
-*.key
-secrets/
+
+# Logs / caches
+*.log
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environment files
+.env
+.env.*
+
+# Local notebooks/checkpoints
+.ipynb_checkpoints/

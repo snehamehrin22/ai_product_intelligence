@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "supabase-intelligence": {
+      "command": "python",
+      "args": ["/Users/snehamehrin/Desktop/automation_projects/supabase_mcp_server/server.py"],
+      "env": {
+        "SUPABASE_URL": "https://wbpupfkbjmncmjmhyfha.supabase.co",
+        "SUPABASE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndicHVwZmtiam1uY21qbWh5ZmhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAyNjE3NTEsImV4cCI6MjA3NTgzNzc1MX0.xh1RCMySorXqK0tpCdcg4vyrm8Tr3KQzcOrG3I1UzWA"
+      }
+    }
+  }
+}
