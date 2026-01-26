@@ -88,18 +88,36 @@ def run_deep_research(app_name: str, output_dir: str = None) -> dict:
     # Extract markdown and JSON from response
     # The response should contain both markdown analysis and JSON object
     markdown_section = ""
-    json_section = ""
+    json_section = {}
 
-    # Try to split by markdown code fence
-    if "```json" in content:
-        parts = content.split("```json")
+    # Try to find JSON in code fence (look for ```json or just ``` with { })
+    if "```" in content:
+        # Split by code fences
+        parts = content.split("```")
+
+        # First part is markdown
         markdown_section = parts[0].strip()
-        json_part = parts[1].split("```")[0].strip()
-        json_section = json.loads(json_part)
+
+        # Try to find JSON in code fences
+        for i, part in enumerate(parts[1:], 1):
+            # Skip the closing fence
+            if i % 2 == 0:
+                continue
+            # Remove 'json' if present at start
+            json_candidate = part.strip()
+            if json_candidate.startswith('json'):
+                json_candidate = json_candidate[4:].strip()
+
+            # Try to parse as JSON
+            try:
+                if json_candidate.startswith('{'):
+                    json_section = json.loads(json_candidate)
+                    break
+            except json.JSONDecodeError:
+                continue
     else:
-        # If no clear separation, use entire content as markdown
+        # If no code fence, use entire content as markdown
         markdown_section = content
-        json_section = {}
 
     # Get citations if available
     citations = result.get('citations', [])
