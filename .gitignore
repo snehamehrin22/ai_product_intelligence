@@ -21,5 +21,9 @@ venv/
 .env
 .env.*
 
+# direnv
+.envrc
+.direnv/
+
 # Local notebooks/checkpoints
 .ipynb_checkpoints/

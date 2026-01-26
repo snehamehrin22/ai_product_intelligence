@@ -1,0 +1,14 @@
+# If you use direnv:
+# 1) Copy this to .envrc (not committed; .gitignore already covers it)
+# 2) Run: direnv allow
+#
+# This loads shared + project env in a predictable way.
+
+# Load per-project secrets (copy ENV.example -> .env in the project)
+dotenv_if_exists .env
+
+# Optional: keep a machine-wide shared env file (NOT committed)
+# Put shared values here:
+#   ~/.config/automation_core/common.env
+dotenv_if_exists ~/.config/automation_core/common.env
+

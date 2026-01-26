@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "automation-core"
+version = "0.1.0"
+description = "Reusable connectors + auth + config for automations (Google Drive/Sheets, Notion, etc.)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "pydantic>=2.7",
+  "pydantic-settings>=2.2",
+  "python-dotenv>=1.0",
+  "tenacity>=8.2",
+  "requests>=2.31",
+
+  # Notion
+  "notion-client>=2.2.1",
+
+  # Google APIs (Drive/Sheets)
+  "google-api-python-client>=2.120",
+  "google-auth>=2.27",
+  "google-auth-oauthlib>=1.2",
+]
+
+[project.scripts]
+automation-core = "automation_core.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
