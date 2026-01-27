@@ -1,0 +1,75 @@
+{
+  "product_name": "Oura Ring",
+  "category": "Wearable Health Tracker",
+  "product_snapshot": {
+    "description": "Sleek finger-worn smart ring tracking sleep, HRV, temperature, activity via IR LEDs and app.",
+    "target_user": "Health-conscious adults prioritizing recovery (athletes, biohackers, professionals).",
+    "perceived_category": "Fitness wearable tracker.",
+    "actual_job_to_be_done": "Passive 24/7 monitoring of recovery metrics without wrist disruption."
+  },
+  "founders": [
+    {
+      "name": "Petteri Lahtela, Kari Kivel\u00e4, Markku Koskela",
+      "background": "Engineers from Finland's tech ecosystem (Oulu).",
+      "relevant_lived_experience": "Hardware/sensor expertise for miniaturization.",
+      "founder_motivation": "Frustration with bulky wrist wearables disrupting sleep/exercise (speculative)."
+    }
+  ],
+  "core_pain_problem": {
+    "problem_statement": "Intrusive/inaccurate tracking of recovery metrics like sleep and stress.",
+    "who_experienced_it": "Athletes, professionals seeking optimization.",
+    "why_existing_solutions_failed": "Wrist devices bulky, step-focused, disrupted sleep.",
+    "emotional_or_practical_cost": "Anxiety from unquantified fatigue; incomplete data."
+  },
+  "world_state": {
+    "social_cultural": "Wellness/sleep optimization mainstreamed via biohacking.",
+    "economic": "Healthtech VC boom; crowdfunding enabled launch.",
+    "user_behavior": "Shift to recovery over activity tracking.",
+    "demographic": "Millennials/Gen Z with sleep issues in high-stress jobs.",
+    "anthropological_psychological": "Control rituals amid uncertainty/anxiety.",
+    "technological": "Miniaturized sensors, ML for finger PPG."
+  },
+  "competitive_landscape": {
+    "direct_competitors": [
+      "Fitbit",
+      "Apple Watch",
+      "WHOOP",
+      "Ringconn",
+      "Ultrahuman"
+    ],
+    "indirect_substitutes": [
+      "Sleep apps",
+      "manual tracking"
+    ],
+    "incumbent_failures": "Obtrusive form, wrong metrics (steps > recovery).",
+    "user_tradeoffs_before": "Comfort vs. accuracy; no tracking."
+  },
+  "differentiation": {
+    "core_insight": "Recovery > activity; finger optimal for passive tracking.",
+    "assumptions_rejected": "Must be wrist-based/gamified.",
+    "meaningful_differences": "Discreet aesthetics, readiness scores, always-on."
+  },
+  "fundamental_human_need": {
+    "primary_need": "Control and self-understanding.",
+    "why_it_mattered_then": "Burnout anxiety in always-on culture; COVID health focus."
+  },
+  "early_growth": {
+    "initial_channels": [
+      "Kickstarter (2015/2016)",
+      "Slush conference (2017)",
+      "Word-of-mouth"
+    ],
+    "why_users_adopted": "Accurate sleep data + discretion for evangelists.",
+    "early_distribution_mechanics": "Crowdfunding community; app sharing."
+  },
+  "monetization": {
+    "initial_model": "Hardware sale + $6/mo subscription.",
+    "why_users_paid": "Personalized, updating insights on sensitive data.",
+    "models_that_would_fail": "Freemium/ads; one-time only; B2B-first."
+  },
+  "success_synthesis": {
+    "why_it_worked": "Nailed recovery focus when culture/tech aligned.",
+    "key_alignment_factors": "Sensor advances, VC/crowdfunding, wellness shift, control psychology.",
+    "historical_inevitability_thesis": "Natural response to intrusive wearables in quantified-self era."
+  }
+}

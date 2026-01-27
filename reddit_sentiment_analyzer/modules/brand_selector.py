@@ -61,23 +61,23 @@ class BrandSelector:
         table = Table(show_header=False)
         table.add_column("Field", style="cyan")
         table.add_column("Value", style="white")
-        
-        table.add_row("Prospect ID", prospect['id'])
+
+        table.add_row("Prospect ID", str(prospect['id']))
         table.add_row("Brand Name", prospect['brand_name'])
         table.add_row("Industry", prospect.get('industry_category', 'N/A'))
         table.add_row("Revenue Range", prospect.get('est_revenue_range', 'N/A'))
-        
+
         console.print(table)
     
     def _collect_prospect_info(self, brand_name: str) -> Dict[str, Any]:
-        """Collect prospect information from user"""
+        """Create prospect with default information (no prompts)"""
         return {
             'brand_name': brand_name,
-            'hq_location': Prompt.ask("Location", default="Unknown"),
-            'industry_category': Prompt.ask("Industry", default="Wellness"),
-            'est_revenue_range': Prompt.ask("Revenue", default="$1M-$10M"),
-            'website': Prompt.ask("Website", default=""),
-            'linkedin_url': Prompt.ask("LinkedIn URL", default=""),
-            'why_good_fit': Prompt.ask("Notes/Why good fit?", default="")
+            'hq_location': "Unknown",
+            'industry_category': "App/SaaS",
+            'est_revenue_range': "Unknown",
+            'website': "",
+            'linkedin_url': "",
+            'why_good_fit': "Auto-created for Reddit analysis"
         }
 

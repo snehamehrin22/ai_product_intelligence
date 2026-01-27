@@ -1,0 +1,75 @@
+{
+  "business_origin": {
+    "product_name": "Oura Ring",
+    "category": "Wearable Health Tech",
+    "product_snapshot": {
+      "description": "Smart ring tracking sleep, activity, heart rate, temperature, respiratory rate, blood oxygen via IR LEDs and app.",
+      "target_user": "Health-conscious adults prioritizing recovery (athletes, biohackers, professionals).",
+      "perceived_category": "Fitness tracker / smartwatch.",
+      "actual_job_to_be_done": "Discreet 24/7 sleep and recovery monitoring."
+    },
+    "founders": [
+      {
+        "name": "Petteri Lahtela, Kari Kivel\u00e4, Markku Koskela",
+        "background": "Finnish engineers, founded 2013 in Oulu.",
+        "relevant_lived_experience": "Engineering in sensors/algorithms; Finland's tech ecosystem.",
+        "founder_motivation": "Speculative: Personal sleep issues in long winters; positioned via sensor access. [1]"
+      }
+    ],
+    "core_pain_problem": {
+      "problem_statement": "Inaccurate, disruptive sleep/recovery tracking.",
+      "who_experienced_it": "High-achievers needing passive data.",
+      "why_existing_solutions_failed": "Wrist devices uncomfortable, inaccurate for sleep.",
+      "emotional_or_practical_cost": "Loss of control over performance; burnout risk. [1]"
+    },
+    "world_state": {
+      "social_cultural": "Quantified self / biohacking normalized sleep data as status. [1]",
+      "economic": "Post-2008 VC for health tech; 2015 seed/Kickstarter viable. [1]",
+      "user_behavior": "Shift to always-on insights, rejecting obtrusive wear. [1]",
+      "demographic": "Aging millennials demand longevity tools. [1]",
+      "anthropological_psychological": "Anxiety drove data rituals for predictability. [1]",
+      "technological": "Miniaturized IR LEDs, BLE enabled finger tracking. [1]"
+    },
+    "competitive_landscape": {
+      "direct_competitors": [
+        "Fitbit",
+        "Apple Watch"
+      ],
+      "indirect_substitutes": [
+        "Sleep apps",
+        "wrist trackers"
+      ],
+      "incumbent_failures": "Prioritized notifications over passive recovery.",
+      "user_tradeoffs_before": "Comfort, discretion, 24/7 accuracy. [1]"
+    },
+    "differentiation": {
+      "core_insight": "Finger PPG superior for sleep.",
+      "assumptions_rejected": "Fitness = steps; recovery secondary.",
+      "meaningful_differences": "Jewelry form for all-day wear. [1]"
+    },
+    "fundamental_human_need": {
+      "primary_need": "Control",
+      "why_it_mattered_then": "Burnout in hustle culture amplified agency need. [1]"
+    },
+    "early_growth": {
+      "initial_channels": [
+        "Kickstarter 2015-16",
+        "Slush 2017"
+      ],
+      "why_users_adopted": "Superior sleep insights for biohackers.",
+      "early_distribution_mechanics": "Crowdfunding, events; app low-friction. [1]"
+    },
+    "monetization": {
+      "initial_model": "Hardware sales + sub.",
+      "why_users_paid": "Tangible recovery value.",
+      "models_that_would_fail": "Ads/freemium; privacy-valued data. [1]"
+    },
+    "success_synthesis": {
+      "why_it_worked": "Outlasted via recovery focus + sensor timing.",
+      "key_alignment_factors": "Tech, psychology, culture.",
+      "historical_inevitability_thesis": "Evolution to passive optimization. [1]"
+    }
+  },
+  "growth_loops": {},
+  "voice_of_customer": {}
+}

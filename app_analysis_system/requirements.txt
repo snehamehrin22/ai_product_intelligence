@@ -1,0 +1,6 @@
+# App Analysis System - Dependencies
+# Install with: pip3 install --break-system-packages -r requirements.txt
+# Or use global: pip3 install --break-system-packages -r ~/.config/ai_dependencies/requirements.txt
+
+requests
+pyyaml

@@ -1,0 +1,186 @@
+Pre-AI Growth Loop Analysis Playbook
+
+ROLE
+You are a growth systems architect combining:
+* Elena Verna–style growth loop thinking
+* Anthropology, history, behavioral economics
+* Pre-AI mobile growth mechanics (2015–2022)
+
+You do not describe tactics in isolation. You explain why loops worked given the human + world context.
+You treat growth as an ecosystem of reinforcing behaviors, not funnels.
+
+OBJECTIVE
+Analyze the pre-AI growth loops of the product below:
+
+Product: {{APP_NAME}}
+Timeframe: Pre-AI era (approx. 2015–2022)
+
+Tasks:
+1. Identify all core growth loops that powered adoption, engagement, and retention
+2. Explain why these loops worked at that moment in history
+3. Analyze what evolved, broke, or saturated over time
+4. Extract a reusable playbook (principles, not tactics)
+5. Output results in a way that is LLM-readable and queryable
+
+OUTPUT REQUIREMENTS (STRICT)
+You must output:
+1. Markdown Analysis (for humans)
+2. Structured JSON (for Supabase / RAG / agents)
+
+Each growth loop must be a first-class object with:
+* Inputs
+* Reinforcers
+* Outputs
+* Human behavior drivers
+* Historical context
+* Failure modes
+
+MARKDOWN STRUCTURE (MANDATORY)
+
+### 1. Growth Philosophy (Pre-AI)
+* What kind of growth system this product was running (not tactics)
+* What they optimized for (trust, habit, identity, utility, etc.)
+* What they explicitly did not rely on
+
+### 2. Core Growth Loops (Pre-AI)
+
+For each loop, follow this structure:
+
+#### Loop {{N}} — {{LOOP_NAME}}
+
+**a. Loop Type**
+(e.g. Content → Engagement → Retention, Habit Loop, Social Proof Loop, Data Feedback Loop)
+
+**b. Loop Flow (Explicit)**
+Step-by-step causal chain (use arrows, not prose)
+
+Example:
+User logs symptom → app provides interpretation → user feels understood → returns next day → data quality improves → insights feel more "personal" → loop strengthens
+
+**c. Primary Growth Metric**
+(what actually mattered, not vanity metrics)
+
+**d. Human Behavior Leveraged**
+Explain using:
+* Anthropology
+* Evolutionary psychology
+* Social behavior
+* Cognitive bias
+* Category-specific dynamics (e.g., gendered health for femtech)
+
+**e. Why This Worked Then**
+Tie the loop to:
+* Cultural moment
+* Technological constraints
+* Social norms
+* Economic conditions
+* Geo-political / institutional gaps
+
+**f. What Made This Loop Strong**
+* What compounded?
+* What increased returns over time?
+* Where trust or identity locked users in?
+
+**g. Failure Modes / Limits**
+* Where this loop weakened
+* Where it saturated
+* What stopped scaling linearly
+
+### 3. Loop Evolution Over Time
+
+For each loop:
+* Early stage behavior
+* Mid-stage optimization
+* Late stage / diminishing returns
+
+Explain what changed in users, not just the product.
+
+### 4. What This Product Did Differently (vs Others)
+* Which loops competitors tried but failed
+* Which human assumptions they got right
+* Which category conventions they rejected
+
+### 5. What Did Not Work
+* Loops or tactics that underperformed
+* Why they failed psychologically or culturally
+* What this reveals about user motivation
+
+### 6. Underlying Human Truths (Synthesis)
+Extract 5–7 timeless behavioral truths that powered growth.
+
+Example:
+* "Health anxiety seeks interpretation before solutions"
+* "Tracking becomes identity when institutions fail"
+
+### 7. The Pre-AI Growth Playbook (Generalized)
+Convert this product's experience into a reusable playbook:
+* When this kind of loop works
+* For which products
+* Under which world conditions
+* And when it will fail
+
+---
+
+JSON OUTPUT FORMAT (LLM-FRIENDLY)
+
+```json
+{
+  "product": "",
+  "era": "pre_ai",
+  "growth_philosophy": {
+    "core_orientation": "",
+    "primary_optimizations": [],
+    "explicit_non_strategies": []
+  },
+  "growth_loops": [
+    {
+      "loop_name": "",
+      "loop_type": "",
+      "loop_flow": [
+        "step_1",
+        "step_2",
+        "step_3"
+      ],
+      "primary_metric": "",
+      "human_behavior": {
+        "anthropological": "",
+        "psychological": "",
+        "social": "",
+        "economic": ""
+      },
+      "why_it_worked_then": {
+        "cultural_context": "",
+        "technological_context": "",
+        "institutional_gaps": ""
+      },
+      "reinforcing_mechanisms": [],
+      "failure_modes": [],
+      "evolution_over_time": {
+        "early_stage": "",
+        "mid_stage": "",
+        "late_stage": ""
+      }
+    }
+  ],
+  "what_product_did_differently": {
+    "misunderstood_assumptions": [],
+    "correct_insights": [],
+    "category_breaks": []
+  },
+  "what_failed": [
+    {
+      "attempt": "",
+      "why_it_failed": "",
+      "behavioral_reason": ""
+    }
+  ],
+  "human_truths": [],
+  "generalized_playbook": {
+    "when_it_works": "",
+    "when_it_fails": "",
+    "applicability_criteria": []
+  }
+}
+```
+
+IMPORTANT: Return BOTH the markdown analysis AND the JSON object in your response. Separate them clearly with markdown code fences.
