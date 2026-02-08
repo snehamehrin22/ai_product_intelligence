@@ -1,0 +1,16 @@
+## Codebase Patterns
+- Server migration scripts located in migration-scripts/ directory
+- Use full-server-backup.sh for complete backup (not just OpenClaw)
+- Backup directory: /root/server-backups/
+- Current server: 187.77.1.7 (VPS ID: 1343427)
+- Migration scripts already tested and working
+- All scripts are executable and in migration-scripts/
+
+## Migration Context
+- Current installation: OpenClaw + shared folders + Git repos
+- Total size: ~834M
+- Key components: /docker/openclaw-r8v9, /shared/projects, /shared/scripts
+- Security items: SSH keys, API keys, firewall configs
+- Backup encryption password: CHANGE_THIS_PASSWORD (default)
+
+---

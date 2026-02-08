@@ -1,0 +1,123 @@
+{
+  "project": "Server Migration Backup",
+  "branchName": "ralph/server-migration-backup",
+  "description": "Autonomous server backup for migration to new VPS",
+  "userStories": [
+    {
+      "id": "MIGRATE-001",
+      "title": "Run migration readiness check",
+      "description": "Verify the server is ready for backup by checking all prerequisites",
+      "acceptanceCriteria": [
+        "Execute /shared/projects/ai_product_intelligence/migration-scripts/test-migration-readiness.sh",
+        "All checks pass (Docker, OpenClaw, disk space, required tools)",
+        "Document readiness status in progress.txt",
+        "Commit results"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MIGRATE-002",
+      "title": "Create complete server backup",
+      "description": "Run full-server-backup.sh to backup everything (OpenClaw, shared folders, Git repos, security configs)",
+      "acceptanceCriteria": [
+        "Execute /shared/projects/ai_product_intelligence/migration-scripts/full-server-backup.sh production-$(date +%Y%m%d)",
+        "Backup completes successfully",
+        "Both encrypted and unencrypted archives created",
+        "Backup summary file exists",
+        "Document backup location and size in progress.txt",
+        "Commit backup confirmation"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MIGRATE-003",
+      "title": "Verify backup integrity",
+      "description": "Verify the backup was created correctly with valid checksums",
+      "acceptanceCriteria": [
+        "Check backup directory exists in /root/server-backups/",
+        "Verify checksums.txt file exists and is valid",
+        "Confirm encrypted archive (.tar.gz.enc) exists",
+        "Confirm unencrypted archive (.tar.gz) exists",
+        "Run sha256sum verification on backup archives",
+        "Document verification results in progress.txt",
+        "Commit verification status"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MIGRATE-004",
+      "title": "Document backup contents",
+      "description": "Create detailed inventory of what was backed up for reference",
+      "acceptanceCriteria": [
+        "Read BACKUP-SUMMARY.txt from backup directory",
+        "List all backed up components (Docker, shared folders, SSH keys, etc.)",
+        "Document backup size and file counts",
+        "Create BACKUP-INVENTORY.md in project root with full details",
+        "Include what API keys and security items are in backup",
+        "Commit inventory document"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MIGRATE-005",
+      "title": "Prepare new server setup instructions",
+      "description": "Create step-by-step guide for setting up the new server",
+      "acceptanceCriteria": [
+        "Create NEW-SERVER-SETUP.md with detailed instructions",
+        "Include SSH setup steps",
+        "Include commands to transfer backup files",
+        "Include restoration commands",
+        "Include verification steps",
+        "List new server IP placeholder for user to fill in",
+        "Commit setup guide"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MIGRATE-006",
+      "title": "Create transfer commands script",
+      "description": "Prepare ready-to-run commands for transferring backup to new server",
+      "acceptanceCriteria": [
+        "Create transfer-to-new-server.sh script",
+        "Include scp command for encrypted backup",
+        "Include scp commands for migration scripts",
+        "Include rsync alternative for large files",
+        "Add placeholder for NEW_SERVER_IP variable",
+        "Make script executable",
+        "Add usage instructions in comments",
+        "Commit transfer script"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MIGRATE-007",
+      "title": "Generate final migration checklist",
+      "description": "Create comprehensive checklist of all remaining manual steps",
+      "acceptanceCriteria": [
+        "Create MIGRATION-CHECKLIST.md",
+        "List completed automated steps",
+        "List remaining manual steps with checkboxes",
+        "Include estimated time for each step",
+        "Include troubleshooting tips",
+        "Include rollback procedure",
+        "Reference all created documentation files",
+        "Commit checklist"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
