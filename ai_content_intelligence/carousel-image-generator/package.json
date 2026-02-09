@@ -1,0 +1,22 @@
+{
+  "name": "carousel-image-generator",
+  "version": "1.0.0",
+  "description": "Generate Instagram carousel images from JSON content using PPTX",
+  "main": "src/index.js",
+  "scripts": {
+    "generate": "node src/index.js",
+    "generate-images": "node src/generate-images.js",
+    "test": "node src/index.js ../data/carousel_outputs/Superhuman_pillar_01_growth_loops_are_changing.json",
+    "test-full": "node src/generate-images.js ../data/carousel_outputs/Superhuman_pillar_01_growth_loops_are_changing.json"
+  },
+  "keywords": ["carousel", "instagram", "pptx", "image-generation"],
+  "author": "Sneha",
+  "license": "MIT",
+  "dependencies": {
+    "pptxgenjs": "^3.12.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "sharp": "^0.33.0"
+  },
+  "type": "module"
+}

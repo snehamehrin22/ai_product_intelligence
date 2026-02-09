@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Replit Publisher
-Transforms Perplexity business origin analysis into YAML case study format
+Transforms multi-section analysis into YAML case study format matching template
+Supports: business_origin, growth_loops, voice_of_customer (reddit_intelligence)
 """
 
 import sys
@@ -14,10 +15,10 @@ from datetime import datetime
 
 def transform_to_yaml(json_data: dict, app_name: str, markdown_content: str = None) -> dict:
     """
-    Transform Perplexity JSON analysis into Replit YAML case study format
+    Transform multi-section analysis into Replit YAML case study format
 
     Args:
-        json_data: The structured JSON from Perplexity
+        json_data: Combined JSON from all sections (business_origin, growth_loops, voice_of_customer)
         app_name: Name of the app
         markdown_content: Optional full markdown analysis
 
@@ -25,30 +26,43 @@ def transform_to_yaml(json_data: dict, app_name: str, markdown_content: str = No
         Dictionary in YAML case study format
     """
 
-    # Extract data from JSON
-    product_snapshot = json_data.get("product_snapshot", {})
-    founders = json_data.get("founders", [])
-    core_pain = json_data.get("core_pain_problem", {})
-    world_state = json_data.get("world_state", {})
-    competitive = json_data.get("competitive_landscape", {})
-    differentiation = json_data.get("differentiation", {})
-    human_need = json_data.get("fundamental_human_need", {})
-    early_growth = json_data.get("early_growth", {})
-    monetization = json_data.get("monetization", {})
-    synthesis = json_data.get("success_synthesis", {})
+    # Detect which sections are present
+    has_business_origin = "business_origin" in json_data
+    has_growth_loops = "growth_loops" in json_data
+    has_voice_of_customer = "voice_of_customer" in json_data
+
+    # If old format (direct keys), treat as business_origin
+    if not any([has_business_origin, has_growth_loops, has_voice_of_customer]):
+        # Old format - direct keys
+        business_origin_data = json_data
+    else:
+        # New format - nested by section
+        business_origin_data = json_data.get("business_origin", {})
+
+    # Extract business_origin data (for backwards compatibility)
+    product_snapshot = business_origin_data.get("product_snapshot", {})
+    founders = business_origin_data.get("founders", [])
+    core_pain = business_origin_data.get("core_pain_problem", {})
+    world_state = business_origin_data.get("world_state", {})
+    competitive = business_origin_data.get("competitive_landscape", {})
+    differentiation = business_origin_data.get("differentiation", {})
+    human_need = business_origin_data.get("fundamental_human_need", {})
+    early_growth = business_origin_data.get("early_growth", {})
+    monetization = business_origin_data.get("monetization", {})
+    synthesis = business_origin_data.get("success_synthesis", {})
 
     # Build YAML structure
     case_study = {
-        "title": f"{app_name}: Business Origin & World-State Analysis",
-        "description": f"Deep dive into {app_name}'s founding story, market conditions, and strategic positioning",
+        "title": f"{app_name}: Complete Analysis",
+        "description": f"Multi-lens analysis of {app_name} including business origin, growth dynamics, and user intelligence",
         "client": app_name,
-        "industry": json_data.get("category", "Technology"),
+        "industry": business_origin_data.get("category", "Technology"),
         "duration": "Research Phase",
         "tags": [
             "Business Origin",
-            "Market Analysis",
-            "Strategic Positioning",
-            json_data.get("category", "App Analysis")
+            "Growth Analysis",
+            "User Intelligence",
+            business_origin_data.get("category", "App Analysis")
         ],
         "sections": []
     }
@@ -272,7 +286,109 @@ def transform_to_yaml(json_data: dict, app_name: str, markdown_content: str = No
         "cards": synthesis_cards
     })
 
+    # Add voice_of_customer section if present (reddit_intelligence type)
+    if has_voice_of_customer:
+        voc_data = json_data.get("voice_of_customer", {})
+        voc_section = transform_voice_of_customer_to_reddit_intelligence(voc_data, app_name)
+        if voc_section:
+            case_study["sections"].append(voc_section)
+
     return case_study
+
+
+def transform_voice_of_customer_to_reddit_intelligence(voc_data: dict, app_name: str) -> dict:
+    """
+    Transform voice_of_customer behavioral analysis into reddit_intelligence section format
+
+    Args:
+        voc_data: Voice of customer JSON data from behavioral analysis
+        app_name: Name of the app
+
+    Returns:
+        reddit_intelligence section dict matching template structure
+    """
+
+    # Build reddit_intelligence section (even if voc_data is empty, use defaults)
+    section = {
+        "type": "reddit_intelligence"
+    }
+
+    # Verdict (required)
+    verdict = voc_data.get("verdict", {})
+    section["verdict"] = {
+        "headline": verdict.get("headline", "Analysis in progress"),
+        "subhead": verdict.get("subhead", f"Community sentiment analysis for {app_name}"),
+        "trajectory": verdict.get("trajectory", "stable"),
+        "trajectoryLabel": verdict.get("trajectoryLabel", "Stable")
+    }
+
+    # Metadata (required)
+    metadata = voc_data.get("metadata", {})
+    section["metadata"] = {
+        "posts": metadata.get("posts", metadata.get("total_posts", 0)),
+        "subreddits": metadata.get("subreddits", metadata.get("total_subreddits", 0)),
+        "timespan": metadata.get("timespan", metadata.get("date_range", "Unknown")),
+        "confidence": metadata.get("confidence", "medium"),
+        "lastUpdated": metadata.get("lastUpdated", datetime.now().strftime("%B %Y"))
+    }
+
+    # Sentiment distribution (required)
+    sentiment = voc_data.get("sentiment", {})
+    section["sentiment"] = {
+        "positive": sentiment.get("positive", 0),
+        "negative": sentiment.get("negative", 0),
+        "neutral": sentiment.get("neutral", 0),
+        "mixed": sentiment.get("mixed", 0)
+    }
+
+    # Sentiment shift over time (optional)
+    shift = voc_data.get("shift", voc_data.get("sentiment_shift", {}))
+    if shift:
+        section["shift"] = {
+            "title": shift.get("title", "The Sentiment Shift"),
+            "events": shift.get("events", [])
+        }
+
+    # Wins (where app is winning)
+    wins = voc_data.get("wins", voc_data.get("where_winning", []))
+    if wins:
+        section["wins"] = wins
+
+    # Losses (where app is losing)
+    losses = voc_data.get("losses", voc_data.get("where_losing", []))
+    if losses:
+        section["losses"] = losses
+
+    # Multi-lens interpretation
+    lenses = voc_data.get("lenses", voc_data.get("multi_lens_interpretation", []))
+    if lenses:
+        section["lenses"] = lenses
+
+    # Emergent lens (discovered patterns)
+    emergent_lens = voc_data.get("emergentLens", voc_data.get("emergent_lens", {}))
+    if emergent_lens:
+        section["emergentLens"] = emergent_lens
+
+    # Growth and retention loops
+    loops = voc_data.get("loops", voc_data.get("growth_loops", []))
+    if loops:
+        section["loops"] = loops
+
+    # Competitors mentioned
+    competitors = voc_data.get("competitors", voc_data.get("competitive_landscape", []))
+    if competitors:
+        section["competitors"] = competitors
+
+    # Strategic recommendations
+    recommendations = voc_data.get("recommendations", voc_data.get("strategic_implications", {}))
+    if recommendations:
+        section["recommendations"] = {
+            "leanInto": recommendations.get("leanInto", recommendations.get("lean_into", [])),
+            "pullBack": recommendations.get("pullBack", recommendations.get("pull_back", [])),
+            "structuralChange": recommendations.get("structuralChange", recommendations.get("structural_change", {}))
+        }
+
+    return section
 
 
 def publish_to_replit(json_file: str, app_name: str, output_dir: str = None):

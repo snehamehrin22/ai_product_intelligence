@@ -1,0 +1,54 @@
+{
+  "general_voice": [
+    "carousel_01.txt",
+    "carousel_02.txt",
+    "carousel_03.txt",
+    "carousel_04.txt",
+    "carousel_05.txt",
+    "carousel_06.txt"
+  ],
+  "pillar_01_growth_loops": [
+    "carousel_07.txt",
+    "carousel_08.txt",
+    "carousel_09.txt",
+    "carousel_10.txt",
+    "carousel_superhuman_gold.txt"
+  ],
+  "pillar_02_measurement_gap": [
+    "carousel_11.txt",
+    "carousel_12.txt",
+    "carousel_13.txt",
+    "carousel_14.txt"
+  ],
+  "pillar_03_thinking_layer": [
+    "carousel_15.txt",
+    "carousel_17.txt",
+    "carousel_18.txt"
+  ],
+  "pillar_metadata": {
+    "pillar_01": {
+      "id": "growth_loops_are_changing",
+      "name": "Growth Loops Are Changing",
+      "framework_file": "prompts/frameworks/growth_loops_teardown_framework.md",
+      "carousel_goal": "Pillar 1 Teardown (10 slides)",
+      "slide_count": 10,
+      "voice_folder": "pillar01_voice"
+    },
+    "pillar_02": {
+      "id": "measurement_gap",
+      "name": "Measurement Gap",
+      "framework_file": "prompts/frameworks/measurement_gap_framework.md",
+      "carousel_goal": "Pillar 2 Measurement Gap (5-7 slides)",
+      "slide_count_range": [5, 7],
+      "voice_folder": "pillar02_voice"
+    },
+    "pillar_03": {
+      "id": "thinking_layer",
+      "name": "Thinking Layer",
+      "framework_file": "prompts/frameworks/thinking_layer_framework.md",
+      "carousel_goal": "Pillar 3 Thinking Layer (7-9 slides)",
+      "slide_count_range": [7, 9],
+      "voice_folder": "pillar03_voice"
+    }
+  }
+}

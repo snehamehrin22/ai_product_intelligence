@@ -1,0 +1,36 @@
+
+  📊 Voice of Customer Section for Eight Sleep
+  🔍 Collecting Reddit data for Eight Sleep...
+Found existing prospect: Eight Sleep
+┌───────────────┬───────────────────────────────────────┐
+│ Prospect ID   │ 184                                   │
+│ Brand Name    │ Eight Sleep                           │
+│ Industry      │ Sleep Technology and Smart Mattresses │
+│ Revenue Range │                                       │
+└───────────────┴───────────────────────────────────────┘
+  ✅ Found 2 Reddit URLs
+  ✅ Scraped 23 posts/comments
+  ✅ Cleaned 23 valid items
+  🧠 Running behavioral intelligence analysis for Eight Sleep...
+  ✅ Behavioral analysis complete
+
+======================================================================
+VOICE OF CUSTOMER ANALYSIS
+======================================================================
+# Eight Sleep — Reddit Behavioral Intelligence Memo
+
+## 0. Metadata & Data Integrity
+
+| Field | Value |
+|-------|-------|
+| App Name | Eight Sleep |
+| Analysis Date | 2026-01-27 |
+| Data Source | Reddit |
+| Total Posts | 23 |
+| Total Comments | 0 |
+| Time Range Covered | 2010-04-09T22:59:46.000Z → 2026-01-27T09:41:13.000Z |
+| Subreddits Sampled | r/Mattress, r/EightSleep |
+| Confidence Level | Medium |
+| Known Biases | Sample size is small, and data is skewed towards recent posts. |
+
+## 1. Senti...

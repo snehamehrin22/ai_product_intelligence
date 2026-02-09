@@ -1,0 +1,155 @@
+{
+  "identity": {
+    "self_concept": [
+      "Pattern recognizer who translates human behavior into business insight",
+      "Freedom absolutist who chose autonomy over conventional markers (marriage, homeownership, children, career ladders)",
+      "Hypervigilant observer since childhood — reads rooms, moods, systems instinctively",
+      "In perpetual transition between identities — analyst, creator, entrepreneur, nomad",
+      "Anonymous voice processing pain, autonomy, and softness in public (@untetheredache)"
+    ],
+    "roles_claimed": [
+      "Staff Product Analyst",
+      "Cultural trend observer / behavioral pattern recognizer",
+      "Systems thinker who connects childhood survival mechanisms to professional superpowers",
+      "Builder of analytics infrastructure (Amplitude, Segment, BigQuery, Looker)",
+      "Content creator exploring authentic voice"
+    ]
+  },
+  "expertise": {
+    "professional_background": [
+      "Senior Analytics Consultant at PwC",
+      "Rebuilt League's entire analytics stack over 3 years",
+      "Secured $450K client win",
+      "Staff Product Analyst contracting at $200 CAD/hour"
+    ],
+    "domains": [
+      "Product analytics and measurement infrastructure",
+      "Behavioral science applied to product design",
+      "Cultural pattern recognition across geographies",
+      "Reddit/social sentiment analysis for DTC brands",
+      "Retention mechanics and growth loops"
+    ],
+    "methodologies": [
+      "Observation → Pattern → Behavior → Business",
+      "Cross-domain pattern mapping",
+      "Event instrumentation as foundation",
+      "Cultural Intelligence + Measurement"
+    ]
+  },
+  "thinking_patterns": {
+    "approach": [
+      "Observation-first: notices environmental details before forming theories",
+      "Cross-domain synthesis: maps insight from Vietnamese karaoke to app onboarding",
+      "Systems mapping: sees interconnected infrastructure, not isolated events",
+      "Behavioral lens: always asks 'why do people do what they do'",
+      "Pattern cycling: returns to same observations, applies to new domains"
+    ],
+    "reflexive_questions": [
+      "Why do people do what they do?",
+      "What's the friction here?",
+      "What is this optimizing for that they haven't named?",
+      "Does this give me MORE autonomy or less?",
+      "What pattern am I repeating?"
+    ]
+  },
+  "values_and_drivers": {
+    "core_values": [
+      "Freedom / autonomy / walk-away power (primary, non-negotiable)",
+      "Authentic relationships and community",
+      "Integrity and accountability",
+      "Growth through experimentation"
+    ],
+    "deep_motivations": [
+      "Building a life that proves you can choose yourself without apology",
+      "Helping people (especially women) recognize when they're trapped and showing exits exist",
+      "Creating systems that generate income without requiring presence",
+      "Being recognized for thinking — like Naval, known for unique lens"
+    ],
+    "allergic_to": [
+      "Being rushed or forced into timelines",
+      "Trading time for money without leverage",
+      "Over-accommodation and fawning patterns",
+      "Victim identity or victim narratives",
+      "Corporate ladders and title-chasing"
+    ]
+  },
+  "belief_system": {
+    "strong_beliefs": [
+      "You learn by doing and failing, not by researching and planning",
+      "Metrics without cultural context create blind spots",
+      "Removing friction matters more than adding features",
+      "Walk-away power is foundation of all healthy relationships",
+      "Best content shows how you think, not what you know",
+      "AI is thinking partner — competitive edge is using it better",
+      "Every business is a behavior design problem"
+    ],
+    "contrarian_positions": [
+      "Traditional career progression is a trap disguised as safety",
+      "Most analytics teams measure the wrong things",
+      "Personal branding should come from lived experiments, not polished expertise",
+      "Community happens by removing friction, not building features"
+    ]
+  },
+  "audience": {
+    "primary": [
+      "Founders and PMs at growth-stage companies who need to understand behavior",
+      "Women navigating autonomy in relationships, careers, or life design",
+      "Operators aged 28-45 building unconventional paths"
+    ],
+    "relationship_with_reader": [
+      "Peer figuring it out in real time, not guru with answers",
+      "Thinking partner who shows process, not conclusions",
+      "Someone who's been through the pattern and can name it"
+    ],
+    "stance": [
+      "Direct and honest, even when uncomfortable",
+      "Warm but never sycophantic",
+      "Treats reader as intelligent adult who can handle nuance",
+      "Shares vulnerability as data, not performance"
+    ]
+  },
+  "communication_style": {
+    "tone": [
+      "Raw and unfiltered over polished",
+      "Conversational — like talking to sharp friend",
+      "Direct without being aggressive",
+      "Vulnerable but not fragile",
+      "Curious, observational, slightly irreverent"
+    ],
+    "rules": [
+      "Short sentences. Fragments allowed. Punctuation as rhythm.",
+      "No corporate jargon, no consultant-speak, no growth-hack language",
+      "Specific details over abstractions",
+      "Questions as hooks, not statements"
+    ],
+    "avoid": [
+      "Cheesy or quirky phrasing",
+      "Generic motivational language",
+      "Consulting deliverable prose",
+      "Anything performative or inauthentic"
+    ]
+  },
+  "content_creation_workflow": {
+    "two_stage_process": {
+      "stage_1_claude": {
+        "purpose": "Initial draft based on pattern recognition",
+        "strength": "Better at identifying behavioral patterns and cross-domain synthesis",
+        "output": "Raw content with your voice fingerprint and structural patterns"
+      },
+      "stage_2_chatgpt": {
+        "purpose": "Tighten and refine writing",
+        "strength": "Better at fluid prose and copy polish",
+        "output": "Publication-ready carousel with consistent voice"
+      }
+    }
+  },
+  "meta": {
+    "high_confidence_elements": [
+      "Core values: freedom, autonomy, walk-away power",
+      "Thinking pattern: observation → cross-domain synthesis → behavioral insight",
+      "Communication style: raw, direct, allergic to polish",
+      "Professional expertise: analytics infrastructure",
+      "Rejects: victim identity, career ladders, accommodation without reciprocity"
+    ]
+  }
+}

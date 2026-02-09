@@ -1,0 +1,272 @@
+{
+  "pillars": {
+    "growth_loops_are_changing": {
+      "pillar_id": "growth_loops_are_changing",
+      "name": "Growth Loops Are Changing",
+      "thesis": "AI isn't just changing products. It's changing how products grow. The growth loops that built the last generation of companies are either accelerating, breaking, or being replaced by something new.",
+      "shifts": [
+        "Visible output change is the new viral loop",
+        "AI that reduces friction compounds. AI that adds capability often doesn't.",
+        "The retention loop is fragmenting",
+        "AI features ≠ AI growth loops",
+        "Platform vs. layer: Products that embed into workflows grow differently from products that try to be the destination"
+      ],
+      "framework_file": "prompts/frameworks/growth_loops_teardown_framework.md",
+      "carousel_structure": "10_slide_product_teardown",
+      "keywords": [
+        "growth",
+        "viral",
+        "loops",
+        "distribution",
+        "acquisition",
+        "retention",
+        "network effects",
+        "compound growth",
+        "viral loop",
+        "growth engine",
+        "user acquisition",
+        "product-led growth",
+        "organic growth",
+        "growth mechanics",
+        "visible output",
+        "friction reduction",
+        "behavioral change"
+      ],
+      "series_tag": "Part of a series on how AI is changing the way products grow — the loops that work, the ones that don't, and what it tells us about how people adopt technology now.",
+      "carousel_format": {
+        "slide_count": 10,
+        "structure": [
+          {
+            "slide": 1,
+            "purpose": "Hook",
+            "description": "Personal observation + tension. Why this product matters to the 'growth loops are changing' argument"
+          },
+          {
+            "slide": 2,
+            "purpose": "Setup",
+            "description": "What the product does + personal experience. Ground in real usage, not theory"
+          },
+          {
+            "slide": "3-6",
+            "purpose": "Loops",
+            "description": "Name and dissect 3-4 growth loops. Show which are pre-AI, AI-native, or breaking"
+          },
+          {
+            "slide": 7,
+            "purpose": "Compounds",
+            "description": "How loops feed each other — or don't. Reveal where growth engine has gaps"
+          },
+          {
+            "slide": 8,
+            "purpose": "Bigger Picture",
+            "description": "Connect to behavioral shift. What this tells us about AI and growth"
+          },
+          {
+            "slide": 9,
+            "purpose": "Portable",
+            "description": "Takeaways for builders. Specific, actionable, tied to shifts"
+          },
+          {
+            "slide": 10,
+            "purpose": "Close",
+            "description": "Land the thesis. One clean observation about what's changing"
+          }
+        ]
+      }
+    },
+
+    "measurement_gap": {
+      "pillar_id": "measurement_gap",
+      "name": "The Measurement Gap",
+      "thesis": "Growth loops are changing. Most teams are still measuring the old ones. Analytics teams are still measuring growth the way they did pre-AI. AI changed the loops. But the dashboards didn't update.",
+      "shifts": [
+        "Teams measure AI adoption. They should measure behavior replacement.",
+        "The insight plateau is killing retention — and dashboards can't see it.",
+        "AI features improve products but don't grow them. Most teams can't tell the difference.",
+        "Teams measure time-in-app. The best AI products measure time-to-done.",
+        "Standard growth metrics miss AI-specific leading indicators."
+      ],
+      "framework_file": "prompts/frameworks/measurement_gap_framework.md",
+      "carousel_structure": "measurement_framework_post",
+      "keywords": [
+        "metrics",
+        "measurement",
+        "analytics",
+        "KPIs",
+        "dashboard",
+        "retention",
+        "churn",
+        "adoption",
+        "engagement",
+        "behavior replacement",
+        "time-to-core-action",
+        "insight plateau",
+        "AI attribution",
+        "leading indicators",
+        "product analytics",
+        "experiments",
+        "cohort analysis"
+      ],
+      "series_tag": "Part of a series on measuring what matters in AI-era growth — the metrics that are broken, the ones that work, and the experiments that tell you the difference."
+    },
+
+    "thinking_layer": {
+      "pillar_id": "thinking_layer",
+      "name": "The Thinking Layer",
+      "thesis": "AI can do the analysis. It can't do the thinking. Everyone has access to the same AI tools now. The difference isn't the tool. It's what you ask it to do. The thinking directed the AI, not the other way around. And that thinking is the part that doesn't get commoditized.",
+      "differentiators": [
+        "Product analytics layer: Event taxonomy design, data model thinking, instrumentation specifics. Language of someone who's built analytics infrastructure (Segment, BigQuery, Amplitude, Looker).",
+        "AI-as-thinking-partner: Not just better prompts, but AI used inside the analytical workflow as a reasoning partner — pressure-testing hypotheses, modeling data before you have it, generating counter-hypotheses."
+      ],
+      "shifts": [
+        "Decomposition: Aggregate metrics hide distinct behaviors with different retention trajectories. (Wispr: voice-to-typed ratio event schema)",
+        "Inversion: Ask 'under what conditions would this stop working?' instead of 'why is this working?' (Oura: insight_depth event property)",
+        "Second-order thinking: Ask 'what does this make possible, and what does that change?' (Todoist: capture window time-series)",
+        "Reframe unit of analysis: Same data, different question, different insight. (Notion: content_origin event taxonomy)"
+      ],
+      "framework_file": "prompts/frameworks/thinking_layer_framework.md",
+      "carousel_structure": "thinking_skill_demonstration",
+      "keywords": [
+        "analysis",
+        "thinking",
+        "mental models",
+        "reframing",
+        "decomposition",
+        "inversion",
+        "second-order",
+        "first principles",
+        "product analytics",
+        "event taxonomy",
+        "data model",
+        "instrumentation",
+        "behavioral analysis",
+        "strategic thinking",
+        "AI prompts",
+        "analytical workflow",
+        "event schema",
+        "cohort segmentation",
+        "user quotes",
+        "behavioral divergence",
+        "Segment",
+        "BigQuery",
+        "Amplitude"
+      ],
+      "series_tag": "Part of a series on thinking with AI — applied to real products, showing how better questions produce better analysis than better tools ever could.",
+      "structure_elements": [
+        "Real user quotes as raw material (2-3 contrasting quotes showing behavioral divergence)",
+        "The obvious question (standard analyst frame + generic AI prompt)",
+        "The reframe (thinking skill applied, named lightly)",
+        "AI prompt comparison (generic vs. reframed, showing AI as reasoning partner)",
+        "What this surfaces (strategic implications + specific instrumentation details)",
+        "Where else this applies (2-3 transferable examples)",
+        "Why this matters (moat message lands implicitly)",
+        "Series tag"
+      ],
+      "product_analytics_examples": {
+        "Wispr": "voice-to-typed ratio derivable from input_method event property, computed at user-session level",
+        "Oura": "insight_depth property (glance | explore | deep_dive) on score_viewed event",
+        "Todoist": "capture windows from task_created timestamps, no new instrumentation needed",
+        "Notion": "Full event schema: content_origin_type, paste_with_formatting_detection, ai_interaction_depth, time_to_first_content"
+      }
+    }
+  },
+
+  "pillar_relationships": {
+    "description": "How pillars connect and build on each other - an escalation in depth",
+    "progression": [
+      {
+        "pillar": "growth_loops_are_changing",
+        "level": "Observation",
+        "establishes": "Pattern recognition - 'She sees growth loops I can't see'",
+        "output": "Product teardowns showing what's changing",
+        "description": "Here's what's actually happening with this product's growth."
+      },
+      {
+        "pillar": "measurement_gap",
+        "level": "Measurement",
+        "establishes": "Instrumentation knowledge - 'She knows what to measure that I'm not measuring'",
+        "output": "Measurement frameworks and experiments",
+        "description": "Here's what the standard metrics miss and what you'd need to track instead."
+      },
+      {
+        "pillar": "thinking_layer",
+        "level": "Thinking + Execution",
+        "establishes": "Full stack differentiation - 'She thinks differently AND she can build the systems that make those insights visible. This isn't just strategy — it's executable.'",
+        "output": "Live reframes with AI prompt comparisons + event schema design",
+        "description": "Here's the reframe that changes the question, the AI workflow that accelerates the analysis, and the event schema that would surface it in production data."
+      }
+    ],
+    "posting_order": {
+      "strategy": "Interleave by app, not by pillar",
+      "reasoning": "Each app gets a three-post arc. Reader who follows one app gets full depth. Reader who catches one post from each pillar gets breadth.",
+      "example_sequence": [
+        "1. Wispr teardown (Pillar 1)",
+        "2. Wispr measurement (Pillar 2)",
+        "3. Wispr thinking (Pillar 3)",
+        "4. Oura teardown (Pillar 1)",
+        "5. Oura measurement (Pillar 2)",
+        "6. Oura thinking (Pillar 3)",
+        "7. Todoist teardown (Pillar 1)",
+        "8. Todoist measurement (Pillar 2)",
+        "9. Todoist thinking (Pillar 3)",
+        "10. Notion teardown (Pillar 1)",
+        "11. Notion measurement (Pillar 2)",
+        "12. Notion thinking (Pillar 3)"
+      ]
+    },
+    "multi_pillar_arcs": {
+      "description": "Same product analyzed through all 3 pillars",
+      "total_posts": "12 posts = 4 apps × 3 pillars",
+      "apps": {
+        "Wispr": [
+          "Pillar 1: How it actually grows",
+          "Pillar 2: Behavior replacement rate",
+          "Pillar 3: Decomposition — 4.7 stars hiding 3 products → voice-to-typed ratio event schema"
+        ],
+        "Oura": [
+          "Pillar 1: How it actually grows",
+          "Pillar 2: Insight engagement decay",
+          "Pillar 3: Inversion — success causing churn → insight_depth event property"
+        ],
+        "Todoist": [
+          "Pillar 1: How it actually grows",
+          "Pillar 2: Time-to-core-action",
+          "Pillar 3: Second-order — 5x is the start, not the answer → capture window time-series"
+        ],
+        "Notion": [
+          "Pillar 1: How it actually grows",
+          "Pillar 2: AI-attributed growth",
+          "Pillar 3: Unit of analysis — adoption ≠ cognitive workflow → content_origin event taxonomy"
+        ]
+      }
+    },
+    "positioning_strategy": {
+      "icp": "Post-PMF companies $1M-$20M integrating AI",
+      "internal_monologue_progression": [
+        "After Pillar 1: She can see the loops",
+        "After Pillar 2: She can measure them",
+        "After Pillar 3: The thinking is the moat. She can turn insights into instrumentation our team would actually ship. Maybe she should look at our product."
+      ],
+      "sales_approach": "The content IS the sales pitch without pitching"
+    }
+  },
+
+  "shared_structure": {
+    "typical_slide_count": 10,
+    "hook_types": [
+      "Personal observation with tension",
+      "Behavioral contradiction",
+      "Counter narrative",
+      "Data paradox"
+    ],
+    "closing_style": "Land the thesis - one clean observation that makes the reader think about their own product",
+    "tone": "Analytical observer, not fan or hater. Personal experience grounds every post. Every insight connects back to behavioral shifts."
+  },
+
+  "metadata": {
+    "version": "1.0",
+    "created_at": "2026-02-06",
+    "total_pillars": 3,
+    "status": "Pillar 1 framework complete, Pillars 2 & 3 frameworks pending"
+  }
+}

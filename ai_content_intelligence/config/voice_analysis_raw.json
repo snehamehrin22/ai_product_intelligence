@@ -1,0 +1,105 @@
+{
+  "hook_patterns": [
+    {
+      "pattern_type": "personal_observation",
+      "example": "I talk more than I type. Always have.",
+      "frequency": 8
+    },
+    {
+      "pattern_type": "behavioral_contradiction",
+      "example": "I wore an Oura Ring for months. Then I stopped.",
+      "frequency": 6
+    },
+    {
+      "pattern_type": "counter_narrative",
+      "example": "Most teams think Duolingo won because of gamification. That's not what I saw.",
+      "frequency": 4
+    },
+    {
+      "pattern_type": "direct_statement",
+      "example": "Kids, grandparents, and strangers singing together. No introductions needed.",
+      "frequency": 3
+    },
+    {
+      "pattern_type": "data_paradox",
+      "example": "Todoist is one of the most popular task managers in the world. I barely use any of its features.",
+      "frequency": 3
+    }
+  ],
+  "structure": {
+    "typical_slide_count": 10,
+    "body_structure": "numbered insights with examples and analysis",
+    "cta_style": "reflective question that challenges assumptions"
+  },
+  "tone_markers": [
+    {
+      "marker_type": "pronoun_usage",
+      "description": "Heavy use of 'I' for personal experience, 'you' for direct address, minimal 'we'",
+      "examples": [
+        "I kept asking myself",
+        "So here's my question for you",
+        "What friction is hiding in your product"
+      ]
+    },
+    {
+      "marker_type": "sentence_structure",
+      "description": "Mix of short punchy statements and longer analytical sentences",
+      "examples": [
+        "It worked. Sort of.",
+        "This isn't accident. It's behavioral architecture.",
+        "The insight: Most products reward 'best content.' Winners reward 'showing up.'"
+      ]
+    },
+    {
+      "marker_type": "punctuation_style",
+      "description": "Frequent em-dashes, arrows (\u2192), and strategic line breaks for emphasis",
+      "examples": [
+        "Meet stranger \u2192 anxiety",
+        "What Vietnam understands about belonging that product teams don't \u2192",
+        "That sentence = retention."
+      ]
+    },
+    {
+      "marker_type": "vocabulary_level",
+      "description": "Accessible but precise language, avoids jargon while being analytical",
+      "examples": [
+        "behavioral architecture",
+        "friction removal",
+        "structural dependency"
+      ]
+    },
+    {
+      "marker_type": "rhetorical_devices",
+      "description": "Frequent use of parallel structure and contrast patterns",
+      "examples": [
+        "Traditional community asks you to: \u274c / Karaoke removes all of that: \u2713",
+        "Old model: / New model:"
+      ]
+    }
+  ],
+  "voice_fingerprints": {
+    "repeated_phrases": [
+      "Here's what [company] figured out that most [category] haven't",
+      "This isn't [obvious thing]. It's [deeper insight]",
+      "The insight:",
+      "What this tells us:",
+      "Here's the miss",
+      "That's not what I saw",
+      "The real question",
+      "Most teams would [do obvious thing]. I'd [ask deeper question]"
+    ],
+    "unique_vocabulary": [
+      "behavioral architecture",
+      "friction removal",
+      "switching costs",
+      "growth loops",
+      "compound growth",
+      "structural dependency",
+      "visible output change",
+      "capture share",
+      "second-order effects"
+    ],
+    "overall_tone": "analytical observer who challenges conventional wisdom through personal experience and behavioral insight",
+    "distinctiveness": "Combines first-person narrative with systems thinking, uses personal usage patterns as data points to reveal broader behavioral principles, consistently reframes surface metrics to expose underlying dynamics"
+  }
+}
