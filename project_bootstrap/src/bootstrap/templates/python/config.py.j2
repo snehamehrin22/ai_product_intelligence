@@ -1,10 +1,10 @@
 """Configuration from environment variables."""
 
-import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from pydantic import BaseSettings
+from pydantic import BaseModel, Field, field_validator
+from pydantic_settings import BaseSettings
 
 
 # Load .env file
@@ -15,21 +15,33 @@ class Settings(BaseSettings):
     """Application settings loaded from .env."""
 
     # Project
-    project_name: str = "{{ project_name }}"
-    environment: str = os.getenv("ENVIRONMENT", "development")
-    log_level: str = os.getenv("LOG_LEVEL", "INFO")
+    project_name: str = Field(default="{{ project_name }}", description="Project name")
+    environment: str = Field(default="development", description="Environment (development, staging, production)")
+    log_level: str = Field(default="INFO", description="Log level (DEBUG, INFO, WARNING, ERROR)")
 
     # LLM
-    anthropic_api_key: str = os.getenv("ANTHROPIC_API_KEY", "")
-    openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
+    anthropic_api_key: str = Field(default="", description="Anthropic API key")
+    openai_api_key: str = Field(default="", description="OpenAI API key")
 
     # API (if applicable)
-    api_port: int = int(os.getenv("API_PORT", "8000"))
-    api_host: str = os.getenv("API_HOST", "0.0.0.0")
+    api_port: int = Field(default=8000, ge=1, le=65535, description="API port")
+    api_host: str = Field(default="0.0.0.0", description="API host")
+
+    @field_validator("api_port", mode="before")
+    @classmethod
+    def validate_api_port(cls, v):
+        """Validate API port is in valid range."""
+        if isinstance(v, str):
+            try:
+                v = int(v)
+            except ValueError:
+                raise ValueError(f"API_PORT must be an integer, got: {v}")
+        return v
 
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        case_sensitive = False
 
 
 settings = Settings()

@@ -15,6 +15,7 @@ src/bootstrap/templates/env/default.env
 src/bootstrap/templates/gitignore/node.txt
 src/bootstrap/templates/gitignore/python.txt
 src/bootstrap/templates/python/__init__.py.j2
+src/bootstrap/templates/python/__main__.py.j2
 src/bootstrap/templates/python/config.py.j2
 src/bootstrap/templates/python/main.py.j2
 src/bootstrap/templates/python/requirements-agent.txt
@@ -22,6 +23,7 @@ src/bootstrap/templates/python/requirements-api.txt
 src/bootstrap/templates/python/requirements-base.txt
 src/bootstrap/templates/python/requirements-cli.txt
 src/bootstrap/templates/python/requirements-webapp.txt
+src/bootstrap/templates/python/schemas.py.j2
 src/bootstrap/templates/python/test_main.py.j2
 src/project_bootstrap.egg-info/PKG-INFO
 src/project_bootstrap.egg-info/SOURCES.txt

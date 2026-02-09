@@ -33,6 +33,37 @@ def init(project_path: Path | str, language: Language) -> None:
     print(f"  ✓ .gitignore")
 
 
+def auto_commit(project_path: Path | str) -> None:
+    """
+    Create initial commit with scaffolded files.
+
+    Args:
+        project_path: Path to the project directory
+    """
+    project_path = Path(project_path)
+
+    try:
+        # Stage all files
+        subprocess.run(
+            ["git", "add", "."],
+            cwd=project_path,
+            check=True,
+            capture_output=True,
+        )
+
+        # Create initial commit
+        subprocess.run(
+            ["git", "commit", "-m", "chore: initial scaffold with project-bootstrap"],
+            cwd=project_path,
+            check=True,
+            capture_output=True,
+        )
+        print(f"  ✓ initial commit")
+    except subprocess.CalledProcessError:
+        # Silently skip if commit fails (e.g., git not configured)
+        pass
+
+
 def _load_gitignore(language: Language) -> str:
     """Load .gitignore template for the language."""
     template_path = Path(__file__).parent / "templates" / "gitignore" / f"{language}.txt"

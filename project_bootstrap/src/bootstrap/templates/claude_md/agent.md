@@ -1,14 +1,25 @@
 ## Agent-Specific Patterns
 
+### Generated Files
+
+Your project includes these core files:
+
+- **`src/{{ package_name }}/schemas.py`** — Pydantic v2 models (generated)
+- **`src/{{ package_name }}/config.py`** — Settings from .env (generated)
+- **`src/{{ package_name }}/main.py`** — Entry point and logging setup (generated)
+- **`prompts/`** — Directory for prompt files (create system.txt, user_task.txt)
+
 ### Architecture Pattern
 
 Keep your agent in three layers:
 
 1. **Schemas** (`src/{{ package_name }}/schemas.py`)
-   - Define all data models with Pydantic
+   - Define all data models with Pydantic v2
    - This is the single source of truth
+   - Already created—add your models here
 
 2. **Tools** (`src/{{ package_name }}/tools.py`)
+   - Create this file for API calls and external tools
    - Pure functions that take input, call APIs, return results
    - No side effects except API calls
    - All return values must match schemas
@@ -22,22 +33,22 @@ Keep your agent in three layers:
 
 ### LLM Integration
 
-Always validate LLM output:
+Always validate LLM output with Pydantic v2:
 
 ```python
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import json
 
 class MyResponse(BaseModel):
-    decision: str
-    confidence: float
+    decision: str = Field(..., description="Decision made")
+    confidence: float = Field(..., ge=0, le=1, description="Confidence (0-1)")
 
 # Get LLM response
 response_text = client.messages.create(...)
 data = json.loads(response_text)
 
-# Validate it
-validated = MyResponse(**data)  # Throws if invalid
+# Validate it (Pydantic throws ValidationError if invalid)
+validated = MyResponse(**data)
 ```
 
 ### Prompts

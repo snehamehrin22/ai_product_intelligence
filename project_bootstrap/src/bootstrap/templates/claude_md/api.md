@@ -4,18 +4,30 @@
 
 This project uses FastAPI for HTTP APIs.
 
-```bash
-pip install fastapi uvicorn pydantic
-```
+Dependencies are in `requirements.txt`:
+- fastapi==0.104.*
+- uvicorn==0.24.*
+- pydantic==2.*
+
+### Generated Files
+
+Your project includes:
+
+- **`src/{{ package_name }}/schemas.py`** — Pydantic v2 models (create request/response schemas here)
+- **`src/{{ package_name }}/config.py`** — Settings from .env
+- **`src/{{ package_name }}/main.py`** — Edit this to create FastAPI app
+- **`pyproject.toml`** — Project configuration
 
 ### Project Structure
+
+Once you add API routes, organize like this:
 
 ```
 src/{{ package_name }}/
 ├── __init__.py
 ├── config.py           # Load .env, validate config
-├── schemas.py          # Pydantic models for requests/responses
-├── main.py             # FastAPI app setup
+├── schemas.py          # Pydantic models for requests/responses (GENERATED)
+├── main.py             # FastAPI app setup (EDIT THIS)
 └── routes/
     ├── __init__.py
     ├── health.py       # GET /health
