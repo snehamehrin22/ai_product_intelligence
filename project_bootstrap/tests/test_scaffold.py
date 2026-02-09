@@ -1,5 +1,6 @@
 """Tests for scaffold module."""
 
+import os
 import tempfile
 from pathlib import Path
 
@@ -8,10 +9,10 @@ import pytest
 from bootstrap import scaffold
 
 
-def test_create_python_agent():
+def test_create_python_agent(monkeypatch):
     """Test creating a Python agent project."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        tmpdir = Path(tmpdir)
+        monkeypatch.chdir(tmpdir)
         project_path = scaffold.create("test-agent", "agent", "python")
 
         # Check that project was created in current directory
@@ -22,10 +23,10 @@ def test_create_python_agent():
         assert (project_path / "prompts").exists()
 
 
-def test_create_node_api():
+def test_create_node_api(monkeypatch):
     """Test creating a Node.js API project."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        tmpdir = Path(tmpdir)
+        monkeypatch.chdir(tmpdir)
         project_path = scaffold.create("test-api", "api", "node")
 
         assert project_path.exists()
@@ -33,10 +34,10 @@ def test_create_node_api():
         assert (project_path / "src").exists()
 
 
-def test_create_existing_directory_fails():
+def test_create_existing_directory_fails(monkeypatch):
     """Test that creating a project in existing directory fails."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        tmpdir = Path(tmpdir)
+        monkeypatch.chdir(tmpdir)
         # Create first project
         project_path = scaffold.create("existing", "agent", "python")
 
