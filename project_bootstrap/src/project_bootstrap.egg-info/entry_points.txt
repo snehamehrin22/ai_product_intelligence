@@ -1,0 +1,2 @@
+[console_scripts]
+bootstrap = bootstrap.cli:main

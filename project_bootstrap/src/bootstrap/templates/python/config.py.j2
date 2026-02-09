@@ -1,0 +1,35 @@
+"""Configuration from environment variables."""
+
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+from pydantic import BaseSettings
+
+
+# Load .env file
+load_dotenv(Path(__file__).parent.parent.parent / ".env")
+
+
+class Settings(BaseSettings):
+    """Application settings loaded from .env."""
+
+    # Project
+    project_name: str = "{{ project_name }}"
+    environment: str = os.getenv("ENVIRONMENT", "development")
+    log_level: str = os.getenv("LOG_LEVEL", "INFO")
+
+    # LLM
+    anthropic_api_key: str = os.getenv("ANTHROPIC_API_KEY", "")
+    openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
+
+    # API (if applicable)
+    api_port: int = int(os.getenv("API_PORT", "8000"))
+    api_host: str = os.getenv("API_HOST", "0.0.0.0")
+
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+
+
+settings = Settings()

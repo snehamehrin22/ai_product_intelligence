@@ -1,0 +1,28 @@
+"""Main entry point for {{ project_name }}."""
+
+import logging
+from loguru import logger
+
+from .config import settings
+
+
+# Configure logging
+logger.remove()
+logger.add(
+    lambda msg: print(msg, end=""),
+    level=settings.log_level,
+    format="<level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan> - <level>{message}</level>",
+)
+
+
+def main():
+    """Main function."""
+    logger.info(f"Starting {settings.project_name}")
+    logger.info(f"Environment: {settings.environment}")
+
+    # TODO: Add your implementation here
+    logger.info("Application started successfully")
+
+
+if __name__ == "__main__":
+    main()

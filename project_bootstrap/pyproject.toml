@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "project-bootstrap"
+version = "0.1.0"
+description = "CLI tool to scaffold AI agent and application projects with golden templates"
+requires-python = ">=3.11"
+dependencies = [
+    "jinja2>=3.1.0",
+]
+
+[project.scripts]
+bootstrap = "bootstrap.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+[tool.setuptools]
+packages = ["bootstrap"]
+package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+bootstrap = ["templates/**/*"]
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"

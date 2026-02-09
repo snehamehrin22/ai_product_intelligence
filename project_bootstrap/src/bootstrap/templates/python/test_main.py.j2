@@ -1,0 +1,26 @@
+"""Tests for main module."""
+
+import pytest
+from {{ package_name }}.main import main
+from {{ package_name }}.config import settings
+
+
+def test_config_loads():
+    """Test that configuration loads correctly."""
+    assert settings.project_name == "{{ project_name }}"
+    assert settings.environment in ["development", "production"]
+
+
+def test_main_runs():
+    """Test that main function runs without error."""
+    # Should not raise
+    main()
+
+
+@pytest.mark.parametrize("env_level", ["DEBUG", "INFO", "WARNING"])
+def test_log_levels(env_level):
+    """Test different log levels."""
+    import os
+    os.environ["LOG_LEVEL"] = env_level
+    # Test that main still runs with different log levels
+    main()
