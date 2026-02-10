@@ -29,17 +29,16 @@ def main():
     )
 
     parser.add_argument(
-        "--type",
-        choices=["agent", "api", "cli", "webapp"],
-        default="agent",
-        help="Project type (default: agent)",
+        "--llm",
+        choices=["openai", "deepseek", "anthropic"],
+        default="openai",
+        help="LLM provider (default: openai)",
     )
 
     parser.add_argument(
-        "--lang",
-        choices=["python", "node"],
-        default="python",
-        help="Programming language (default: python)",
+        "--features",
+        help="Comma-separated features to include (e.g., pydantic,token-tracking,tests)",
+        default="pydantic,token-tracking,tests",
     )
 
     parser.add_argument(
@@ -63,27 +62,30 @@ def main():
             print(f"\n✗ Invalid project name: {error_msg}", file=sys.stderr)
             return 1
 
+        # Parse features
+        features = [f.strip() for f in args.features.split(",")]
+
         # Step 1: Create directory structure
         print(f"\nStep 1/5: Scaffolding directories...")
-        project_path = scaffold.create(args.name, args.type, args.lang)
+        project_path = scaffold.create(args.name, features)
 
         # Step 2: Initialize git
         if not args.no_git:
             print(f"\nStep 2/5: Initializing git...")
-            git.init(project_path, args.lang)
+            git.init(project_path, "python")
         else:
             print(f"\nStep 2/5: Skipping git (--no-git)")
 
         # Step 3: Set up environment
         if not args.no_venv:
             print(f"\nStep 3/5: Setting up environment...")
-            environment.setup(project_path, args.lang, args.type)
+            environment.setup(project_path, features)
         else:
             print(f"\nStep 3/5: Skipping environment setup (--no-venv)")
 
         # Step 4: Generate configs
         print(f"\nStep 4/5: Generating configuration files...")
-        configs.generate(project_path, args.name, args.type, args.lang)
+        configs.generate(project_path, args.name, args.llm, features)
 
         # Step 5: Auto-commit if git enabled
         if not args.no_git:
@@ -95,8 +97,10 @@ def main():
         # Success message
         print(f"\n✓ {args.name} ready!\n")
         print(f"  cd {args.name}")
-        print(f"  source .venv/bin/activate  # (if Python)")
+        print(f"  source .venv/bin/activate")
+        print(f"  # Add your API keys to .env")
         print(f"  pytest  # Run tests")
+        print(f"  python scripts/run_agent.py  # Run the agent")
         print(f"  code .\n")
 
         return 0

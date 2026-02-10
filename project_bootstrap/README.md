@@ -1,8 +1,8 @@
 # project-bootstrap
 
-A CLI tool to scaffold AI agent and application projects with opinionated, golden templates.
+A CLI tool to scaffold AI agent projects in seconds with opinionated, production-ready templates.
 
-Think of it as `create-react-app` but for AI agents, APIs, CLIs, and web apps.
+**Focus:** AI agents only. Web apps, APIs, and CLIs have been removed to optimize for agent development.
 
 ## Installation
 
@@ -17,17 +17,17 @@ bootstrap --help
 ## Quick Start
 
 ```bash
-# Create a Python agent project
-bootstrap my-agent --type agent --lang python
+# Create an AI agent project
+bootstrap my-agent --llm openai
 
-# Create a FastAPI API project
-bootstrap my-api --type api
+# With all features (default)
+bootstrap my-agent --llm openai --features pydantic,token-tracking,tests
 
-# Create a CLI tool
-bootstrap my-cli --type cli
+# Skip venv creation (if you're in an existing venv)
+bootstrap my-agent --llm openai --no-venv
 
-# Create a Streamlit web app
-bootstrap my-webapp --type webapp
+# Skip git initialization
+bootstrap my-agent --llm openai --no-git
 ```
 
 After creation:
@@ -35,152 +35,174 @@ After creation:
 ```bash
 cd my-agent
 source .venv/bin/activate
-pip install -r requirements.txt
-pytest
-python -m src.my_agent.main
-```
-
-## Architecture
-
-```
-project-bootstrap/
-├── src/bootstrap/
-│   ├── cli.py              # Entry point & arg parsing
-│   ├── scaffold.py         # Directory creation
-│   ├── git.py              # Git initialization
-│   ├── environment.py      # Venv & dependency setup
-│   ├── configs.py          # Config file generation
-│   └── templates/          # Golden template files
-│       ├── gitignore/
-│       ├── env/
-│       ├── claude_md/
-│       ├── python/         # Python templates (Jinja2)
-│       └── node/           # Node templates (Jinja2)
-└── tests/
-    ├── test_scaffold.py
-    └── test_cli.py
+# Add your API keys to .env
+pytest -v
+python scripts/run_agent.py --input "test input"
 ```
 
 ## What Gets Generated
 
-When you run `bootstrap my-project --type agent`, you get:
+When you run `bootstrap my-agent --llm openai`, you get:
 
 ```
-my-project/
-├── .env                         # Secrets (gitignored)
-├── .env.example                 # Template for .env
-├── .gitignore                   # Language-specific ignore rules
-├── CLAUDE.md                    # AI agent development guide
-├── requirements.txt             # Python dependencies
-├── README.md                    # Placeholder
+my-agent/
+├── .env                         # API keys (gitignored)
+├── .env.example                 # Template
+├── .gitignore                   # Python-specific ignore rules
+├── requirements.txt             # Auto-generated based on features
+├── pyproject.toml               # Project config + pytest settings
+├── README.md                    # Project overview
 │
 ├── src/
-│   └── my_project/
-│       ├── __init__.py
-│       ├── config.py            # Load .env, validate settings
-│       └── main.py              # Entry point with logging
+│   └── my_agent/
+│       ├── __init__.py          # Package exports
+│       ├── schemas.py           # Pydantic models (SINGLE SOURCE OF TRUTH)
+│       ├── utils.py             # load_prompt(), track_tokens(), log_tokens()
+│       └── main.py              # Core logic with LLM setup
+│
+├── prompts/                     # LLM prompts as .txt files (version controlled)
+│   ├── system_prompt.txt
+│   └── user_prompt.txt
+│
+├── scripts/
+│   └── run_agent.py             # Entry point with CLI args
 │
 ├── tests/
 │   ├── __init__.py
-│   ├── inputs/                  # Test data (10-15 samples)
+│   ├── inputs/                  # Test data
+│   │   ├── sample_01.txt
+│   │   └── sample_02.txt
+│   ├── outputs/                 # Results (gitignored)
 │   └── test_main.py             # Starter tests
 │
 └── logs/                        # Runtime logs (gitignored)
-    └── (empty)
-```
-
-## Project Types
-
-### `agent`
-AI agent that uses Claude API. Includes:
-- Anthropic SDK
-- Tenacity for retries
-- Loguru for observability
-- Pydantic for schemas
-
-### `api`
-FastAPI REST API. Includes:
-- FastAPI + Uvicorn
-- Pydantic validation
-- Health check endpoint
-
-### `cli`
-Command-line tool using Click. Includes:
-- Click framework
-- Argument/option parsing
-- Command groups support
-
-### `webapp`
-Streamlit web application. Includes:
-- Streamlit
-- Session state management
-- Component patterns
-
-## Language Support
-
-### Python (default)
-- Virtual environment (`.venv/`)
-- pip dependencies (`requirements.txt`)
-- Pytest configuration
-- Loguru logging
-
-### Node.js
-- npm dependencies (`package.json`)
-- TypeScript support (tsconfig.json)
-- ESM modules
-
-## Customization
-
-To customize what gets generated, edit the template files in `src/bootstrap/templates/`:
-
-- `.env` defaults: Edit `env/default.env`
-- CLAUDE.md content: Edit `claude_md/base.md` and type-specific files
-- Python defaults: Edit `python/config.py.j2` and `python/main.py.j2`
-- Dependencies: Edit `python/requirements-*.txt`
-
-## Development
-
-```bash
-# Install in editable mode with dev dependencies
-pip install -e ".[dev]"
-
-# Run tests
-pytest -v
-
-# Run with coverage
-pytest --cov=bootstrap tests/
-
-# Format code
-black src/bootstrap tests/
-
-# Lint
-ruff check src/bootstrap tests/
+    └── token_usage.jsonl        # Auto-populated by utils.py
 ```
 
 ## Features
 
-- ✅ Opinionated defaults (you'll use these patterns)
-- ✅ Template composition by project type
-- ✅ Single-command setup (venv + deps + configs)
-- ✅ Git initialization with language-specific .gitignore
-- ✅ Jinja2 template rendering for customization
-- ✅ Works with Python 3.11+
-- ✅ Tested end-to-end
+### Core (Always Included)
+- Python 3.11+ support
+- Virtual environment setup
+- `.env` file management
+- Git initialization
+- Basic project structure
 
-## Usage in CLAUDE.md
+### Optional Features (via `--features`)
 
-Add to your root CLAUDE.md:
+#### `pydantic` (default: enabled)
+- Pydantic models for validation
+- Schema-first development
+- Type safety for LLM I/O
 
-```markdown
-## New Project Setup
+#### `token-tracking` (default: enabled)
+- Automatic token usage tracking
+- JSONL logging to `logs/token_usage.jsonl`
+- Cost calculation utilities
 
-Before starting any new project:
+#### `tests` (default: enabled)
+- pytest setup
+- Sample test inputs
+- Test coverage configuration
 
-1. Run `bootstrap <project-name> --type agent --lang python`
-2. Follow the setup instructions printed by the CLI
-3. See the generated CLAUDE.md for project-specific guidelines
+## LLM Provider Support
+
+### OpenAI (--llm openai)
+- Uses `openai>=1.0.0`
+- Structured output with `response_format={"type": "json_object"}`
+- Built-in token tracking
+
+### DeepSeek (--llm deepseek)
+- Uses OpenAI SDK with custom base_url
+- Cost-effective alternative
+
+### Anthropic (--llm anthropic)
+- Uses `anthropic>=0.7.0`
+- Claude API integration
+
+## Key Patterns Included
+
+### 1. Prompt Management
+Prompts are stored as `.txt` files in `prompts/`:
+```python
+from utils import load_prompt
+
+system_prompt = load_prompt("system_prompt")
 ```
+
+### 2. Token Tracking
+Built-in utilities for tracking LLM costs:
+```python
+from utils import track_tokens, log_tokens
+
+tokens = track_tokens(response)
+log_tokens(tokens, "my_operation")
+```
+
+### 3. Pydantic Validation
+Never trust raw LLM output:
+```python
+from schemas import AgentOutput
+
+data = json.loads(llm_response)
+validated = AgentOutput(**data)  # Throws ValidationError if invalid
+```
+
+### 4. Test-Driven Development
+Sample inputs in `tests/inputs/`, run with:
+```bash
+pytest -v
+```
+
+## Development
+
+```bash
+# Install in editable mode
+cd project_bootstrap
+pip install -e .
+
+# Run tests
+pytest -v
+
+# Create a test agent
+bootstrap test-agent --llm openai --no-venv --no-git
+```
+
+## Philosophy
+
+This tool embodies lessons learned from building dozens of AI agents:
+
+1. **Prompts as files** - Version control, easy editing, non-technical collaboration
+2. **Token tracking from day 1** - You can't optimize what you don't measure
+3. **Schema-first** - Pydantic models catch LLM hallucinations early
+4. **Test inputs matter** - Diverse test cases prevent production surprises
+5. **No surprises** - Opinionated defaults that actually work
+
+## Comparison to Old Version
+
+| Feature | Old project-bootstrap | New project-bootstrap |
+|---------|----------------------|----------------------|
+| Project types | agent, api, cli, webapp | **agent only** |
+| Languages | Python, Node.js | **Python only** |
+| Template system | Jinja2 templates | **Direct Python generation** |
+| LLM support | None | **Built-in for 3 providers** |
+| Token tracking | None | **Included by default** |
+| Prompt management | None | **load_prompt() utility** |
+| Setup time | ~5 minutes | **~30 seconds** |
+
+## Future Enhancements
+
+- [ ] `--storage` flag (notion, supabase, local)
+- [ ] Pre-built schemas for common tasks (triage, summarization, extraction)
+- [ ] Token cost calculation by provider
+- [ ] LLM client wrappers (retry logic, error handling)
+- [ ] Test data generator
+- [ ] Observability dashboard
 
 ## License
 
 MIT
+
+---
+
+**Generated by the team at [ai_product_intelligence](https://github.com/yourusername/ai_product_intelligence)**

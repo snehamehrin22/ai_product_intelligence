@@ -2,14 +2,10 @@
 
 import re
 from pathlib import Path
-from typing import Literal
+from typing import Optional, Tuple, List
 
 
-ProjectType = Literal["agent", "api", "cli", "webapp"]
-Language = Literal["python", "node"]
-
-
-def validate_project_name(name: str) -> tuple[bool, str | None]:
+def validate_project_name(name: str) -> Tuple[bool, Optional[str]]:
     """
     Validate project name.
 
@@ -39,14 +35,13 @@ def validate_project_name(name: str) -> tuple[bool, str | None]:
     return True, None
 
 
-def create(name: str, project_type: ProjectType, language: Language) -> Path:
+def create(name: str, features: List[str]) -> Path:
     """
-    Create the directory structure for a new project.
+    Create the directory structure for a new AI agent project.
 
     Args:
         name: Project name (will be used as directory name)
-        project_type: Type of project (agent, api, cli, webapp)
-        language: Programming language (python, node)
+        features: List of features to include (e.g., ['pydantic', 'token-tracking', 'tests'])
 
     Returns:
         Path to the created project directory
@@ -56,23 +51,20 @@ def create(name: str, project_type: ProjectType, language: Language) -> Path:
     if project_path.exists():
         raise FileExistsError(f"Directory {name} already exists")
 
-    # Core directories
+    # Core directories for AI agent
     directories = [
         project_path,
-        project_path / "tests" / "inputs",
+        project_path / "src" / _to_package_name(name),
+        project_path / "prompts",
+        project_path / "scripts",
         project_path / "logs",
-        project_path / "data",
     ]
 
-    if language == "python":
+    # Add tests directory if tests feature is enabled
+    if "tests" in features:
         directories.extend([
-            project_path / "src" / _to_package_name(name),
-            project_path / "prompts",
-        ])
-    elif language == "node":
-        directories.extend([
-            project_path / "src",
-            project_path / "prompts",
+            project_path / "tests" / "inputs",
+            project_path / "tests" / "outputs",
         ])
 
     for directory in directories:

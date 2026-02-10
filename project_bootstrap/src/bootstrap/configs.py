@@ -1,27 +1,23 @@
 """Generate configuration files from templates."""
 
 from pathlib import Path
-from typing import Literal
-
-from jinja2 import Environment, FileSystemLoader
-
-from .scaffold import ProjectType, Language
+from typing import Union, List, Dict, Any
 
 
 def generate(
-    project_path: Path | str,
+    project_path: Union[Path, str],
     project_name: str,
-    project_type: ProjectType,
-    language: Language,
+    llm_provider: str,
+    features: List[str],
 ) -> None:
     """
-    Generate all configuration files from templates.
+    Generate all configuration files for an AI agent project.
 
     Args:
         project_path: Path to the project directory
         project_name: Name of the project
-        project_type: Type of project (agent, api, cli, webapp)
-        language: Programming language (python, node)
+        llm_provider: LLM provider (openai, deepseek, anthropic)
+        features: List of features to include
     """
     project_path = Path(project_path)
     package_name = _to_package_name(project_name)
@@ -29,178 +25,166 @@ def generate(
     context = {
         "project_name": project_name,
         "package_name": package_name,
-        "project_type": project_type,
-        "language": language,
-        "api_name": project_name.replace("-", "_"),
+        "llm_provider": llm_provider,
+        "features": features,
     }
 
-    # Setup Jinja2
-    template_dir = Path(__file__).parent / "templates"
-    jinja_env = Environment(loader=FileSystemLoader(str(template_dir)))
-
-    # Generate .env
+    # Generate core config files
     _generate_env(project_path, context)
-
-    # Generate CLAUDE.md
-    _generate_claude_md(project_path, context, template_dir)
-
-    # Generate README.md
+    _generate_gitignore(project_path)
     _generate_readme(project_path, context)
+    _generate_pyproject_toml(project_path, context)
 
-    # Generate language-specific files
-    if language == "python":
-        _generate_python_files(project_path, context, jinja_env)
-        _generate_pyproject_toml(project_path, context)
-        _generate_makefile(project_path, context, jinja_env)
+    # Generate source files
+    _generate_utils(project_path, context)
+    _generate_schemas(project_path, context)
+    _generate_main(project_path, context)
+    _generate_init(project_path, context)
 
+    # Generate scripts
+    _generate_run_script(project_path, context)
 
-def _generate_env(project_path: Path, context: dict) -> None:
-    """Generate .env file."""
-    template_path = Path(__file__).parent / "templates" / "env" / "default.env"
-    content = template_path.read_text()
+    # Generate prompts
+    _generate_prompt_templates(project_path, context)
 
-    # Simple substitution for .env (not using Jinja2 to avoid issues)
-    content = content.replace("{{ project_name }}", context["project_name"])
-
-    env_path = project_path / ".env"
-    env_path.write_text(content)
-
-    # Create .env.example
-    example_content = content.replace(context["project_name"], "my-project")
-    example_path = project_path / ".env.example"
-    example_path.write_text(example_content)
-
-    print(f"  ✓ .env + .env.example")
+    # Generate tests if feature enabled
+    if "tests" in features:
+        _generate_tests(project_path, context)
 
 
-def _generate_claude_md(
-    project_path: Path,
-    context: dict,
-    template_dir: Path,
-) -> None:
-    """Generate CLAUDE.md from templates."""
-    base_path = template_dir / "claude_md" / "base.md"
-    base_content = base_path.read_text()
+def _generate_env(project_path: Path, context: Dict[str, Any]) -> None:
+    """Generate .env and .env.example files."""
+    env_content = """# LLM API Keys
+# Get your keys from:
+# - OpenAI: https://platform.openai.com/api-keys
+# - Anthropic: https://console.anthropic.com/settings/keys
+# - DeepSeek: https://platform.deepseek.com/
 
-    # Substitute base template
-    base_content = base_content.replace("{{ project_name }}", context["project_name"])
-    base_content = base_content.replace("{{ package_name }}", context["package_name"])
+OPENAI_API_KEY=sk-proj-your-key-here
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+DEEPSEEK_API_KEY=sk-your-key-here
 
-    # Add type-specific additions
-    type_addon_path = template_dir / "claude_md" / f"{context['project_type']}.md"
-    if type_addon_path.exists():
-        addon_content = type_addon_path.read_text()
-        addon_content = addon_content.replace("{{ project_name }}", context["project_name"])
-        addon_content = addon_content.replace("{{ package_name }}", context["package_name"])
-        addon_content = addon_content.replace("{{ api_name }}", context["api_name"])
-        base_content += "\n\n" + addon_content
+# Project Settings
+LOG_LEVEL=INFO
 
-    claude_md_path = project_path / "CLAUDE.md"
-    claude_md_path.write_text(base_content)
-    print(f"  ✓ CLAUDE.md")
+# Optional: Track costs in a separate file
+# COST_LOG_FILE=logs/costs.jsonl
+"""
+
+    (project_path / ".env").write_text(env_content)
+    (project_path / ".env.example").write_text(env_content)
+    print(f"  ✓ .env + .env.example (with all LLM provider keys)")
 
 
-def _generate_python_files(project_path: Path, context: dict, jinja_env) -> None:
-    """Generate Python source files."""
-    package_path = project_path / "src" / context["package_name"]
-    test_path = project_path / "tests"
+def _generate_gitignore(project_path: Path) -> None:
+    """Generate .gitignore file."""
+    gitignore_content = """# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
 
-    # Generate __init__.py
-    init_template = jinja_env.get_template("python/__init__.py.j2")
-    init_content = init_template.render(**context)
-    (package_path / "__init__.py").write_text(init_content)
+# Environment
+.env
 
-    # Generate __main__.py
-    main_module_template = jinja_env.get_template("python/__main__.py.j2")
-    main_module_content = main_module_template.render(**context)
-    (package_path / "__main__.py").write_text(main_module_content)
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
-    # Generate config.py
-    config_template = jinja_env.get_template("python/config.py.j2")
-    config_content = config_template.render(**context)
-    (package_path / "config.py").write_text(config_content)
+# Logs and data
+logs/
+data/
+*.log
 
-    # Generate schemas.py
-    schemas_template = jinja_env.get_template("python/schemas.py.j2")
-    schemas_content = schemas_template.render(**context)
-    (package_path / "schemas.py").write_text(schemas_content)
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+tests/outputs/
 
-    # Generate main.py
-    main_template = jinja_env.get_template("python/main.py.j2")
-    main_content = main_template.render(**context)
-    (package_path / "main.py").write_text(main_content)
-
-    # Generate test_main.py
-    test_template = jinja_env.get_template("python/test_main.py.j2")
-    test_content = test_template.render(**context)
-    (test_path / "test_main.py").write_text(test_content)
-
-    # Generate tests/__init__.py
-    (test_path / "__init__.py").write_text("")
-
-    print(f"  ✓ src/{context['package_name']}/__init__.py")
-    print(f"  ✓ src/{context['package_name']}/__main__.py")
-    print(f"  ✓ src/{context['package_name']}/config.py")
-    print(f"  ✓ src/{context['package_name']}/schemas.py")
-    print(f"  ✓ src/{context['package_name']}/main.py")
-    print(f"  ✓ tests/test_main.py")
+# OS
+.DS_Store
+Thumbs.db
+"""
+    (project_path / ".gitignore").write_text(gitignore_content)
+    print(f"  ✓ .gitignore")
 
 
-def _generate_readme(project_path: Path, context: dict) -> None:
+def _generate_readme(project_path: Path, context: Dict[str, Any]) -> None:
     """Generate README.md."""
     readme_content = f"""# {context['project_name']}
 
-Generated with [project-bootstrap](https://github.com/yourusername/project-bootstrap).
+AI agent project generated with project-bootstrap.
 
-## Getting Started
-
-### Setup
+## Setup
 
 ```bash
 # Activate virtual environment
 source .venv/bin/activate
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Run tests
-pytest -v
+# Add your API keys to .env
+# Then run:
+python scripts/run_agent.py
 ```
 
-### Development
+## Development
 
-See `CLAUDE.md` for detailed development guidelines for your project type.
+```bash
+# Run tests
+pytest -v
 
-## Project Type: {context['project_type'].upper()}
+# Run with custom input
+python scripts/run_agent.py --input "your text here"
+```
 
-This is a {context['project_type']} project. Review `CLAUDE.md` for patterns and best practices specific to this type.
+## Project Structure
+
+```
+{context['project_name']}/
+├── .env                    # API keys (gitignored)
+├── src/{context['package_name']}/
+│   ├── __init__.py
+│   ├── schemas.py          # Pydantic models
+│   ├── utils.py            # Utilities (load_prompt, token_tracking, etc.)
+│   └── main.py             # Main logic
+├── prompts/                # LLM prompts as .txt files
+│   ├── system_prompt.txt
+│   └── user_prompt.txt
+├── scripts/
+│   └── run_agent.py        # Entry point
+├── tests/
+│   ├── inputs/             # Test data
+│   └── outputs/            # Results (gitignored)
+└── logs/                   # Runtime logs (gitignored)
+```
 
 ## Testing
 
-Place test inputs in `tests/inputs/` and run:
+Add test inputs to `tests/inputs/` and run:
 
 ```bash
 pytest -v
 ```
 
-## Next Steps
-
-1. Read `CLAUDE.md` for project-specific patterns
-2. Customize this README with your project details
-3. Start implementing your project
-4. Run tests frequently: `pytest -v`
-
 ---
 
-**Generated by project-bootstrap v0.2.0**
+Generated by project-bootstrap
 """
-    readme_path = project_path / "README.md"
-    readme_path.write_text(readme_content)
+    (project_path / "README.md").write_text(readme_content)
     print(f"  ✓ README.md")
 
 
-def _generate_pyproject_toml(project_path: Path, context: dict) -> None:
-    """Generate pyproject.toml for Python projects."""
+def _generate_pyproject_toml(project_path: Path, context: Dict[str, Any]) -> None:
+    """Generate pyproject.toml."""
     pyproject_content = f"""[build-system]
 requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
@@ -208,9 +192,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "{context['package_name']}"
 version = "0.1.0"
-description = "{context['project_name']} project bootstrapped with project-bootstrap"
+description = "{context['project_name']} - AI agent"
 requires-python = ">=3.11"
-dependencies = []
 
 [tool.setuptools]
 packages = ["{context['package_name']}"]
@@ -229,25 +212,441 @@ line-length = 100
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-
-[tool.mypy]
-python_version = "3.11"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = false
 """
-    pyproject_path = project_path / "pyproject.toml"
-    pyproject_path.write_text(pyproject_content)
+    (project_path / "pyproject.toml").write_text(pyproject_content)
     print(f"  ✓ pyproject.toml")
 
 
-def _generate_makefile(project_path: Path, context: dict, jinja_env) -> None:
-    """Generate Makefile for Python projects."""
-    makefile_template = jinja_env.get_template("python/Makefile.j2")
-    makefile_content = makefile_template.render(**context)
-    makefile_path = project_path / "Makefile"
-    makefile_path.write_text(makefile_content)
-    print(f"  ✓ Makefile")
+def _generate_utils(project_path: Path, context: Dict[str, Any]) -> None:
+    """Generate utils.py with load_prompt, token tracking, and cost calculation."""
+    package_path = project_path / "src" / context['package_name']
+
+    utils_content = '''"""Utility functions for the agent."""
+
+from pathlib import Path
+from typing import Any, Dict, Literal, TypedDict
+from datetime import datetime
+import json
+
+
+# ============================================================================
+# Prompt Management
+# ============================================================================
+
+def load_prompt(prompt_name: str) -> str:
+    """
+    Load prompt from prompts/ folder.
+
+    Args:
+        prompt_name: Name of the prompt file (without .txt extension)
+
+    Returns:
+        Prompt text
+    """
+    prompt_path = Path(__file__).parent.parent.parent / "prompts" / f"{prompt_name}.txt"
+    if not prompt_path.exists():
+        raise FileNotFoundError(f"Prompt not found: {prompt_path}")
+    return prompt_path.read_text(encoding="utf-8")
+
+
+# ============================================================================
+# Token Tracking
+# ============================================================================
+
+def track_tokens(response: Any) -> Dict[str, int]:
+    """
+    Extract token usage from LLM response.
+
+    Args:
+        response: Response object from OpenAI/Anthropic API
+
+    Returns:
+        Dictionary with token counts
+    """
+    if hasattr(response, "usage"):
+        return {
+            "prompt_tokens": response.usage.prompt_tokens,
+            "completion_tokens": response.usage.completion_tokens,
+            "total_tokens": response.usage.total_tokens,
+        }
+    return {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+
+
+def log_tokens(tokens: Dict[str, int], operation: str, log_dir: Path = None) -> None:
+    """
+    Log token usage to file.
+
+    Args:
+        tokens: Token usage dictionary
+        operation: Name of the operation
+        log_dir: Directory to save logs (default: logs/)
+    """
+    if log_dir is None:
+        log_dir = Path(__file__).parent.parent.parent / "logs"
+
+    log_dir.mkdir(exist_ok=True)
+
+    timestamp = datetime.now().isoformat()
+    log_entry = {
+        "timestamp": timestamp,
+        "operation": operation,
+        **tokens,
+    }
+
+    log_file = log_dir / "token_usage.jsonl"
+    with open(log_file, "a") as f:
+        f.write(json.dumps(log_entry) + "\\n")
+
+
+# ============================================================================
+# Token Cost Calculator
+# Pricing data as of February 2025
+# ============================================================================
+
+class TokenUsage(TypedDict):
+    """Token usage from an LLM response."""
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+
+
+class CostBreakdown(TypedDict):
+    """Cost breakdown for an LLM call."""
+    prompt_cost: float
+    completion_cost: float
+    total_cost: float
+    provider: str
+    model: str
+    tokens: TokenUsage
+
+
+# Pricing in USD per 1 million tokens
+PRICING = {
+    "openai": {
+        "gpt-4o": {"input": 2.50, "output": 10.00},
+        "gpt-4": {"input": 30.00, "output": 60.00},
+        "gpt-4-turbo": {"input": 10.00, "output": 30.00},
+        "gpt-3.5-turbo": {"input": 0.50, "output": 1.50},
+    },
+    "anthropic": {
+        "claude-3-5-sonnet-20241022": {"input": 3.00, "output": 15.00},
+        "claude-3-opus-20240229": {"input": 15.00, "output": 75.00},
+        "claude-3-sonnet-20240229": {"input": 3.00, "output": 15.00},
+        "claude-3-haiku-20240307": {"input": 0.25, "output": 1.25},
+    },
+    "deepseek": {
+        "deepseek-chat": {"input": 0.27, "output": 1.10},
+        "deepseek-coder": {"input": 0.27, "output": 1.10},
+    },
+}
+
+
+def calculate_cost(
+    provider: Literal["openai", "anthropic", "deepseek"],
+    model: str,
+    tokens: TokenUsage,
+) -> CostBreakdown:
+    """
+    Calculate cost for an LLM call based on token usage.
+
+    Args:
+        provider: LLM provider name (openai, anthropic, deepseek)
+        model: Model name (e.g., "gpt-4o", "claude-3-5-sonnet-20241022")
+        tokens: Token usage with prompt_tokens and completion_tokens
+
+    Returns:
+        CostBreakdown with prompt_cost, completion_cost, and total_cost in USD
+
+    Example:
+        >>> tokens = track_tokens(response)
+        >>> cost = calculate_cost("openai", "gpt-4o", tokens)
+        >>> print(f"Cost: ${cost[\\'total_cost\\']:.4f}")
+    """
+    if provider not in PRICING:
+        available = ", ".join(PRICING.keys())
+        raise ValueError(f"Unknown provider: {provider}. Available: {available}")
+
+    if model not in PRICING[provider]:
+        available = ", ".join(PRICING[provider].keys())
+        raise ValueError(f"Unknown model: {model} for {provider}. Available: {available}")
+
+    pricing = PRICING[provider][model]
+    prompt_cost = (tokens["prompt_tokens"] / 1_000_000) * pricing["input"]
+    completion_cost = (tokens["completion_tokens"] / 1_000_000) * pricing["output"]
+
+    return CostBreakdown(
+        prompt_cost=prompt_cost,
+        completion_cost=completion_cost,
+        total_cost=prompt_cost + completion_cost,
+        provider=provider,
+        model=model,
+        tokens=tokens,
+    )
+
+
+# ============================================================================
+# Output Management
+# ============================================================================
+
+def save_output(data: Any, name: str, output_dir: Path = None) -> Path:
+    """
+    Save output data to file with timestamp.
+
+    Args:
+        data: Data to save (will be JSON serialized)
+        name: Base name for the file
+        output_dir: Directory to save outputs (default: tests/outputs/)
+
+    Returns:
+        Path to saved file
+    """
+    if output_dir is None:
+        output_dir = Path(__file__).parent.parent.parent / "tests" / "outputs"
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_file = output_dir / f"{name}_{timestamp}.json"
+
+    with open(output_file, "w") as f:
+        json.dump(data, f, indent=2)
+
+    return output_file
+'''
+
+    (package_path / "utils.py").write_text(utils_content)
+    print(f"  ✓ src/{context['package_name']}/utils.py (with token cost calculator)")
+
+
+def _generate_schemas(project_path: Path, context: Dict[str, Any]) -> None:
+    """Generate schemas.py with Pydantic models."""
+    package_path = project_path / "src" / context['package_name']
+
+    schemas_content = '''"""Pydantic schemas for the agent."""
+
+from pydantic import BaseModel, Field
+from typing import List, Optional
+
+
+class AgentInput(BaseModel):
+    """Input to the agent."""
+    text: str = Field(..., min_length=1, description="Input text to process")
+
+
+class AgentOutput(BaseModel):
+    """Output from the agent."""
+    result: str = Field(..., description="Processed result")
+    confidence: float = Field(0.0, ge=0.0, le=1.0, description="Confidence score")
+
+
+# Add your custom schemas below
+'''
+
+    (package_path / "schemas.py").write_text(schemas_content)
+    print(f"  ✓ src/{context['package_name']}/schemas.py")
+
+
+def _generate_main(project_path: Path, context: Dict[str, Any]) -> None:
+    """Generate main.py with core logic."""
+    package_path = project_path / "src" / context['package_name']
+
+    llm_setup = ""
+    if context['llm_provider'] == "openai":
+        llm_setup = '''    from openai import OpenAI
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        response_format={"type": "json_object"},
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        temperature=0.2,
+        max_tokens=4000
+    )
+
+    result = response.choices[0].message.content'''
+
+    main_content = f'''"""Main agent logic."""
+
+import os
+import json
+from dotenv import load_dotenv
+from .schemas import AgentInput, AgentOutput
+from .utils import load_prompt, track_tokens, log_tokens, calculate_cost
+
+load_dotenv()
+
+
+def process(input_data: AgentInput) -> AgentOutput:
+    """
+    Process input through the agent.
+
+    Args:
+        input_data: Validated input
+
+    Returns:
+        Validated output
+    """
+    # Load prompts
+    system_prompt = load_prompt("system_prompt")
+    user_prompt_template = load_prompt("user_prompt")
+
+    # Format user prompt
+    user_prompt = user_prompt_template.replace("{{{{input}}}}", input_data.text)
+
+    # Call LLM
+{llm_setup}
+
+    # Track tokens and calculate cost
+    tokens = track_tokens(response)
+    log_tokens(tokens, "process")
+
+    cost = calculate_cost("{context['llm_provider']}", "gpt-4o", tokens)
+    print(f"💰 Cost: ${{cost['total_cost']:.4f}} ({{tokens['total_tokens']}} tokens)")
+
+    # Parse and validate response
+    data = json.loads(result)
+    output = AgentOutput(**data)
+
+    return output
+'''
+
+    (package_path / "main.py").write_text(main_content)
+    print(f"  ✓ src/{context['package_name']}/main.py")
+
+
+def _generate_init(project_path: Path, context: Dict[str, Any]) -> None:
+    """Generate __init__.py."""
+    package_path = project_path / "src" / context['package_name']
+
+    init_content = f'''"""{ context['project_name'] } - AI agent."""
+
+__version__ = "0.1.0"
+
+from .main import process
+from .schemas import AgentInput, AgentOutput
+
+__all__ = ["process", "AgentInput", "AgentOutput"]
+'''
+
+    (package_path / "__init__.py").write_text(init_content)
+    print(f"  ✓ src/{context['package_name']}/__init__.py")
+
+
+def _generate_run_script(project_path: Path, context: Dict[str, Any]) -> None:
+    """Generate scripts/run_agent.py entry point."""
+    scripts_path = project_path / "scripts"
+
+    run_script_content = f'''#!/usr/bin/env python3
+"""Run the agent."""
+
+import sys
+import argparse
+from pathlib import Path
+
+# Add src to path
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+from {context['package_name']} import process, AgentInput
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Run the agent")
+    parser.add_argument("--input", type=str, help="Input text")
+    parser.add_argument("--file", type=Path, help="Input file")
+    args = parser.parse_args()
+
+    if args.file:
+        input_text = args.file.read_text()
+    elif args.input:
+        input_text = args.input
+    else:
+        print("Error: Provide --input or --file")
+        return 1
+
+    # Process
+    agent_input = AgentInput(text=input_text)
+    result = process(agent_input)
+
+    print(f"\\nResult: {{result.result}}")
+    print(f"Confidence: {{result.confidence}}")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+'''
+
+    (scripts_path / "run_agent.py").write_text(run_script_content)
+    (scripts_path / "run_agent.py").chmod(0o755)
+    print(f"  ✓ scripts/run_agent.py")
+
+
+def _generate_prompt_templates(project_path: Path, context: Dict[str, Any]) -> None:
+    """Generate prompt template files."""
+    prompts_path = project_path / "prompts"
+
+    system_prompt = """You are an AI agent that processes text and returns structured JSON.
+
+Always respond with valid JSON in this format:
+{
+  "result": "your processed result here",
+  "confidence": 0.95
+}
+
+Be concise and accurate."""
+
+    user_prompt = """Process the following text:
+
+{{input}}
+
+Return your analysis as JSON."""
+
+    (prompts_path / "system_prompt.txt").write_text(system_prompt)
+    (prompts_path / "user_prompt.txt").write_text(user_prompt)
+    print(f"  ✓ prompts/system_prompt.txt")
+    print(f"  ✓ prompts/user_prompt.txt")
+
+
+def _generate_tests(project_path: Path, context: Dict[str, Any]) -> None:
+    """Generate test files."""
+    tests_path = project_path / "tests"
+
+    test_main_content = f'''"""Tests for the agent."""
+
+import pytest
+from {context['package_name']} import process, AgentInput, AgentOutput
+
+
+def test_basic_input():
+    """Test basic input processing."""
+    input_data = AgentInput(text="Hello, world!")
+    result = process(input_data)
+
+    assert isinstance(result, AgentOutput)
+    assert result.result
+    assert 0.0 <= result.confidence <= 1.0
+
+
+def test_empty_input_fails():
+    """Test that empty input fails validation."""
+    with pytest.raises(Exception):
+        AgentInput(text="")
+'''
+
+    (tests_path / "test_main.py").write_text(test_main_content)
+    (tests_path / "__init__.py").write_text("")
+
+    # Create sample test inputs
+    (tests_path / "inputs" / "sample_01.txt").write_text("This is a test input.")
+    (tests_path / "inputs" / "sample_02.txt").write_text("Another test case.")
+
+    print(f"  ✓ tests/test_main.py")
+    print(f"  ✓ tests/inputs/sample_01.txt")
+    print(f"  ✓ tests/inputs/sample_02.txt")
 
 
 def _to_package_name(name: str) -> str:

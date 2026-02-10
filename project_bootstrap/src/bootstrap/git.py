@@ -2,18 +2,16 @@
 
 import subprocess
 from pathlib import Path
-from typing import Literal
-
-from .scaffold import ProjectType, Language
+from typing import Union
 
 
-def init(project_path: Path | str, language: Language) -> None:
+def init(project_path: Union[Path, str], language: str) -> None:
     """
-    Initialize git repository and create .gitignore.
+    Initialize git repository (gitignore handled by configs.py now).
 
     Args:
         project_path: Path to the project directory
-        language: Programming language (python, node)
+        language: Programming language (always python for AI agents)
     """
     project_path = Path(project_path)
 
@@ -26,14 +24,8 @@ def init(project_path: Path | str, language: Language) -> None:
     )
     print(f"  ✓ git init")
 
-    # Create .gitignore
-    gitignore_content = _load_gitignore(language)
-    gitignore_path = project_path / ".gitignore"
-    gitignore_path.write_text(gitignore_content)
-    print(f"  ✓ .gitignore")
 
-
-def auto_commit(project_path: Path | str) -> None:
+def auto_commit(project_path: Union[Path, str]) -> None:
     """
     Create initial commit with scaffolded files.
 
@@ -62,9 +54,3 @@ def auto_commit(project_path: Path | str) -> None:
     except subprocess.CalledProcessError:
         # Silently skip if commit fails (e.g., git not configured)
         pass
-
-
-def _load_gitignore(language: Language) -> str:
-    """Load .gitignore template for the language."""
-    template_path = Path(__file__).parent / "templates" / "gitignore" / f"{language}.txt"
-    return template_path.read_text()

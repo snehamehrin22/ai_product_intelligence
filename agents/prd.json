@@ -1,0 +1,79 @@
+{
+  "projectName": "AI Agent Utilities Library",
+  "description": "Shared utilities and tools for building AI agents quickly and consistently",
+  "version": "0.1.0",
+  "branchName": "main",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Token Cost Calculator",
+      "description": "Build a utility that calculates costs for different LLM providers based on token usage",
+      "priority": 1,
+      "passes": true,
+      "acceptanceCriteria": [
+        "Supports OpenAI (GPT-4, GPT-4o, GPT-3.5-turbo)",
+        "Supports Anthropic (Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku)",
+        "Supports DeepSeek",
+        "Returns cost in USD with breakdown (prompt_cost, completion_cost, total_cost)",
+        "Has tests with known token counts and expected costs",
+        "Pricing data is up-to-date as of February 2025"
+      ],
+      "technicalNotes": "Create in src/agent_utils/token_calculator.py with pricing constants and calculate_cost() function"
+    },
+    {
+      "id": "US-002",
+      "title": "LLM Client Wrapper",
+      "description": "Unified client interface for OpenAI, Anthropic, and DeepSeek with retry logic",
+      "priority": 2,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Single interface for all providers",
+        "Automatic retry with exponential backoff",
+        "Token tracking built-in",
+        "Cost tracking built-in",
+        "Error handling with meaningful messages"
+      ],
+      "technicalNotes": "Create in src/agent_utils/llm_client.py with UnifiedLLMClient class"
+    },
+    {
+      "id": "US-003",
+      "title": "Pydantic Validation Helpers",
+      "description": "Helper functions for common Pydantic validation patterns with LLM outputs",
+      "priority": 3,
+      "passes": false,
+      "acceptanceCriteria": [
+        "validate_llm_output() decorator that auto-retries on validation failure",
+        "extract_json() function that handles wrapped JSON responses",
+        "Common base schemas for typical agent responses",
+        "Has tests showing retry behavior"
+      ],
+      "technicalNotes": "Create in src/agent_utils/validation.py"
+    },
+    {
+      "id": "US-004",
+      "title": "Prompt Template Manager",
+      "description": "Advanced prompt management with variable substitution and versioning",
+      "priority": 4,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Load prompts from files with variable substitution",
+        "Support prompt versions (system_prompt_v1.txt, system_prompt_v2.txt)",
+        "Track which prompt version was used for each LLM call",
+        "A/B testing support"
+      ],
+      "technicalNotes": "Create in src/agent_utils/prompts.py"
+    }
+  ],
+  "technicalStack": {
+    "language": "Python 3.11+",
+    "dependencies": [
+      "openai>=1.0.0",
+      "anthropic>=0.7.0",
+      "pydantic>=2.0.0",
+      "python-dotenv>=1.0.0",
+      "tenacity>=8.0.0",
+      "loguru>=0.7.0"
+    ],
+    "testing": "pytest"
+  }
+}
