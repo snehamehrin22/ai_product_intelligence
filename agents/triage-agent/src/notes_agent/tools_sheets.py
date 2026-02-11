@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Optional
 import gspread
 from google.oauth2.service_account import Credentials
-from .schemas import TriageItem
+from .schemas import TriageItem, TriageEvaluation
 import os
 
 
@@ -218,3 +218,118 @@ def append_to_sheet(
 
     except Exception as e:
         raise ValueError(f"Failed to append to Google Sheet: {e}")
+
+
+def write_evaluation_to_sheet(
+    evaluation: TriageEvaluation,
+    sheet_id: str,
+    worksheet_name: str = "Evaluation"
+) -> str:
+    """
+    Write evaluation results to a Google Sheet.
+
+    Args:
+        evaluation: TriageEvaluation object
+        sheet_id: Google Sheet ID (from URL)
+        worksheet_name: Name of the worksheet/tab (default: "Evaluation")
+
+    Returns:
+        URL of the Google Sheet
+    """
+    client = get_sheets_client()
+
+    try:
+        sheet = client.open_by_key(sheet_id)
+
+        # Get or create worksheet
+        try:
+            worksheet = sheet.worksheet(worksheet_name)
+            worksheet.clear()  # Clear existing evaluation
+        except gspread.WorksheetNotFound:
+            worksheet = sheet.add_worksheet(title=worksheet_name, rows=100, cols=10)
+
+        # Header
+        headers = [
+            'Prompt Version',
+            'Overall Score',
+            'Num Items',
+            'Recommendation',
+            'Strengths',
+            'Weaknesses'
+        ]
+
+        # Summary row
+        summary_row = [
+            evaluation.prompt_version,
+            f"{evaluation.overall_score:.2f}",
+            str(evaluation.num_items),
+            evaluation.recommendation,
+            evaluation.strengths,
+            evaluation.weaknesses
+        ]
+
+        # Per-item headers
+        item_headers = [
+            'Item ID',
+            'Completeness',
+            'Classification',
+            'Granularity',
+            'Tag Quality',
+            'Niche Signal',
+            'Publishable',
+            'Reasoning'
+        ]
+
+        # Per-item rows
+        item_rows = []
+        for item_eval in evaluation.item_evaluations:
+            item_rows.append([
+                item_eval.item_id,
+                item_eval.completeness,
+                item_eval.classification_accuracy,
+                item_eval.granularity,
+                item_eval.tag_quality,
+                item_eval.niche_signal_accuracy,
+                item_eval.publishability_accuracy,
+                item_eval.reasoning
+            ])
+
+        # Combine all rows
+        all_rows = [
+            headers,
+            summary_row,
+            [],  # Empty row
+            item_headers
+        ] + item_rows
+
+        # Write to sheet
+        worksheet.update('A1', all_rows)
+
+        # Format headers (bold)
+        worksheet.format('A1:F1', {
+            'textFormat': {'bold': True},
+            'backgroundColor': {'red': 0.9, 'green': 0.9, 'blue': 0.9}
+        })
+        worksheet.format('A4:H4', {
+            'textFormat': {'bold': True},
+            'backgroundColor': {'red': 0.9, 'green': 0.9, 'blue': 0.9}
+        })
+
+        # Highlight overall score
+        score_color = {
+            'red': 0.8 if evaluation.overall_score < 3 else 0.6 if evaluation.overall_score < 4 else 0.8,
+            'green': 0.8 if evaluation.overall_score >= 4 else 0.6,
+            'blue': 0.6
+        }
+        worksheet.format('B2', {'backgroundColor': score_color, 'textFormat': {'bold': True}})
+
+        # Auto-resize columns
+        worksheet.columns_auto_resize(0, len(headers) - 1)
+
+        print(f"✓ Wrote evaluation to '{sheet.title}' → '{worksheet_name}'")
+        print(f"  URL: {sheet.url}")
+
+        return sheet.url
+
+    except Exception as e:
+        raise ValueError(f"Failed to write evaluation to Google Sheet: {e}")

@@ -63,3 +63,31 @@ class BrainDump(BaseModel):
     created_time: datetime = Field(..., description="When created")
     content: str = Field(..., min_length=1, description="Raw text content")
     source_type: str = Field(default="manual", description="voice_note | journal | manual")
+
+
+# ===== EVALUATION =====
+
+class ItemEvaluation(BaseModel):
+    """Evaluation of a single triage item."""
+
+    item_id: str = Field(..., description="ID of the item being evaluated")
+    completeness: int = Field(..., ge=1, le=5, description="Did it extract all meaningful content? (1-5)")
+    classification_accuracy: int = Field(..., ge=1, le=5, description="Are type/domain correct? (1-5)")
+    granularity: int = Field(..., ge=1, le=5, description="Right level of detail? (1-5)")
+    tag_quality: int = Field(..., ge=1, le=5, description="Relevant, specific keywords? (1-5)")
+    niche_signal_accuracy: int = Field(..., ge=1, le=5, description="Correct behavioral pattern assessment? (1-5)")
+    publishability_accuracy: int = Field(..., ge=1, le=5, description="Correct content potential assessment? (1-5)")
+    reasoning: str = Field(..., description="Brief explanation of scores")
+
+
+class TriageEvaluation(BaseModel):
+    """Overall evaluation of a triage run (multiple items)."""
+
+    prompt_version: str = Field(..., description="Identifier for the prompt (e.g., 'v1', 'v2')")
+    input_text: str = Field(..., description="Original input text")
+    num_items: int = Field(..., description="Number of items extracted")
+    item_evaluations: List[ItemEvaluation] = Field(..., description="Per-item evaluations")
+    overall_score: float = Field(..., ge=0.0, le=5.0, description="Average score across all dimensions")
+    strengths: str = Field(..., description="What this prompt does well")
+    weaknesses: str = Field(..., description="What this prompt struggles with")
+    recommendation: str = Field(..., description="Keep, revise, or discard")
