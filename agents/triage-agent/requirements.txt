@@ -19,3 +19,7 @@ jupyter>=1.0.0
 
 # Data / analysis
 numpy>=1.26.0
+
+# Google Sheets integration
+gspread>=6.0.0
+google-auth>=2.0.0

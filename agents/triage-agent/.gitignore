@@ -34,3 +34,6 @@ logs/*.log
 
 # Project specific
 data/temp/
+
+# Credentials (NEVER commit)
+config/google_service_account.json
