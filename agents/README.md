@@ -4,7 +4,7 @@ This folder contains all AI agents built for various use cases.
 
 ## Agents
 
-### 1. notes-agent
+### 1. journal-classifier
 **Purpose:** Automatic journal classification system
 - Processes Notion journal entries
 - Splits text into cognitive blocks
@@ -25,7 +25,7 @@ This folder contains all AI agents built for various use cases.
 
 ---
 
-### 3. ai_content_intelligence
+### 3. carousel-generator
 **Purpose:** Content creation pipeline for carousels
 - Transforms product research into LinkedIn/Instagram carousels
 - Two-stage AI generation (Claude for patterns, ChatGPT for prose)
@@ -35,7 +35,7 @@ This folder contains all AI agents built for various use cases.
 
 ---
 
-### 4. app_analysis_system
+### 4. app-analyzer
 **Purpose:** Deep app case studies
 - Analyzes apps with bi-directional Knowledge Brain connection
 - Generates comprehensive case studies

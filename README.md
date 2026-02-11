@@ -7,11 +7,11 @@ A collection of AI agents, shared utilities, and infrastructure for product inte
 ```
 ai_product_intelligence/
 ├── agents/                    # AI agent projects
-│   ├── notes-agent           # Journal classification (Notion → Supabase)
+│   ├── journal-classifier    # Journal classification (Notion → Supabase)
 │   ├── reddit_sentiment_analyzer  # Brand sentiment from Reddit
-│   ├── ai_content_intelligence    # Content carousel generation
-│   ├── app_analysis_system        # Deep app case studies
-│   └── knowledge_brain            # Multi-disciplinary thinking system
+│   ├── carousel-generator    # Content carousel generation
+│   ├── app-analyzer          # Deep app case studies
+│   └── knowledge_brain       # Multi-disciplinary thinking system
 │
 ├── shared/                    # Reusable utilities
 │   ├── agent_utils           # Token calculator, LLM wrappers, validation
@@ -33,7 +33,7 @@ ai_product_intelligence/
 
 ```bash
 # Navigate to specific agent
-cd agents/notes-agent
+cd agents/journal-classifier
 
 # Setup
 python3 -m venv .venv
@@ -139,8 +139,8 @@ From retros (see `~/.claude/retros/`):
 ## Active Projects
 
 **Production:**
-- notes-agent (journal classification)
-- ai_content_intelligence (carousel generation)
+- journal-classifier (journal classification)
+- carousel-generator (carousel generation)
 
 **Development:**
 - Client acquisition pipeline (lead scoring)
