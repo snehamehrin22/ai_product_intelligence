@@ -37,3 +37,7 @@ data/temp/
 
 # Credentials (NEVER commit)
 config/google_service_account.json
+
+# Sensitive test data (NEVER commit)
+tests/inputs/*.txt
+tests/inputs/*.json
