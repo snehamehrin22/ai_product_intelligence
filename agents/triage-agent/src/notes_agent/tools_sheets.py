@@ -52,7 +52,8 @@ def write_triage_items_to_sheet(
     items: List[TriageItem],
     sheet_id: str,
     worksheet_name: str = "Sheet1",
-    clear_existing: bool = False
+    clear_existing: bool = False,
+    prompt_version: Optional[str] = None
 ) -> str:
     """
     Write triage items to a Google Sheet.
@@ -62,6 +63,7 @@ def write_triage_items_to_sheet(
         sheet_id: Google Sheet ID (from URL)
         worksheet_name: Name of the worksheet/tab (default: "Sheet1")
         clear_existing: If True, clear existing data before writing
+        prompt_version: Optional label for which prompt was used (e.g., "prompt1", "v2.3")
 
     Returns:
         URL of the Google Sheet
@@ -90,6 +92,12 @@ def write_triage_items_to_sheet(
         if clear_existing:
             worksheet.clear()
 
+        # Add metadata row if prompt version specified
+        rows = []
+        if prompt_version:
+            rows.append(['Prompt Version:', prompt_version])
+            rows.append([])  # Empty row
+
         # Prepare header row
         headers = [
             'ID',
@@ -104,7 +112,7 @@ def write_triage_items_to_sheet(
         ]
 
         # Prepare data rows
-        rows = [headers]
+        rows.append(headers)
         for item in items:
             rows.append([
                 item.id,
@@ -121,11 +129,24 @@ def write_triage_items_to_sheet(
         # Write to sheet
         worksheet.update('A1', rows)
 
-        # Format header row (bold)
-        worksheet.format('A1:I1', {
-            'textFormat': {'bold': True},
-            'backgroundColor': {'red': 0.9, 'green': 0.9, 'blue': 0.9}
-        })
+        # Format headers and metadata
+        if prompt_version:
+            # Format prompt version row (bold, highlighted)
+            worksheet.format('A1:B1', {
+                'textFormat': {'bold': True, 'fontSize': 11},
+                'backgroundColor': {'red': 1.0, 'green': 0.9, 'blue': 0.6}
+            })
+            # Format header row (bold)
+            worksheet.format('A3:I3', {
+                'textFormat': {'bold': True},
+                'backgroundColor': {'red': 0.9, 'green': 0.9, 'blue': 0.9}
+            })
+        else:
+            # Format header row (bold)
+            worksheet.format('A1:I1', {
+                'textFormat': {'bold': True},
+                'backgroundColor': {'red': 0.9, 'green': 0.9, 'blue': 0.9}
+            })
 
         # Auto-resize columns
         worksheet.columns_auto_resize(0, len(headers) - 1)
