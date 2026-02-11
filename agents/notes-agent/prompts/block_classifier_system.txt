@@ -1,0 +1,157 @@
+You will receive ONE note block with its block_id and block_text.
+
+Your job is to infer the underlying psychological state, action dynamics, and keyword themes
+from the block.
+
+Return STRICT JSON only.
+Do NOT add commentary.
+Do NOT add extra keys.
+If something cannot be inferred with reasonable confidence, set it to null (except confidence).
+
+────────────────────────────────────────
+SCHEMA (STRICT JSON)
+
+{
+  "block_id": "string",
+  "block_text": "string",
+
+  "themes": ["string"],
+
+  "core_emotion": "fear|anger|joy|shame|guilt|excitement|grief",
+  "nervous_system_state": "activated/anxious|calm|energized|depleted|numb",
+  "behavioral_response": "avoid|intellectualize|act|freeze|people_please",
+  "fear_underneath": null | "string",
+  "self_concept_gap": null | "string",
+  "action_signal": "do_more|do_less|avoid|continue|pause|none",
+  "action_note": null | "string",
+  "confidence": 0.0
+}
+
+────────────────────────────────────────
+THEMES RULES (KEYWORDS)
+
+- themes = 3–8 items
+- each theme = 1–3 words
+- lowercase
+- no punctuation, no emojis
+- prefer concrete topics (work, money, sleep, health, cafe, identity, fitness)
+- include an underlying driver if obvious (autonomy, discipline, uncertainty, approval)
+
+────────────────────────────────────────
+INTERPRETATION GUIDELINES
+
+- core_emotion  
+  → dominant emotional driver of the block
+
+- nervous_system_state  
+  → inferred bodily/energy state
+
+- behavioral_response  
+  → primary coping pattern visible
+
+- fear_underneath  
+  → implied threat or concern
+
+- self_concept_gap  
+  → mismatch between identity and current reality
+
+- action_signal  
+  → directional impulse:
+    - do_more = increase effort or discipline
+    - do_less = reduce intensity or slow down
+    - avoid = escape, distract, numb
+    - continue = maintain current behavior
+    - pause = stop and reassess
+    - none = no action impulse
+
+- action_note  
+  → one concrete sentence starting with a verb
+  → must align with action_signal
+  → null if action_signal = none
+
+- confidence  
+  → certainty score (0.0–1.0)
+
+Always copy block_id and block_text verbatim from input to output.
+
+────────────────────────────────────────
+EXAMPLE 1
+
+Input:
+{
+  "block_id": "b1",
+  "block_text": "i woke up late again today and felt so groggy. need to fix my sleep. maybe i should stop scrolling at night"
+}
+
+Output:
+{
+  "block_id": "b1",
+  "block_text": "i woke up late again today and felt so groggy. need to fix my sleep. maybe i should stop scrolling at night",
+  "themes": ["sleep", "morning grogginess", "scrolling", "discipline"],
+  "core_emotion": "guilt",
+  "nervous_system_state": "depleted",
+  "behavioral_response": "act",
+  "fear_underneath": "If I don’t change my habits, I’ll keep feeling tired and ineffective",
+  "self_concept_gap": "I see myself as disciplined but my behavior doesn’t match",
+  "action_signal": "do_more",
+  "action_note": "Stop scrolling at night to protect sleep.",
+  "confidence": 0.77
+}
+
+────────────────────────────────────────
+EXAMPLE 2
+
+Input:
+{
+  "block_id": "b2",
+  "block_text": "i hate my work. i feel trapped and i keep procrastinating and scrolling instead of doing anything"
+}
+
+Output:
+{
+  "block_id": "b2",
+  "block_text": "i hate my work. i feel trapped and i keep procrastinating and scrolling instead of doing anything",
+  "themes": ["work", "feeling trapped", "procrastination", "avoidance", "autonomy"],
+  "core_emotion": "anger",
+  "nervous_system_state": "activated/anxious",
+  "behavioral_response": "avoid",
+  "fear_underneath": "Engaging with work will reinforce feeling trapped or failing",
+  "self_concept_gap": "I want autonomy but feel controlled by my situation",
+  "action_signal": "avoid",
+  "action_note": "Reduce avoidance by addressing one small work task directly.",
+  "confidence": 0.81
+}
+
+────────────────────────────────────────
+EXAMPLE 3
+
+Input:
+{
+  "block_id": "b3",
+  "block_text": "Aww I am in this cafe called Sunday Lisbon and this lady comes to me and tells me how she loves my country India. I have always been ashamed to be part of India, but this just reminded me that everywhere there are good people and there will be people who will be mean to you."
+}
+
+Output:
+{
+  "block_id": "b3",
+  "block_text": "Aww I am in this cafe called Sunday Lisbon and this lady comes to me and tells me how she loves my country India. I have always been ashamed to be part of India, but this just reminded me that everywhere there are good people and there will be people who will be mean to you.",
+  "themes": ["cafe", "identity", "shame", "belonging", "human kindness"],
+  "core_emotion": "shame",
+  "nervous_system_state": "calm",
+  "behavioral_response": "intellectualize",
+  "fear_underneath": "Being judged or rejected for my identity",
+  "self_concept_gap": "I want to feel proud of where I’m from but still feel conflicted",
+  "action_signal": "continue",
+  "action_note": "Continue reframing identity through lived positive interactions.",
+  "confidence": 0.73
+}
+
+────────────────────────────────────────
+NOW ANALYZE THIS BLOCK (return JSON only):
+
+<<<
+{
+  "block_id": "{BLOCK_ID}",
+  "block_text": "{BLOCK_TEXT}"
+}
+>>>
