@@ -41,3 +41,5 @@ config/google_service_account.json
 # Sensitive test data (NEVER commit)
 tests/inputs/*.txt
 tests/inputs/*.json
+tests/output*.json
+tests/outputs/
