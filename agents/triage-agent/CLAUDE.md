@@ -322,6 +322,129 @@ Google Sheet columns:
 
 ---
 
+## LLM-as-Judge Evaluation
+
+### Overview
+
+We use **GPT-4 as an evaluator** to objectively compare prompt variants. The evaluator assesses 6 dimensions of triage quality on a 1-5 scale.
+
+### Evaluation Criteria
+
+1. **Completeness (1-5)** - Did it extract ALL meaningful items?
+2. **Classification Accuracy (1-5)** - Are types/domains correct?
+3. **Granularity (1-5)** - Right level of detail (not too broad/narrow)?
+4. **Tag Quality (1-5)** - Relevant, specific keywords?
+5. **Niche Signal Accuracy (1-5)** - Correct behavioral pattern assessment?
+6. **Publishability Accuracy (1-5)** - Correct content potential assessment?
+
+**Overall Score:** Average across all dimensions
+
+### Usage
+
+**Single Evaluation:**
+```bash
+cd triage-agent-prompt1/agents/triage-agent
+python scripts/evaluate_prompts.py --input tests/inputs/sample_01.txt
+```
+
+**Compare Two Prompts:**
+```bash
+# First, save outputs from both worktrees
+cd triage-agent-prompt1/agents/triage-agent
+python scripts/test_layer1.py  # Saves to tests/output_layer1.json
+
+cd triage-agent-prompt2/agents/triage-agent
+python scripts/test_layer1.py  # Saves to tests/output_layer1.json
+
+# Then compare
+python scripts/evaluate_prompts.py \
+  --input tests/inputs/sample_01.txt \
+  --compare \
+  --prompt1-output triage-agent-prompt1/tests/output_layer1.json \
+  --prompt2-output triage-agent-prompt2/tests/output_layer1.json
+```
+
+### Evaluation Output
+
+**Console:**
+```
+COMPARING PROMPTS: prompt1 vs prompt2
+================================================================================
+
+prompt1:
+  Overall Score: 4.2/5.0
+  Items: 8
+  Recommendation: keep
+  Strengths: Excellent granularity, captures all items
+  Weaknesses: Tags could be more specific
+
+prompt2:
+  Overall Score: 3.8/5.0
+  Items: 6
+  Recommendation: revise
+  Strengths: Good classification accuracy
+  Weaknesses: Missed 2 items, granularity too broad
+
+🏆 Winner: prompt1
+```
+
+**Google Sheets (optional):**
+```python
+from notes_agent.evaluator import evaluate_triage_output
+from notes_agent.tools_sheets import write_evaluation_to_sheet
+
+evaluation = evaluate_triage_output(input_text, items, "prompt1")
+write_evaluation_to_sheet(evaluation, sheet_id, worksheet_name="Evaluation")
+```
+
+Creates an "Evaluation" tab with:
+- Summary row (overall score, recommendation, strengths/weaknesses)
+- Per-item scores for all 6 dimensions
+- Color-coded overall score (red <3, yellow 3-4, green 4+)
+
+### Evaluation Workflow
+
+**Complete Flow:**
+```bash
+# 1. Test both prompts in parallel worktrees
+Terminal 1: cd triage-agent-prompt1/agents/triage-agent && python test_sheets_quick.py
+Terminal 2: cd triage-agent-prompt2/agents/triage-agent && python test_sheets_quick.py
+
+# 2. Run evaluation
+python scripts/evaluate_prompts.py --compare \
+  --input tests/inputs/sample_01.txt \
+  --prompt1-output path/to/prompt1_output.json \
+  --prompt2-output path/to/prompt2_output.json
+
+# 3. Review results in console + Google Sheets
+
+# 4. Keep the winner
+# If prompt1 wins, merge test/prompt1 to master
+git checkout master
+git merge test/prompt1
+git push
+
+# 5. Clean up
+git worktree remove triage-agent-prompt1
+git worktree remove triage-agent-prompt2
+git branch -d test/prompt1 test/prompt2
+```
+
+### Why LLM-as-Judge?
+
+- **Objective**: Consistent evaluation criteria
+- **Fast**: Evaluate in seconds, not hours
+- **Scalable**: Test 10+ variants easily
+- **Detailed**: Get per-item feedback
+- **Cost-effective**: ~$0.01 per evaluation with GPT-4o
+
+**Limitations:**
+- Evaluator can be wrong (validate with manual review)
+- Works best with clear evaluation criteria
+- Needs good examples in evaluator prompt
+
+---
+
 ## Deployment
 
 ### Local Testing
