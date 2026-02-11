@@ -4,6 +4,9 @@ openai>=1.0.0
 pydantic>=2.0.0
 python-dotenv>=1.0.0
 
+# DeepSeek (OpenAI-compatible)
+# Uses openai package with custom base_url
+
 # Notion integration
 notion-client>=2.0.0
 

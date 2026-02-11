@@ -4,7 +4,7 @@ This folder contains all AI agents built for various use cases.
 
 ## Agents
 
-### 1. journal-classifier
+### 1. triage-agent
 **Purpose:** Automatic journal classification system
 - Processes Notion journal entries
 - Splits text into cognitive blocks
