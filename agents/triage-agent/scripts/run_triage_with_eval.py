@@ -24,9 +24,15 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 from notes_agent.layer1_triage import triage_braindump
 from notes_agent.tools_sheets import write_triage_items_to_sheet, write_evaluation_to_sheet
-from notes_agent.evaluator import evaluate_triage_output
+from notes_agent.evaluator import evaluate_triage_output, count_tokens
 
 load_dotenv()
+
+
+def load_prompt() -> str:
+    """Load the triage system prompt."""
+    prompt_path = Path(__file__).parent.parent / "prompts" / "layer1_triage_system.txt"
+    return prompt_path.read_text(encoding="utf-8")
 
 
 def main():
@@ -52,12 +58,36 @@ def main():
 
     input_text = input_path.read_text(encoding='utf-8').strip()
 
+    # Load prompt and calculate tokens
+    try:
+        prompt_text = load_prompt()
+        prompt_tokens = count_tokens(prompt_text)
+        input_tokens = count_tokens(input_text)
+    except Exception as e:
+        print(f"⚠️  Could not load prompt or count tokens: {e}\n")
+        prompt_text = None
+        prompt_tokens = 0
+        input_tokens = 0
+
     print(f"\n{'='*80}")
     print(f"COMPLETE TRIAGE WORKFLOW")
     print(f"{'='*80}\n")
     print(f"Input: {input_path.name}")
     print(f"Prompt Version: {args.prompt_version}")
     print(f"Sheet ID: {sheet_id}\n")
+
+    # Show prompt preview and token counts
+    if prompt_text:
+        print(f"{'─'*80}")
+        print("PROMPT BEING USED:")
+        print(f"{'─'*80}")
+        # Show first 500 chars of prompt
+        preview = prompt_text[:500].replace('\n', ' ')
+        print(f"{preview}...\n")
+        print(f"📊 Token Counts:")
+        print(f"   Prompt: {prompt_tokens:,} tokens")
+        print(f"   Input:  {input_tokens:,} tokens")
+        print(f"   Total:  {prompt_tokens + input_tokens:,} tokens\n")
 
     # Step 1: Run triage
     print(f"{'─'*80}")
@@ -70,7 +100,14 @@ def main():
         starting_id=1
     )
 
-    print(f"\n✓ Generated {len(items)} triage items\n")
+    # Calculate output tokens
+    import json
+    output_text = json.dumps([item.dict() for item in items])
+    output_tokens = count_tokens(output_text)
+
+    print(f"\n✓ Generated {len(items)} triage items")
+    print(f"📊 Output: {output_tokens:,} tokens")
+    print(f"📊 Total tokens used: {prompt_tokens + input_tokens + output_tokens:,} tokens\n")
 
     # Step 2: Write to Google Sheets
     print(f"{'─'*80}")

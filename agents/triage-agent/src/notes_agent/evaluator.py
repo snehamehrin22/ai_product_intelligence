@@ -8,6 +8,31 @@ from .llm_clients import call_openai, parse_json_response
 from pathlib import Path
 
 
+def count_tokens(text: str, model: str = "gpt-4o") -> int:
+    """
+    Count tokens in text using tiktoken.
+
+    Args:
+        text: Text to count tokens for
+        model: Model name to determine encoding (default: gpt-4o)
+
+    Returns:
+        Number of tokens
+    """
+    try:
+        import tiktoken
+        if model.startswith("gpt-4"):
+            encoding = tiktoken.encoding_for_model("gpt-4")
+        elif model.startswith("gpt-3.5"):
+            encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
+        else:
+            encoding = tiktoken.get_encoding("cl100k_base")
+        return len(encoding.encode(text))
+    except Exception as e:
+        print(f"⚠️  Token counting failed: {e}")
+        return 0
+
+
 def load_evaluator_prompt() -> str:
     """Load the evaluation system prompt."""
     prompt_path = Path(__file__).parent.parent.parent / "prompts" / "evaluator_system.txt"
@@ -123,7 +148,7 @@ def compare_prompts(
     prompt2_items: List[TriageItem],
     prompt1_version: str = "prompt1",
     prompt2_version: str = "prompt2"
-) -> tuple[TriageEvaluation, TriageEvaluation]:
+) -> tuple:
     """
     Compare two prompt outputs side-by-side.
 
