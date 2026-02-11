@@ -192,6 +192,136 @@ Without logs, the agent is a black box.
 
 ---
 
+## Git Worktrees for Parallel Testing
+
+### Setup
+
+We use **git worktrees** to test multiple prompt variants in parallel without switching branches:
+
+```bash
+# List all worktrees
+git worktree list
+
+# Current setup:
+# - triage-agent-prompt1 → test/prompt1 branch
+# - triage-agent-prompt2 → test/prompt2 branch
+```
+
+### Worktree Structure
+
+```
+ai_product_intelligence/agents/
+├── triage-agent/              # Main worktree (master branch)
+├── triage-agent-prompt1/      # Prompt1 testing (test/prompt1 branch)
+└── triage-agent-prompt2/      # Prompt2 testing (test/prompt2 branch)
+```
+
+### Usage Pattern
+
+**1. Edit prompts in each worktree:**
+```bash
+# Terminal 1: Prompt1 testing
+cd triage-agent-prompt1/agents/triage-agent
+# Edit prompts/layer1_triage_system.txt
+python scripts/test_layer1.py
+
+# Terminal 2: Prompt2 testing
+cd triage-agent-prompt2/agents/triage-agent
+# Edit prompts/layer1_triage_system.txt
+python scripts/test_layer1.py
+```
+
+**2. Output results to separate Google Sheets:**
+```bash
+# In prompt1 worktree - writes to GOOGLE_SHEET_PROMPT1_ID
+python test_sheets_quick.py
+
+# In prompt2 worktree - writes to GOOGLE_SHEET_PROMPT2_ID
+python test_sheets_quick.py
+```
+
+**3. Compare results:**
+- Open both sheets side-by-side
+- Evaluate which prompt produces better classifications
+- Keep the winner, merge back to master
+
+**4. Clean up when done:**
+```bash
+# Keep the winning prompt in master
+git worktree remove triage-agent-prompt1
+git worktree remove triage-agent-prompt2
+git branch -d test/prompt1 test/prompt2
+```
+
+### Benefits
+
+- ✅ Test multiple prompts simultaneously
+- ✅ No branch switching (avoids .env/venv disruption)
+- ✅ Each worktree has its own working directory
+- ✅ Results go to separate Google Sheets for easy comparison
+- ✅ Faster iteration (run both tests in parallel)
+
+---
+
+## Google Sheets Integration
+
+### Setup
+
+**1. Credentials:**
+- Service account JSON at: `config/google_service_account.json`
+- Added to `.gitignore` (NEVER commit)
+
+**2. Configuration in `.env`:**
+```bash
+GOOGLE_SHEET_PROMPT1_ID=your-sheet-id-here
+GOOGLE_SHEET_PROMPT2_ID=your-sheet-id-here
+```
+
+**3. Get Sheet ID:**
+- Create a Google Sheet
+- Copy ID from URL: `https://docs.google.com/spreadsheets/d/SHEET_ID/edit`
+- Share sheet with service account email (in JSON file)
+
+### Usage
+
+**Quick test:**
+```bash
+python test_sheets_quick.py
+```
+
+**In your code:**
+```python
+from notes_agent.tools_sheets import write_triage_items_to_sheet
+import os
+
+url = write_triage_items_to_sheet(
+    items=triage_items,
+    sheet_id=os.getenv('GOOGLE_SHEET_PROMPT1_ID'),
+    clear_existing=True  # or False to append
+)
+```
+
+### Output Format
+
+Google Sheet columns:
+- ID (T001, T002, etc.)
+- Date (YYYY-MM-DD)
+- Personal/Work
+- Domain
+- Type (Task, Observation, etc.)
+- Tags (comma-separated)
+- Niche Signal (TRUE/FALSE)
+- Publishable (TRUE/FALSE)
+- Raw Context (verbatim text)
+
+**Why Google Sheets for testing:**
+- ✅ Easy to review and compare results visually
+- ✅ Share with non-technical stakeholders
+- ✅ Quick filtering/sorting for pattern analysis
+- ✅ No database setup needed for intermediate testing
+
+---
+
 ## Deployment
 
 ### Local Testing
