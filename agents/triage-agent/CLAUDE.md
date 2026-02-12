@@ -1,74 +1,68 @@
-# Notes Agent - Automatic Journal Classification System
+# Triage Agent - Brain Dump Processor
 
 ## Project Overview
 
-**Problem:** Stream-of-consciousness journal entries in Notion are unstructured and impossible to query for patterns.
+**Problem:** Stream-of-consciousness brain dumps are unstructured and contain mixed types of information (tasks, observations, ideas, questions).
 
-**Solution:** An autonomous AI agent that automatically processes Notion journal entries, splits them into cognitive blocks, and classifies psychological patterns.
+**Solution:** An AI triage agent that automatically processes raw brain dumps and classifies them into atomic, actionable items with metadata.
 
-**Goal:** Transform raw journal text into structured data that reveals:
-- Trigger → Emotion → Response cycles
-- Desire vs fear-based avoidance patterns
-- Self-concept gaps (aspiration vs reality)
-- Nervous system states and behavioral responses
-- Recurring themes and patterns
+**Goal:** Transform raw text into structured triage items with:
+- Clear type classification (Task, Observation, Insight, Question, etc.)
+- Personal/Work domain categorization
+- Specific domain tags (product, engineering, health, etc.)
+- Thematic tags for pattern detection
+- Niche signal detection (behavioral patterns worth sharing)
+- Publishability assessment (content creation potential)
 
 ---
 
-## System Architecture (Final)
+## System Architecture (Current)
 
 ### The Pipeline
 
 ```
-Notion Journal Entry
+Raw Brain Dump Text
         ↓
-Fetch (check processed_entries in Supabase)
+Layer 1: Triage Agent (LLM)
+  - Split into atomic items
+  - Classify each item
+  - Extract metadata
         ↓
-Split into Cognitive Blocks (LLM)
+Pydantic Validation (TriageItem schema)
         ↓
-Classify Each Block (LLM)
-  - Core emotion
-  - Themes (3-8 keywords)
-  - Behavioral response
-  - Nervous system state
-  - Action signals
-  - Optional: fear_underneath, self_concept_gap
+Output to Google Sheets
         ↓
-Enforce Confidence Threshold (≥ 0.7)
-        ↓
-Save to Supabase (journal_blocks table)
-        ↓
-Mark as Processed
-        ↓
-Log All Decisions (JSONL)
+Optional: LLM-as-Judge Evaluation
 ```
 
 ### File Structure
 
 ```
-notes-agent/
-├── src/notes_agent/           # Main pipeline
-│   ├── main_loop.py            # Orchestration (Python controls loop)
-│   ├── splitter.py             # LLM splits text into blocks
-│   ├── classifiers/
-│   │   └── llm_classifier.py   # LLM classifies blocks
-│   ├── enforcement.py          # Confidence thresholds
-│   ├── tools.py                # Notion + Supabase I/O
-│   ├── logging_utils.py        # Decision logging
-│   └── schemas.py              # Pydantic models (source of truth)
+triage-agent/
+├── src/notes_agent/              # Main pipeline
+│   ├── layer1_triage.py          # Core triage logic
+│   ├── llm_clients.py            # DeepSeek API integration
+│   ├── schemas.py                # Pydantic models (source of truth)
+│   ├── tools_sheets.py           # Google Sheets output
+│   └── evaluator.py              # LLM-as-judge evaluation
 │
-├── prompts/                    # LLM prompts (editable, version controlled)
-│   ├── block_splitter_system.txt
-│   └── block_classifier_system.txt
+├── prompts/                      # LLM prompts (version controlled)
+│   ├── layer1_triage_system.txt  # Main triage prompt
+│   └── evaluator_system.txt      # Evaluation criteria
 │
-├── scripts/
-│   └── run_pipeline.py         # Entry point
+├── scripts/                      # Executable scripts
+│   ├── test_layer1.py            # Main test runner
+│   ├── run_triage_with_eval.py   # Complete workflow + eval
+│   └── evaluate_prompts.py       # Compare prompt variants
 │
-├── data/supabase/
-│   └── schema.sql              # Database schema
+├── tests/inputs/                 # Test data
+│   ├── sample_01.txt
+│   └── sample_02.txt
 │
-└── logs/
-    └── decisions_YYYYMMDD.jsonl
+├── config/
+│   └── google_service_account.json  # Google Sheets credentials
+│
+└── logs/                         # Runtime logs
 ```
 
 ---
@@ -77,28 +71,29 @@ notes-agent/
 
 ### 1. LLM = Reasoning Module, NOT the OS
 
-**Agent 1 Pattern (What We Built):**
+**Current Pattern:**
 ```python
-# Python controls the loop
-for entry in notion_entries:
-    blocks = llm.split(entry)          # LLM does ONE task
-    for block in blocks:
-        classification = llm.classify(block)  # LLM does ONE task
-        if confidence >= 0.7:           # Python decides
-            save(classification)        # Python executes
+# Single LLM call does end-to-end triage
+raw_text = "I need to fix the bug in the login flow. Also wondering if we should pivot to AI products..."
+
+items = triage_braindump(raw_text)
+# Returns: [
+#   TriageItem(type="Task", domain="engineering", text="fix bug in login flow"),
+#   TriageItem(type="Question", domain="product", text="should we pivot to AI products?")
+# ]
 ```
 
-**Key Insight:** Python makes all control flow decisions. LLM only does reasoning tasks (split text, classify patterns).
+**Key Insight:** LLM does the reasoning (classification), Python validates with Pydantic.
 
 ### 2. Never Trust Raw LLM Output
 
 **Always use Pydantic for validation:**
 ```python
 # ❌ Bad
-classification = json.loads(llm_response)  # What if LLM returns invalid data?
+items = json.loads(llm_response)  # What if LLM returns invalid data?
 
 # ✅ Good
-classification = BlockClassification(**json.loads(llm_response))  # Pydantic validates
+items = [TriageItem(**item) for item in json.loads(llm_response)]  # Pydantic validates
 ```
 
 **Why:** LLMs are probabilistic. They occasionally return:
@@ -106,89 +101,35 @@ classification = BlockClassification(**json.loads(llm_response))  # Pydantic val
 - Wrong data types
 - Values outside expected ranges
 
-Pydantic catches these before they corrupt your database.
+Pydantic catches these before they corrupt your data.
 
-### 3. Observability Before Intelligence
-
-**Every decision must be logged:**
-```python
-log_decision(
-    block_id=block.block_id,
-    block_text=block.block_text,
-    classification=classification,
-    saved=True/False,
-    reason="passed_all_checks" or "confidence_too_low",
-    error=None or error_message
-)
-```
-
-**Why:** You need to know:
-- How many blocks were processed?
-- What percentage passed the confidence threshold?
-- Which errors occurred most frequently?
-- Are classifications improving over time?
-
-Without logs, the agent is a black box.
-
-### 4. Think in Invariants
-
-**Invariants = Things that must ALWAYS be true:**
-1. Every journal entry processed exactly once
-2. Every classification decision logged
-3. No database write without Pydantic validation
-4. Confidence threshold ≥ 0.7 enforced before saving
-5. LLM never controls system logic (Python does)
-
-**How we enforce:**
-- `processed_entries` table in Supabase (idempotency)
-- Pydantic validation before all writes
-- `should_save()` function checks confidence
-- Deterministic control flow in `main_loop.py`
-
-### 5. Clean Separation of Concerns
+### 3. Clean Separation of Concerns
 
 **Modules have ONE job:**
 - `schemas.py` - Data structures (Pydantic models)
-- `splitter.py` - LLM splitting logic ONLY
-- `classifiers/llm_classifier.py` - LLM classification ONLY
-- `enforcement.py` - Business rules ONLY
-- `tools.py` - External I/O ONLY (Notion, Supabase)
-- `logging_utils.py` - Observability ONLY
-- `main_loop.py` - Orchestration ONLY
+- `layer1_triage.py` - LLM triage logic ONLY
+- `llm_clients.py` - API calls ONLY (DeepSeek)
+- `tools_sheets.py` - External I/O ONLY (Google Sheets)
+- `evaluator.py` - Quality assessment ONLY
 
-**No mixing:** LLM code doesn't touch database. Database code doesn't do validation. Validation doesn't do logging.
+**No mixing:** LLM code doesn't touch Google Sheets. Output code doesn't do validation.
 
 ---
 
-## System Invariants
+## Triage Schema
 
-**What must ALWAYS be true:**
-1. Every journal block processed exactly once
-2. Every classification decision logged (input, decision, confidence, timestamp)
-3. No database write without Pydantic validation passing
-4. LLM never controls retry logic or modifies memory directly
-5. Confidence threshold ≥ 0.7 enforced before saving classification
-
----
-
-## Classification Schema
-
-### Fields Extracted by LLM
+### TriageItem Fields
 
 **Required:**
-- `block_id`: str - Unique identifier (e.g., "b1", "b2")
-- `block_text`: str - The actual text content
-- `themes`: List[str] - 3-8 keyword themes
-- `core_emotion`: str - Primary emotion detected
-- `nervous_system_state`: str - Physiological state
-- `behavioral_response`: str - Action pattern
-- `action_signal`: str - Directional impulse
-- `confidence`: float - LLM certainty (0.0-1.0)
-
-**Optional:**
-- `fear_underneath`: str - Unstated fears or blockers
-- `self_concept_gap`: str - Aspiration vs reality mismatch
-- `action_note`: str - Concrete action suggestion
+- `id`: str - Unique identifier (e.g., "T001", "T002")
+- `date`: str - Date in YYYY-MM-DD format
+- `personal_or_work`: str - Either "Personal" or "Work"
+- `domain`: str - Specific domain (product, engineering, health, etc.)
+- `type`: str - Item type (Task, Observation, Insight, Question, etc.)
+- `tags`: List[str] - 3-6 keyword tags
+- `niche_signal`: bool - Is this a behavioral pattern worth sharing?
+- `publishable`: bool - Does this have content creation potential?
+- `raw_context`: str - Verbatim text from original input
 
 ---
 
@@ -445,50 +386,28 @@ git branch -d test/prompt1 test/prompt2
 
 ---
 
-## Deployment
+## Usage
 
-### Local Testing
+### Quick Test
+
 ```bash
-python scripts/run_pipeline.py --limit 1
+# Test with all sample inputs
+python scripts/test_layer1.py
+
+# Complete workflow: triage + sheets + evaluation
+python scripts/run_triage_with_eval.py \
+  --input tests/inputs/sample_01.txt \
+  --prompt-version "v1.0" \
+  --sheet-id YOUR_SHEET_ID
 ```
 
-### VPS Deployment (24/7 Automation)
+### Testing Workflow
 
-**1. Deploy Code:**
-```bash
-# SSH to VPS
-ssh user@vps-ip
-
-# Clone repo
-cd /home/your-user/
-git clone <repo-url> notes-agent
-cd notes-agent
-
-# Setup
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Add .env
-nano .env  # Paste credentials
-
-# Test
-python scripts/run_pipeline.py --limit 1
-```
-
-**2. Set Up Cron:**
-```bash
-crontab -e
-
-# Run every hour
-0 * * * * cd /home/your-user/notes-agent && /home/your-user/notes-agent/venv/bin/python scripts/run_pipeline.py >> logs/cron.log 2>&1
-```
-
-**3. Monitor:**
-```bash
-tail -f logs/cron.log
-tail -f logs/decisions_*.jsonl
-```
+1. **Add test samples** to `tests/inputs/sample_XX.txt`
+2. **Run triage**: `python scripts/test_layer1.py`
+3. **Review output** in console or Google Sheets
+4. **Evaluate quality** with `run_triage_with_eval.py`
+5. **Iterate on prompt** in `prompts/layer1_triage_system.txt`
 
 ---
 
@@ -565,70 +484,37 @@ response = httpx.post(url, headers=headers, json=body)
 
 ---
 
-## Learning Path (What We Built)
+## Architecture Evolution
 
-### Week 1: Agent 1 - The Classifier ✅
+### What We Built
 
-**Concept:** Deterministic control flow with LLM as reasoning module
-
-**What we built:**
-- Two-phase LLM pipeline (split → classify)
-- Pydantic validation for all LLM outputs
-- Confidence threshold enforcement
-- Idempotency via Supabase tracking
-- Complete observability (JSONL logs)
+**Layer 1: Triage Agent** ✅
+- Single LLM call for end-to-end classification
+- Pydantic validation for all outputs
+- Google Sheets integration for easy review
+- LLM-as-judge evaluation for prompt testing
 
 **Key learnings:**
-- LLM = function, not OS
-- Python controls the loop
-- Never trust raw LLM output
-- Observability is non-negotiable
-- Prompts are code (version control them)
+- Simplicity wins: single-pass classification beats multi-stage pipelines
+- Validation is critical: Pydantic catches LLM errors
+- Cheap models work: DeepSeek is 10-20x cheaper than GPT-4, good enough for structured tasks
+- Prompts are code: version control them, A/B test them
 
----
+### What's Next
 
-## What We Didn't Build (And Why)
+**Layer 2: Smart Routing** (Planned)
+- Route triage items to appropriate systems
+  - Tasks → Task manager (Linear, Notion, etc.)
+  - Insights → Knowledge base
+  - Questions → Research queue
+- Add confidence scores for routing decisions
+- Track completion status
 
-### Agent 2: The Researcher (Explored but Not Deployed)
-
-**Concept:** Autonomous agent with tool calling (LLM controls the loop)
-
-**What we prototyped:**
-- Agent loop: Perceive → Reason → Act → Observe
-- Multiple tools (query_journal, search_web, fetch_url)
-- LLM decides which tools to use and when to stop
-- Conversation memory management
-
-**Why not deployed:**
-- Not needed for current use case (simple pipeline works)
-- Added complexity without benefit
-- Cost implications (multiple LLM calls per query)
-- Current pipeline is deterministic and reliable
-
-**When to use Agent 2 pattern:**
-- User asks varied questions (need adaptive strategy)
-- Task requires combining multiple data sources
-- Don't know exact steps ahead of time
-
-### Agent 3: Memory/RAG (Explored Conceptually)
-
-**Concept:** Long-term memory via vector database
-
-**What RAG does:**
-1. Store past conversations with embeddings
-2. Search by semantic similarity
-3. Inject relevant memories into prompt
-4. LLM "remembers" via context
-
-**Why not deployed:**
-- Current pipeline doesn't need conversation history
-- Each entry processed independently
-- No multi-turn interactions with user
-
-**When to use RAG:**
-- Build a chat interface over your data
-- Need to reference past analyses
-- User asks "What did we discuss about X?"
+**Layer 3: Pattern Detection** (Future)
+- Analyze triage history for recurring themes
+- Detect behavioral patterns worth sharing
+- Suggest content ideas based on niche signals
+- Weekly summaries of activity patterns
 
 ---
 
@@ -637,8 +523,8 @@ response = httpx.post(url, headers=headers, json=body)
 ### 1. Prompts Are Code
 
 **Store as `.txt` files:**
-- `prompts/block_splitter_system.txt`
-- `prompts/block_classifier_system.txt`
+- `prompts/layer1_triage_system.txt` - Main triage prompt
+- `prompts/evaluator_system.txt` - Evaluation criteria
 
 **Why:**
 - Version control
@@ -649,117 +535,71 @@ response = httpx.post(url, headers=headers, json=body)
 ### 2. Be Explicit About Schema
 
 **Include exact JSON structure in prompt:**
-```
-Output must be valid JSON with this structure:
-{
-  "blocks": [
-    {
-      "block_id": "b1",
-      "block_name": "2-6 word name",
-      "block_text": "full text content"
-    }
-  ]
-}
+```json
+[
+  {
+    "id": "T001",
+    "date": "2024-02-11",
+    "personal_or_work": "Work",
+    "domain": "product",
+    "type": "Task",
+    "tags": ["bug-fix", "authentication"],
+    "niche_signal": false,
+    "publishable": false,
+    "raw_context": "fix bug in login flow"
+  }
+]
 ```
 
 ### 3. Provide Examples
 
-**Show the LLM what you want:**
-```
-Example input:
-"I'm worried about money again. Need to check my budget but avoiding it."
-
-Example output:
-{
-  "block_id": "b1",
-  "core_emotion": "anxiety",
-  "themes": ["money", "avoidance", "budget"],
-  "behavioral_response": "avoid",
-  ...
-}
-```
-
-### 4. Confidence is Key
-
-**Always ask LLM for confidence:**
-```
-"confidence": 0.85  // How certain are you? (0.0-1.0)
-```
-
-**Use it to filter:**
-```python
-if classification.confidence >= 0.7:
-    save_to_database(classification)
-else:
-    log_skipped(classification, "confidence_too_low")
-```
+**Show the LLM what you want in the prompt itself.** The current `layer1_triage_system.txt` includes detailed examples of:
+- Different item types (Task, Observation, Insight, Question)
+- Edge cases (ambiguous items, multiple items in one sentence)
+- What qualifies as "niche signal" vs not
+- What's publishable vs not
 
 ---
 
-## Production Checklist
+## Setup Checklist
 
-**Before deploying:**
-- [ ] All API keys in `.env` (not hardcoded)
-- [ ] `.env` in `.gitignore`
-- [ ] Supabase schema created
-- [ ] Test run: `python scripts/run_pipeline.py --limit 1`
-- [ ] Logs directory exists
-- [ ] Cron job tested locally
-- [ ] Monitor first few runs
+**Initial Setup:**
+- [ ] Create virtual environment: `python3.13 -m venv .venv`
+- [ ] Activate: `source .venv/bin/activate`
+- [ ] Install dependencies: `pip install -r requirements.txt`
+- [ ] Add API keys to `.env` (DEEPSEEK_API_KEY, OPENAI_API_KEY, GOOGLE_SHEET_PROMPT1_ID)
+- [ ] Add Google service account JSON to `config/`
+- [ ] Test run: `python scripts/test_layer1.py`
 
 **Security:**
-- [ ] `.env` has `chmod 600` (VPS)
+- [ ] `.env` in `.gitignore` (already there)
+- [ ] `config/google_service_account.json` in `.gitignore` (already there)
 - [ ] No secrets committed to Git
-- [ ] SSH key authentication (not passwords)
-
----
-
-## Future Enhancements (Not Implemented)
-
-### 1. Real-Time Processing
-- Set up Notion webhook (when available)
-- Process entries immediately on creation
-
-### 2. Better Classification
-- Fine-tune model on your journal data
-- Add domain-specific emotion categories
-- Multi-label themes (not just keywords)
-
-### 3. Pattern Analysis
-- Weekly summaries of emotional trends
-- Trigger detection (what causes anxiety?)
-- Behavioral intervention suggestions
-
-### 4. Query Interface
-- Natural language queries over classified data
-- "Show me times I felt anxious about money"
-- Build Agent 2 (Researcher) for this
 
 ---
 
 ## Cost Analysis
 
-**Current monthly costs:**
-- OpenAI API: ~$1-5 (depending on journal volume)
-- Supabase: $0 (free tier)
-- Notion API: $0 (free)
-- VPS: Already owned
+**Current costs per brain dump:**
+- DeepSeek API: ~$0.001-0.003 per triage (ultra cheap)
+- OpenAI API (for evaluation): ~$0.01 per eval (optional)
+- Google Sheets: $0 (free)
 
-**Optimization opportunities:**
-- Use `gpt-4o-mini` instead of `gpt-4o` (10x cheaper)
-- Batch process entries (fewer API calls)
-- Cache classification prompts
+**Why DeepSeek:**
+- 10-20x cheaper than GPT-4
+- Good enough for structured classification tasks
+- Fast response times
 
 ---
 
-## Conclusion
+## Next Steps
 
-**What we built:** A production-ready, autonomous journal classification system.
+**Immediate:**
+- [ ] Integrate with daily workflow (manual or automated input)
+- [ ] Build dashboard to visualize triage patterns over time
+- [ ] Add Layer 2: Smart routing (tasks → task manager, insights → knowledge base)
 
-**Key achievement:** Transformed unstructured journal entries into queryable psychological data.
-
-**Architecture pattern:** Deterministic pipeline with LLM as reasoning module.
-
-**Next steps:** Deploy to VPS with cron job for 24/7 automation.
-
-**Most important lesson:** LLM is a tool, not magic. Build observable, maintainable systems around it.
+**Future:**
+- [ ] Fine-tune model on your triage data for better accuracy
+- [ ] Add semantic search over past triage items
+- [ ] Build query interface ("show me all product insights from last month")
