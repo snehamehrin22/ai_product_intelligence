@@ -38,20 +38,57 @@ class TriageItem(BaseModel):
 
 # ===== LAYER 2: INSIGHT GENERATION =====
 
-class Insight(BaseModel):
-    """An extracted insight from Layer 2."""
-
-    insight_id: str = Field(..., description="Unique identifier (e.g., 'ins1')")
-    insight_text: str = Field(..., min_length=1, description="The extracted pattern/reframe")
-    mechanism: str = Field(..., min_length=1, description="Behavioral mechanism at play")
-    source_item_ids: List[str] = Field(..., min_items=1, description="Links to TriageItem IDs")
-    confidence: float = Field(..., ge=0.0, le=1.0, description="LLM certainty (0-1)")
+class PatternType(str, Enum):
+    """Types of meta-patterns detected across insights."""
+    NEW_PATTERN = "new_pattern"  # Emerging theme from 2+ insights
+    MULTI_LINK = "multi_link"  # Single insight connects 3+ items
+    CLUSTER_GROWTH = "cluster_growth"  # Existing pattern got new evidence
+    CONTRADICTION = "contradiction"  # Opposing insights (tension)
 
 
-class InsightResponse(BaseModel):
-    """Response from Layer 2 insight LLM."""
+class InsightItem(BaseModel):
+    """A generated insight from Layer 2 - reframes and names patterns."""
 
-    insights: List[Insight] = Field(default_factory=list, description="List of extracted insights")
+    # Identity
+    id: str = Field(..., description="Unique identifier (e.g., 'I001', 'I002')")
+    date: str = Field(..., description="Date insight was generated (YYYY-MM-DD)")
+
+    # Core content
+    insight_text: str = Field(..., min_length=1, description="The insight - reframes the pattern (1-3 sentences)")
+
+    # Linking
+    linked_items: List[str] = Field(..., min_items=1, description="IDs of triage items this connects (e.g., ['T004', 'T054'])")
+    related_insights: List[str] = Field(default_factory=list, description="IDs of related insights (cross-batch connections)")
+
+    # Metadata
+    tags: List[str] = Field(..., min_items=1, description="Thematic tags (identity-cascade, avoidance-pattern, etc.)")
+    domain: str = Field(..., min_length=1, description="Domain (same as Layer 1: identity, product, health, etc.)")
+
+    # Publishability
+    publishable_angle: Optional[str] = Field(None, description="Content creation angle if applicable")
+    niche_signal: bool = Field(..., description="Is this a behavioral pattern worth sharing?")
+
+    # Quality
+    confidence: float = Field(..., ge=0.0, le=1.0, description="LLM certainty (0.0-1.0)")
+
+
+class PatternSignal(BaseModel):
+    """Meta-pattern detected across insights."""
+
+    pattern_type: PatternType = Field(..., description="Type of pattern detected")
+    description: str = Field(..., min_length=1, description="What the pattern reveals")
+    involved_insights: List[str] = Field(..., min_items=1, description="Insight IDs involved")
+    involved_items: List[str] = Field(..., min_items=1, description="Triage item IDs involved")
+    strength: float = Field(..., ge=0.0, le=1.0, description="How strong is this signal? (0.0-1.0)")
+
+
+class Layer2Output(BaseModel):
+    """Complete output from Layer 2 insight generation."""
+
+    insights: List[InsightItem] = Field(default_factory=list, description="Generated insights")
+    patterns: List[PatternSignal] = Field(default_factory=list, description="Detected meta-patterns")
+    skipped_items: List[str] = Field(default_factory=list, description="IDs of items that didn't produce insights")
+    metadata: dict = Field(default_factory=dict, description="Stats: total_items, insights_generated, etc.")
 
 
 # ===== INPUT SOURCE =====
