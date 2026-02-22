@@ -107,7 +107,7 @@ Return the JSON object now:"""
         }
 
         mapped_items = []
-        for item in items_data:
+        for idx, item in enumerate(items_data):
             mapped_item = {}
             for llm_key, value in item.items():
                 # Map to schema field name
@@ -121,6 +121,9 @@ Return the JSON object now:"""
                     mapped_item[schema_key] = value.lower() in ["yes", "possible", "true"]
                 else:
                     mapped_item[schema_key] = value
+
+            # CRITICAL: Override LLM-generated ID with correct sequential ID
+            mapped_item["id"] = f"T{starting_id + idx:03d}"
 
             # Add date if not present
             if "date" not in mapped_item:
