@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  openclaw:
+    image: ghcr.io/hostinger/hvps-openclaw:latest
+    init: true
+    ports:
+      - "${PORT}:${PORT}"
+    env_file:
+      - .env
+    environment:
+      - DEBUG=openclaw:*
+    restart: unless-stopped
+    mem_limit: 2g
+    cpus: 0.8
+    volumes:
+      - ./data:/data
+      - ./data/linuxbrew:/home/linuxbrew
+      - /shared:/shared
+      - ${PROJECT_PATH}:/home/sneha/projects/ai_product_intelligence
+      - /usr/local/bin:/host/bin
