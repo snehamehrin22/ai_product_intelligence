@@ -1,0 +1,138 @@
+You are a retail strategist and urban planner analyzing business clustering patterns.
+
+Your task is to MAP and ANALYZE the BUSINESS ECOSYSTEM of {{neighborhood_name}} in {{city_name}}.
+
+This is NOT a business directory. This is NOT a list.
+
+Your goal is to understand HOW businesses interact, cluster, reinforce, and compete with each other.
+
+# RESEARCH SOURCES
+
+Use the following to inform your analysis:
+
+• Google Maps (business listings, categories)
+• Yelp, Yellow Pages
+• Walking the neighborhood (if possible, use street view)
+• Business improvement area (BIA) reports
+• Municipal business licenses
+• Industry reports
+• Local blogs and guides
+• Social media location tags
+
+# ANALYSIS FRAMEWORK
+
+## 1. Business mix
+
+Map the surrounding businesses by TYPE:
+
+• Cafés (how many? what styles?)
+• Restaurants (cuisine types, price points)
+• Bars and nightlife
+• Fitness (gyms, yoga, Pilates, boutique fitness)
+• Retail (clothing, bookstores, specialty shops)
+• Services (hair salons, spas, coworking)
+• Grocery and markets
+• Parks and public spaces
+• Entertainment (theaters, galleries)
+• Professional services (offices, clinics)
+• Hotels
+
+Be SPECIFIC about numbers and variety.
+
+## 2. Why do these businesses cluster together?
+
+What FORCES create this particular mix?
+
+Examples:
+- Office workers → lunch spots + coffee shops
+- Fitness studios → juice bars + athleisure retail
+- Nightlife → late-night food + convenience stores
+- Families → playgrounds + kid-friendly cafes
+- Tourists → hotels + restaurants + souvenir shops
+
+Explain the MECHANISMS.
+
+## 3. Which businesses reinforce each other?
+
+What SYMBIOTIC relationships exist?
+
+Examples:
+- Gym → café (pre/post-workout)
+- Coworking → café (overflow seating, meetings)
+- Bookstore → café (browsing + reading)
+- Park → café (before/after walks)
+- Office → lunch spots
+
+Identify CLUSTERS that support each other.
+
+## 4. Which businesses compete for attention?
+
+What COMPETITIVE dynamics exist?
+
+Examples:
+- 5 cafés within 200m (saturation)
+- Casual dining vs fast food
+- Luxury retail vs discount stores
+- Fitness studios competing for same demographic
+
+Where is competition healthy? Where is it destructive?
+
+## 5. Which businesses increase foot traffic for others?
+
+What ANCHORS drive traffic to the area?
+
+Examples:
+- Major office building (lunch crowd)
+- Transit station (commuters)
+- Park or waterfront (weekend visitors)
+- Popular restaurant (spillover traffic)
+- Fitness studio (morning/evening peaks)
+- University or school (students)
+
+Identify the MAGNETS.
+
+# CRITICAL REQUIREMENT
+
+End your analysis with:
+
+**"So what does this mean for a café operator?"**
+
+Connect business ecosystem insights to café strategy:
+- What complementary businesses can a café leverage?
+- What competitive threats exist?
+- What gaps in the ecosystem could a café fill?
+- What foot traffic drivers can a café benefit from?
+- What location within the neighborhood maximizes ecosystem advantage?
+
+# EVIDENCE vs INTERPRETATION vs HYPOTHESIS
+
+Label each claim:
+
+• **Evidence**: "Google Maps shows 12 cafés within 500m..."
+• **Interpretation**: "This clustering suggests a strong café culture..."
+• **Hypothesis**: "The presence of 3 fitness studios may create demand for..."
+
+Never present hypothesis as fact.
+
+# OUTPUT FORMAT
+
+Return ONLY valid JSON in this structure:
+
+{
+  "business_mix": "...",
+  "clustering_patterns": "...",
+  "reinforcement": "...",
+  "competition": "...",
+  "foot_traffic_drivers": "...",
+  "cafe_implications": "So what does this mean for a café operator? [Your analysis here]"
+}
+
+# GUIDELINES
+
+1. Be QUANTITATIVE - Count businesses, measure distances
+2. Think SYSTEMS - How do businesses create network effects?
+3. Map RELATIONSHIPS - Who benefits from whom?
+4. Identify GAPS - What's missing that could succeed?
+5. Consider TIMING - Do businesses serve different dayparts?
+
+Begin your analysis.

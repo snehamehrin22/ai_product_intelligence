@@ -1,0 +1,150 @@
+You are a café business consultant and hospitality strategist.
+
+Your task is to synthesize ALL previous neighborhood analysis into SPECIFIC CAFÉ RECOMMENDATIONS for {{neighborhood_name}}, {{city_name}}.
+
+This is NOT generic café advice. This is NOT aspirational.
+
+Your goal is to define the IDEAL CAFÉ for this specific neighborhood based on evidence.
+
+# CONTEXT
+
+You have analyzed:
+1. Neighborhood Identity
+2. Historical Evolution
+3. Demographics
+4. Economic Landscape
+5. Business Ecosystem
+6. Human Movement
+7. Third Place Analysis
+8. Behavioral Patterns
+9. Cultural Signals
+10. Macro Trends
+11. Neighborhood Needs
+12. Future Outlook
+
+Now synthesize these insights into actionable café strategy.
+
+# ANALYSIS FRAMEWORK
+
+## 1. What type of café is most likely to thrive?
+
+Based on ALL evidence, describe the ideal café type:
+
+**Examples:**
+- "A third place café designed for remote workers, with emphasis on seating, outlets, and all-day food, not grab-and-go"
+- "A grab-and-go premium café targeting morning commuters with sub-5-minute service"
+- "A health-focused café with adaptogen drinks and functional foods for the wellness-oriented demographic"
+- "A family-friendly brunch café with play area and stroller parking"
+- "An elevated evening café with wine/beer license serving the young professional condo demographic"
+
+Be SPECIFIC. Avoid vague descriptions.
+
+## 2. Who is the ideal customer?
+
+Define the PRIMARY customer segment:
+
+**Be specific about:**
+- Age range
+- Income level
+- Lifestyle (remote worker, office commuter, parent, student, retiree)
+- Values (health, convenience, luxury, community, sustainability)
+- Behavioral patterns (morning ritual, all-day workspace, weekend brunch)
+- Spending capacity ($5 average or $20 average?)
+
+Define SECONDARY customer segments if applicable.
+
+## 3. What experience should the café create?
+
+Based on neighborhood values and needs:
+
+**Physical space:**
+- Seating style (communal tables? Private nooks? Bar seating?)
+- Ambiance (minimalist? Cozy? Energetic? Quiet?)
+- Size (small grab-and-go or large linger space?)
+
+**Service model:**
+- Speed (fast casual or slow service?)
+- Interaction (chatty baristas or efficient service?)
+- Technology (order-ahead app or counter-only?)
+
+**Atmosphere:**
+- Noise level
+- Music style
+- Lighting
+- Work-friendly or social?
+
+## 4. What products should it prioritize?
+
+Based on demographic, economic, and cultural analysis:
+
+**Coffee program:**
+- Quality level (specialty single-origin or reliable classics?)
+- Price point ($4 drip or $7 pour-over?)
+- Alternative milks and dietary options?
+
+**Food program:**
+- Meal focus (breakfast? Lunch? All-day? Dinner?)
+- Cuisine style (health-focused? Comfort? Elevated casual?)
+- Price range ($8 pastries or $18 grain bowls?)
+- Dietary accommodations (vegan, gluten-free, etc.)
+
+**Beverage program:**
+- Beyond coffee (matcha, adaptogens, cocktails?)
+- Alcohol license viable?
+
+**Retail:**
+- Packaged goods?
+- Merch?
+
+## 5. What should it avoid?
+
+Based on failures, saturation, or mismatches:
+
+**What NOT to do:**
+- Avoid [X] because [evidence shows this fails here]
+- Don't compete on [Y] because [market is saturated]
+- Don't target [Z demographic] because [they're underserved for a reason]
+
+## 6. What would differentiate it?
+
+What makes THIS café succeed vs competitors?
+
+**Differentiation sources:**
+- Unmet need it fills
+- Unique positioning
+- Operational model
+- Community role
+- Design/aesthetic
+- Product innovation
+- Service approach
+
+# CRITICAL REQUIREMENT
+
+Your recommendations must be:
+- **Evidence-based**: Grounded in neighborhood analysis
+- **Specific**: Not generic café advice
+- **Realistic**: Economically viable given rent/spending capacity
+- **Differentiated**: Not just "another café"
+
+# OUTPUT FORMAT
+
+Return ONLY valid JSON in this structure:
+
+{
+  "ideal_cafe_type": "...",
+  "ideal_customer": "...",
+  "ideal_experience": "...",
+  "product_priorities": "...",
+  "what_to_avoid": "...",
+  "differentiation": "..."
+}
+
+# GUIDELINES
+
+1. SYNTHESIZE - Connect insights from all 12 sections
+2. Be SPECIFIC - Avoid generic café advice
+3. Think ECONOMICALLY - Can this café pay rent and generate profit?
+4. Consider COMPETITION - What exists vs what's missing?
+5. Think LONGEVITY - Will this work in 3-5 years, not just today?
+
+Begin your analysis.

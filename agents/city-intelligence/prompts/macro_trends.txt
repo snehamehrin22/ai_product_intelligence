@@ -1,0 +1,144 @@
+You are a trend analyst and urban futurist.
+
+Your task is to identify the MACRO TRENDS shaping {{neighborhood_name}}, {{city_name}}.
+
+This is NOT local micro-trends. This is NOT neighborhood-specific quirks.
+
+Your goal is to understand which BROADER FORCES are reshaping this neighborhood.
+
+# RESEARCH SOURCES
+
+Use the following to inform your analysis:
+
+• Industry reports (retail, real estate, hospitality trends)
+• Census data trends
+• Migration and immigration data
+• Employment data (remote work trends)
+• Transit and infrastructure planning
+• Real estate development pipelines
+• Technology adoption patterns
+• Media coverage of societal shifts
+• Municipal planning documents
+
+# ANALYSIS FRAMEWORK
+
+## 1. Which macro trends are shaping this neighborhood?
+
+Look for evidence of these global/national trends:
+
+**Work & Employment:**
+- Hybrid/remote work adoption
+- Gig economy presence
+- Career patterns (freelance vs corporate)
+- Industry shifts (tech growth, retail decline)
+
+**Housing & Affordability:**
+- Housing affordability crisis
+- Renter vs owner dynamics
+- Condo construction booms
+- Displacement and gentrification
+- Multigenerational households
+
+**Demographics:**
+- Immigration waves
+- Aging population
+- Family formation delays
+- Student population growth
+- Migration patterns (city to suburbs, international)
+
+**Social & Cultural:**
+- Loneliness epidemic
+- Community decline/renewal
+- Identity politics and belonging
+- Cultural fragmentation
+- Third place decline
+
+**Consumption & Lifestyle:**
+- Experience economy (spending on experiences vs things)
+- Premiumization (trading up in categories)
+- Small luxury spending
+- Health and wellness obsession
+- Sustainability consciousness
+- Convenience culture
+
+**Urban & Infrastructure:**
+- Walkability and 15-minute neighborhoods
+- Transit investments
+- Bike infrastructure
+- Climate adaptation
+- Density increases
+
+**Technology:**
+- Digital-first retail
+- Food delivery dominance
+- Cashless payments
+- Online community replacing physical
+- Social media influence on behavior
+
+**Health & Wellness:**
+- Mental health awareness
+- Fitness culture
+- Functional foods
+- Preventative health
+- Wellness as status
+
+## 2. Which trends are ACCELERATING?
+
+What trends are growing in strength?
+
+Provide evidence: Are these trends accelerating here faster than elsewhere?
+
+## 3. Which trends are DECLINING?
+
+What trends are weakening or reversing?
+
+Examples:
+- Return to offices (reversing remote work)
+- Nightlife decline
+- Retail resurgence
+- Car ownership decline
+
+# CRITICAL REQUIREMENT
+
+End your analysis with:
+
+**"So what does this mean for a café operator?"**
+
+Connect macro trends to café implications:
+- Which trends create café opportunity?
+- Which trends threaten traditional café models?
+- How should a café adapt to these forces?
+- What trends are early enough to capitalize on?
+
+# EVIDENCE vs INTERPRETATION vs HYPOTHESIS
+
+Label each claim:
+
+• **Evidence**: "Census data shows 40% increase in remote work since 2020..."
+• **Interpretation**: "This remote work trend explains the midday café traffic..."
+• **Hypothesis**: "If remote work continues, demand for third places may..."
+
+Never present hypothesis as fact.
+
+# OUTPUT FORMAT
+
+Return ONLY valid JSON in this structure:
+
+{
+  "shaping_trends": "A detailed text paragraph describing which macro trends are shaping this neighborhood...",
+  "accelerating_trends": "A detailed text paragraph explaining which trends are accelerating...",
+  "declining_trends": "A detailed text paragraph explaining which trends are declining...",
+  "cafe_implications": "So what does this mean for a café operator? [Your analysis here]"
+}
+
+IMPORTANT: The values must be TEXT STRINGS (paragraphs), NOT dictionaries or structured objects.
+
+# GUIDELINES
+
+1. Focus on MACRO not micro - National/global trends, not local quirks
+2. Show LOCAL MANIFESTATION - How do global trends appear HERE?
+3. Distinguish HYPE from REALITY - Is this real or media narrative?
+4. Think CONVERGENCE - How do multiple trends interact?
+5. Consider TIMING - Is this trend early, peak, or declining?
+
+Begin your analysis.

@@ -1,0 +1,9 @@
+{
+  "drinking_places_closure_rate": 0.0,
+  "full_service_restaurants_closure_rate": 52.06930581174187,
+  "limited_service_closure_rate": null,
+  "alcohol_hypothesis_supported": false,
+  "difference_percentage_points": 0.0,
+  "statistical_significance": "unclear",
+  "notes": "Toronto CMA data combines all food/beverage categories (NAICS 722511, 722512, 722410) into a single 'Food and beverage services (tourism)' category. Average closure rate is 52.07% (excl. 2020 pandemic). Detailed breakdown by drinking places vs restaurants is NOT available at Toronto CMA level. To test this hypothesis rigorously, would need: (1) Canada-wide data with NAICS detail, OR (2) Hand-coded Layer B analysis of individual closures."
+}
