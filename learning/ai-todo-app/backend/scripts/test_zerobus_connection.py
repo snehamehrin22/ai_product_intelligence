@@ -81,7 +81,8 @@ def test_zerobus_connection():
         return False
 
     # Configure stream for platform_events table
-    table_properties = TableProperties("main.events.platform_events")
+    # Using bronze layer: signaltogrowth.bronze.platform_events
+    table_properties = TableProperties("signaltogrowth.bronze.platform_events")
     options = StreamConfigurationOptions(record_type=RecordType.JSON)
 
     # Create stream
@@ -96,9 +97,11 @@ def test_zerobus_connection():
     except Exception as e:
         print(f"\n❌ Failed to create Zerobus stream: {e}")
         print("\nPossible issues:")
-        print("  - Service principal lacks permissions (need CREATE TABLE, MODIFY)")
-        print("  - Table main.events.platform_events doesn't exist (run databricks/setup_zerobus.sql)")
+        print("  - Service principal lacks permissions (need USE CATALOG, USE SCHEMA, MODIFY, SELECT)")
+        print("  - Table signaltogrowth.bronze.platform_events doesn't exist")
+        print("    → Run: databricks/setup_zerobus_streaming.sql in Databricks SQL Editor")
         print("  - Zerobus Ingest not enabled in workspace (Admin Settings → Lakeflow Connect)")
+        print("  - Invalid service principal credentials (check CLIENT_ID and CLIENT_SECRET)")
         return False
 
     # Create test event
@@ -147,8 +150,9 @@ def test_zerobus_connection():
     print("✅ Zerobus Connection Test PASSED")
     print("=" * 80)
     print("\nNext steps:")
-    print("  1. Verify event in Databricks:")
-    print(f"     SELECT * FROM main.events.platform_events WHERE event_id = '{test_event['event_id']}'")
+    print("  1. Verify event in Databricks SQL Editor:")
+    print(f"     SELECT * FROM signaltogrowth.bronze.platform_events")
+    print(f"     WHERE event_id = '{test_event['event_id']}'")
     print("  2. Note: Zerobus has ~5 second latency, so wait a bit before querying")
     print("  3. Proceed with implementing ZerobusPublisher service (US-2.2)")
 
