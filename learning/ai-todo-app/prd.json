@@ -161,7 +161,7 @@
       "priority": "P0",
       "estimatedHours": 6,
       "dependencies": ["US-1.3"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-1.6",
@@ -191,7 +191,7 @@
       "priority": "P1",
       "estimatedHours": 5,
       "dependencies": ["US-1.3", "US-1.4"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-1.7",

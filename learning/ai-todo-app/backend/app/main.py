@@ -291,8 +291,34 @@ async def delete_task_endpoint(task_id: str):
 
 
 # ============================================================================
-# AGENT ENDPOINTS (US-1.6 - to be implemented)
+# AGENT ENDPOINTS
 # ============================================================================
+
+from .agent import process_agent_message, AgentResponse as AgentResponseSchema
+
+
+@app.post("/agent/chat", response_model=AgentResponseSchema, tags=["Agent"])
+async def agent_chat_endpoint(
+    message: str = Query(..., description="User's natural language message"),
+    user_id: str = Query(default="test-user-001", description="User ID"),
+):
+    """Process natural language message and create task.
+
+    The AI agent extracts task details from the message and creates a task.
+
+    Returns:
+        Agent response with confirmation and task details
+
+    Example:
+        POST /agent/chat?message=Remind me to buy milk tomorrow&user_id=test-user-001
+    """
+    try:
+        response = await process_agent_message(message, user_id)
+        return response
+
+    except Exception as e:
+        logger.error(f"Error in agent chat: {e}")
+        raise HTTPException(status_code=500, detail=f"Agent error: {str(e)}")
 
 
 if __name__ == "__main__":
