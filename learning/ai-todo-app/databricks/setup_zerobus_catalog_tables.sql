@@ -1,50 +1,33 @@
 -- ============================================================================
--- Zerobus Catalog and Tables Setup
--- Storage credential already created via UI
+-- Zerobus Bronze Tables Setup (Azure ADLS Gen2 with HNS)
+-- Storage credential 'zerobus-ingest' already created via UI
+-- External location 'zerobusingest_final' already created
 -- Run this script in Databricks SQL Editor
 -- ============================================================================
 
--- Step 1: Verify Storage Credential Exists
-DESCRIBE STORAGE CREDENTIAL azure_storage_credential;
+-- Step 1: Verify Prerequisites
+DESCRIBE STORAGE CREDENTIAL `zerobus-ingest`;
+DESCRIBE EXTERNAL LOCATION zerobusingest_final;
 
 -- ============================================================================
--- Step 2: Create External Location
+-- Step 2: Set Managed Location on Bronze Schema
 -- ============================================================================
 
-CREATE EXTERNAL LOCATION IF NOT EXISTS signaltogrowth_storage
-URL 'abfss://databricks-data@signalogrowthdata.dfs.core.windows.net/unity-catalog'
-WITH (STORAGE CREDENTIAL azure_storage_credential);
+USE CATALOG signaltogrowth;
 
--- Verify external location
-DESCRIBE EXTERNAL LOCATION signaltogrowth_storage;
+-- Set managed storage location for bronze schema
+ALTER SCHEMA bronze SET MANAGED LOCATION 'abfss://zerobusingest2@signaltogrowthdata2.dfs.core.windows.net/bronze/';
 
--- ============================================================================
--- Step 3: Create Catalog with Managed Storage
--- ============================================================================
-
-CREATE CATALOG IF NOT EXISTS signaltogrowth_zerobus
-MANAGED LOCATION 'abfss://databricks-data@signalogrowthdata.dfs.core.windows.net/unity-catalog/signaltogrowth_zerobus'
-COMMENT 'Catalog with managed storage for Zerobus Ingest';
-
--- Verify catalog has storage location (should show abfss:// path)
-DESCRIBE CATALOG EXTENDED signaltogrowth_zerobus;
+-- Verify schema has managed location
+DESCRIBE SCHEMA EXTENDED bronze;
 
 -- ============================================================================
--- Step 4: Create Bronze Schema
--- ============================================================================
-
-USE CATALOG signaltogrowth_zerobus;
-
-CREATE SCHEMA IF NOT EXISTS bronze
-COMMENT 'Bronze layer: Raw event streams from Zerobus Ingest';
-
--- ============================================================================
--- Step 5: Create Tables for Zerobus
+-- Step 3: Drop and Recreate Tables (to pick up managed storage)
 -- ============================================================================
 
 USE SCHEMA bronze;
 
--- Drop existing tables if any (to ensure clean slate)
+-- Drop existing tables (they were created without managed storage)
 DROP TABLE IF EXISTS platform_events;
 DROP TABLE IF EXISTS agent_traces;
 
@@ -64,6 +47,7 @@ TBLPROPERTIES (
   'delta.enableChangeDataFeed' = 'true',
   'delta.autoOptimize.optimizeWrite' = 'true',
   'delta.autoOptimize.autoCompact' = 'true',
+  'delta.feature.allowColumnDefaults' = 'supported',
   'comment' = 'Platform events for Zerobus Ingest (with managed storage)'
 );
 
@@ -94,42 +78,55 @@ TBLPROPERTIES (
   'delta.enableChangeDataFeed' = 'true',
   'delta.autoOptimize.optimizeWrite' = 'true',
   'delta.autoOptimize.autoCompact' = 'true',
+  'delta.feature.allowColumnDefaults' = 'supported',
   'comment' = 'Agent traces for Zerobus Ingest (with managed storage)'
 );
 
 -- ============================================================================
--- Step 6: Grant Permissions to Service Principal (for Zerobus SDK)
+-- Step 4: Grant Permissions to Service Principal (for Zerobus SDK)
 -- ============================================================================
 
-GRANT USE CATALOG ON CATALOG signaltogrowth_zerobus TO `46538e1a-e97d-447e-99ef-2685a8492b8f`;
-GRANT USE SCHEMA ON SCHEMA signaltogrowth_zerobus.bronze TO `46538e1a-e97d-447e-99ef-2685a8492b8f`;
-GRANT MODIFY, SELECT ON TABLE signaltogrowth_zerobus.bronze.platform_events TO `46538e1a-e97d-447e-99ef-2685a8492b8f`;
-GRANT MODIFY, SELECT ON TABLE signaltogrowth_zerobus.bronze.agent_traces TO `46538e1a-e97d-447e-99ef-2685a8492b8f`;
+-- Service principal: 46538e1a-e97d-447e-99ef-2685a8492b8f
+GRANT USE CATALOG ON CATALOG signaltogrowth TO `46538e1a-e97d-447e-99ef-2685a8492b8f`;
+GRANT USE SCHEMA ON SCHEMA signaltogrowth.bronze TO `46538e1a-e97d-447e-99ef-2685a8492b8f`;
+GRANT MODIFY, SELECT ON TABLE signaltogrowth.bronze.platform_events TO `46538e1a-e97d-447e-99ef-2685a8492b8f`;
+GRANT MODIFY, SELECT ON TABLE signaltogrowth.bronze.agent_traces TO `46538e1a-e97d-447e-99ef-2685a8492b8f`;
 
 -- ============================================================================
--- Step 7: Verify Storage Location (CRITICAL FOR ZEROBUS)
+-- Step 5: Verify Storage Location (CRITICAL FOR ZEROBUS)
 -- ============================================================================
 
 -- Check platform_events has storage location
-DESCRIBE EXTENDED signaltogrowth_zerobus.bronze.platform_events;
+DESCRIBE EXTENDED signaltogrowth.bronze.platform_events;
 
--- The Location field should now show something like:
--- abfss://databricks-data@signalogrowthdata.dfs.core.windows.net/unity-catalog/signaltogrowth_zerobus/bronze/platform_events
+-- The Location field MUST show an abfss:// path like:
+-- abfss://zerobusingest2@signaltogrowthdata2.dfs.core.windows.net/bronze/platform_events
+--
+-- ✅ If Location shows abfss:// path → Zerobus will work!
+-- ❌ If Location is empty or dbfs:/ → Zerobus will fail with Error 4024
 
--- If Location shows an abfss:// path, Zerobus will work! ✅
+-- Check agent_traces storage location
+DESCRIBE EXTENDED signaltogrowth.bronze.agent_traces;
 
 -- ============================================================================
--- Step 8: Verify Tables
+-- Step 6: Verify Tables and Permissions
 -- ============================================================================
 
-SELECT COUNT(*) as event_count FROM signaltogrowth_zerobus.bronze.platform_events;
-SELECT COUNT(*) as trace_count FROM signaltogrowth_zerobus.bronze.agent_traces;
+-- Verify tables are empty
+SELECT COUNT(*) as event_count FROM signaltogrowth.bronze.platform_events;
+SELECT COUNT(*) as trace_count FROM signaltogrowth.bronze.agent_traces;
 
--- Show grants
-SHOW GRANTS ON TABLE signaltogrowth_zerobus.bronze.platform_events;
+-- Verify service principal has permissions
+SHOW GRANTS ON TABLE signaltogrowth.bronze.platform_events;
+SHOW GRANTS ON TABLE signaltogrowth.bronze.agent_traces;
 
 -- ============================================================================
 -- Setup Complete!
 -- ============================================================================
 
--- Next: Update test_zerobus_connection.py to use signaltogrowth_zerobus.bronze.platform_events
+-- Expected results:
+-- 1. Schema has managed location: abfss://zerobusingest2@signaltogrowthdata2.dfs.core.windows.net/bronze/
+-- 2. Tables inherit storage location from schema
+-- 3. Service principal has MODIFY and SELECT on both tables
+--
+-- Next: Update test_zerobus_connection.py to use signaltogrowth.bronze.platform_events
