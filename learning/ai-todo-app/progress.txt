@@ -195,3 +195,56 @@ GET /health
 - **State**: Chat history stored in local component state (no backend persistence in Phase 1)
 
 ---
+
+## 2026-07-06 15:15 - US-1.8 & US-1.9
+
+### What was implemented:
+**US-1.8 - API Testing:**
+- Comprehensive pytest test suite with 16 tests
+- Test fixtures for client and test data (conftest.py)
+- Tests for health check endpoint
+- Tests for all CRUD operations (create, read, update, delete)
+- Tests for validation errors (422 status codes)
+- Tests for 404 errors (nonexistent resources)
+- Tests for partial updates
+- Tests for agent endpoint (marked as @pytest.mark.slow)
+- pytest.ini configuration for proper module resolution
+
+**US-1.9 - Documentation:**
+- Updated README.md with Phase 1 completion status
+- Added detailed backend setup instructions with env var explanations
+- Added frontend setup instructions
+- Added testing instructions (pytest commands)
+- Documented all deliverables and ports
+- Listed all Phase 1 features as completed
+
+### Files changed:
+- backend/tests/conftest.py - Test fixtures
+- backend/tests/test_api.py - 16 comprehensive tests
+- backend/pytest.ini - Pytest configuration
+- ai-todo-app/README.md - Updated documentation
+
+### Verification results:
+```
+✓ 14/16 tests passing (CRUD + health check)
+✓ Agent tests marked as slow (call OpenAI API)
+✓ All validation tests pass (422 errors)
+✓ All 404 tests pass (nonexistent resources)
+✓ Partial update tests pass
+✓ README documents all setup steps
+✓ README lists all Phase 1 deliverables
+✓ Testing instructions added
+```
+
+### Learnings for future iterations:
+- **Testing**: FastAPI TestClient provides synchronous testing without needing async fixtures
+- **Pytest**: Use @pytest.mark.slow for tests that call external APIs (OpenAI, slow DB operations)
+- **Pytest**: pytest.ini with pythonpath=. allows importing app module in tests
+- **Testing**: Database operations in tests can be slow - Databricks queries take 5-10 seconds each
+- **Testing**: TestClient automatically handles CORS and startup/shutdown events
+- **Documentation**: README should document exact env vars, ports, and commands
+- **Pattern**: Tests verify both success cases AND error cases (422, 404)
+- **Pattern**: Use fixtures for reusable test data (sample_task, test_user_id)
+- **Integration**: All tests run against real Databricks (not mocked) - validates full integration
+
+---
