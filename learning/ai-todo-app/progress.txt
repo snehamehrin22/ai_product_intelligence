@@ -79,3 +79,39 @@ GET /health
 - **Pattern**: DatabricksClient class manages connection lifecycle with health checks
 
 ---
+
+## 2026-07-06 10:27 - US-1.2
+
+### What was implemented:
+- SQL schema setup script (databricks/setup_schema.sql)
+- Database setup automation script (backend/setup_database.py)
+- Users table with proper Delta Lake format and CDC enabled
+- Tasks table with proper schema (task_id, user_id, title, description, status, priority, due_date, created_at, updated_at)
+- Test data: 1 test user (test@example.com) and 3 sample tasks
+- Primary key constraints on both tables
+- Repeatable setup process
+
+### Files changed:
+- databricks/setup_schema.sql - SQL DDL and test data
+- backend/setup_database.py - Automated setup script with verification
+
+### Verification results:
+```
+✓ Users table exists with 1 rows
+  - test@example.com (Test User)
+
+✓ Tasks table exists with 3 rows
+  - [completed] Complete backend setup
+  - [in_progress] Implement CRUD endpoints
+  - [pending] Build React frontend
+```
+
+### Learnings for future iterations:
+- **Gotcha**: Databricks doesn't support DEFAULT values in column definitions - removed DEFAULT CURRENT_TIMESTAMP()
+- **Gotcha**: Databricks only supports PRIMARY KEY and FOREIGN KEY constraints, not CHECK constraints - validation moved to Pydantic
+- **Pattern**: Timestamps (created_at, updated_at) must be explicitly set in application code, not at DB level
+- **Pattern**: Using catalog `signaltogrowth` and schema `todo_app` (not the default `main.todo_app`)
+- **Pattern**: Delta Lake CDC enabled with `delta.enableChangeDataFeed` = 'true' for future Phase 3 streaming
+- **Tool**: setup_database.py script automates SQL execution and verification, making schema setup repeatable
+
+---
