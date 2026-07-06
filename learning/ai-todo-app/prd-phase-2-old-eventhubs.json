@@ -1,0 +1,530 @@
+{
+  "projectName": "AI Todo App - Phase 2: Event Instrumentation",
+  "version": "2.0.0",
+  "phase": "Phase 2 - Event Instrumentation (Week 2)",
+  "description": "Add platform event emitter, Azure Event Hubs integration, and OpenTelemetry agent tracing for full observability",
+  "branchName": "phase-2-event-instrumentation",
+  "objectives": [
+    "Instrument frontend with platform event tracking (user interactions)",
+    "Instrument backend LangGraph agent with OpenTelemetry traces",
+    "Set up Azure Event Hubs for streaming event ingestion",
+    "Implement session ID propagation for join key between events and traces",
+    "Validate end-to-end event flow: Frontend → Backend → Event Hubs",
+    "Integrate Langfuse for real-time agent trace visualization"
+  ],
+  "technicalStack": {
+    "backend": "FastAPI + OpenTelemetry SDK",
+    "frontend": "React + custom event emitter",
+    "streaming": "Azure Event Hubs (Kafka API)",
+    "observability_platform": "Custom events → Event Hubs",
+    "observability_agent": "OpenTelemetry + Langfuse",
+    "infrastructure": "Local development (Event Hubs in Azure)"
+  },
+  "userStories": [
+    {
+      "id": "US-2.1",
+      "title": "Azure Event Hubs Setup and Configuration",
+      "description": "As a developer, I need to provision Azure Event Hubs namespace and configure topics so that the backend can publish streaming events",
+      "acceptanceCriteria": [
+        "Event Hubs namespace created in Azure portal",
+        "Two topics created: platform_events and agent_traces",
+        "Connection string stored securely in .env",
+        "Python kafka-python library can connect and publish test message",
+        "Topics configured with appropriate partitions (4) and retention (7 days)",
+        "Consumer groups created for future Auto Loader ingestion"
+      ],
+      "technicalNotes": [
+        "Use Azure Portal or Terraform for provisioning",
+        "Event Hubs Standard tier (supports Kafka API)",
+        "Connection string format: Endpoint=sb://<namespace>.servicebus.windows.net/;SharedAccessKeyName=...",
+        "Test connection with simple Python script before integration",
+        "Document partition key strategy (session_id for even distribution)"
+      ],
+      "files": [
+        "infrastructure/event_hubs_setup.md",
+        "backend/.env.example"
+      ],
+      "priority": "P0",
+      "estimatedHours": 2,
+      "dependencies": [],
+      "passes": false
+    },
+    {
+      "id": "US-2.2",
+      "title": "Backend Event Publisher Service",
+      "description": "As a backend developer, I need a reusable event publishing service that can send events to Azure Event Hubs so that platform and agent events are centralized",
+      "acceptanceCriteria": [
+        "EventPublisher class with publish() method",
+        "Supports publishing to multiple topics (platform_events, agent_traces)",
+        "Uses Kafka producer with async support (confluent-kafka-python)",
+        "Implements retry logic with exponential backoff for transient failures",
+        "Adds metadata: timestamp, event_id (UUID), event_version",
+        "Graceful error handling (logs error but doesn't crash app)",
+        "Connection pooling for efficiency",
+        "Unit tests for publisher service"
+      ],
+      "technicalNotes": [
+        "Use confluent-kafka-python (better async support than kafka-python)",
+        "Partition key = session_id for ordering guarantees",
+        "Event schema: { event_id, event_name, event_version, timestamp, session_id, user_id, properties }",
+        "Consider batching for high-throughput scenarios",
+        "Wrap in asyncio for FastAPI compatibility"
+      ],
+      "files": [
+        "backend/app/events.py",
+        "backend/tests/test_events.py",
+        "backend/requirements.txt"
+      ],
+      "priority": "P0",
+      "estimatedHours": 4,
+      "dependencies": ["US-2.1"],
+      "passes": false
+    },
+    {
+      "id": "US-2.3",
+      "title": "Platform Event Schema Definition",
+      "description": "As a data engineer, I need well-defined schemas for all platform events so that downstream consumers can rely on consistent structure",
+      "acceptanceCriteria": [
+        "Pydantic models for 8 platform events: task_created, task_completed, task_deleted, task_updated, page_viewed, agent_message_sent, agent_message_received, session_started",
+        "Base PlatformEvent schema with common fields (event_id, event_name, timestamp, session_id, user_id)",
+        "Event-specific properties in nested 'properties' field",
+        "JSON schema exported to documentation",
+        "Schema validation in EventPublisher before sending",
+        "Schema versioning strategy documented (semantic versioning)"
+      ],
+      "technicalNotes": [
+        "Use Pydantic for schema definition and validation",
+        "Common fields: event_id, event_name, event_version, timestamp, session_id, user_id",
+        "Properties field holds event-specific data (task_id, task_title, etc.)",
+        "Export schemas: pydantic model.schema_json()",
+        "Version field allows schema evolution (e.g., 'v1', 'v2')"
+      ],
+      "files": [
+        "backend/app/schemas/events.py",
+        "backend/docs/event_schemas.json",
+        "backend/tests/test_event_schemas.py"
+      ],
+      "priority": "P0",
+      "estimatedHours": 3,
+      "dependencies": [],
+      "passes": false
+    },
+    {
+      "id": "US-2.4",
+      "title": "Backend Platform Event Emission",
+      "description": "As a backend developer, I need to emit platform events from API endpoints so that user interactions are tracked",
+      "acceptanceCriteria": [
+        "POST /tasks emits task_created event",
+        "PUT /tasks/{id} emits task_updated event",
+        "DELETE /tasks/{id} emits task_deleted event",
+        "Task completion toggle emits task_completed event",
+        "Events published asynchronously (non-blocking)",
+        "session_id extracted from request headers (X-Session-Id)",
+        "Events include full task context in properties field",
+        "Error in event publishing doesn't fail API request"
+      ],
+      "technicalNotes": [
+        "Use dependency injection for EventPublisher in FastAPI",
+        "Emit events AFTER successful DB write (not before)",
+        "Fire-and-forget pattern: await event_publisher.publish(event) in background task",
+        "Log event publishing failures but don't return error to client",
+        "Extract session_id from header: request.headers.get('X-Session-Id')"
+      ],
+      "files": [
+        "backend/app/main.py",
+        "backend/app/dependencies.py",
+        "backend/tests/test_event_emission.py"
+      ],
+      "priority": "P0",
+      "estimatedHours": 3,
+      "dependencies": ["US-2.2", "US-2.3"],
+      "passes": false
+    },
+    {
+      "id": "US-2.5",
+      "title": "Frontend Event Emitter Service",
+      "description": "As a frontend developer, I need a reusable event emitter that sends platform events to the backend so that UI interactions are tracked",
+      "acceptanceCriteria": [
+        "EventEmitter class with emit() method",
+        "Generates session_id on app load (stored in sessionStorage)",
+        "Sends events to POST /events endpoint",
+        "Includes session_id in request headers (X-Session-Id)",
+        "Retry logic for network failures (3 retries with backoff)",
+        "Batches events locally before sending (max 10 events or 5 seconds)",
+        "Graceful degradation if backend unavailable (logs to console)",
+        "TypeScript types for event payloads"
+      ],
+      "technicalNotes": [
+        "Generate session_id: crypto.randomUUID() on mount",
+        "Store in sessionStorage for persistence across page refreshes",
+        "Use fetch() with retry wrapper",
+        "Batch events in-memory array, flush on timer or count",
+        "Consider using requestIdleCallback for non-blocking sends"
+      ],
+      "files": [
+        "frontend/src/services/eventEmitter.js",
+        "frontend/src/services/eventEmitter.test.js",
+        "frontend/src/types/events.ts"
+      ],
+      "priority": "P0",
+      "estimatedHours": 4,
+      "dependencies": [],
+      "passes": false
+    },
+    {
+      "id": "US-2.6",
+      "title": "Frontend Platform Event Instrumentation",
+      "description": "As a product analyst, I need frontend UI interactions tracked as events so that I can understand user behavior",
+      "acceptanceCriteria": [
+        "session_started emitted on App mount",
+        "page_viewed emitted on route change (if using router)",
+        "agent_message_sent emitted when user sends chat message",
+        "agent_message_received emitted when agent responds",
+        "Task CRUD actions emit corresponding events (via EventEmitter)",
+        "Events include relevant context (task_id, message_text, etc.)",
+        "No PII in event payloads (no email, passwords)",
+        "Events visible in Network tab (can verify sent to backend)"
+      ],
+      "technicalNotes": [
+        "Wrap EventEmitter in React Context for easy access",
+        "Call eventEmitter.emit() in component lifecycle hooks",
+        "For task actions: emit AFTER API call succeeds",
+        "For agent chat: emit on message send AND receive",
+        "Use useEffect for session_started on mount",
+        "Properties field structure: { task_id, task_title, message_text, etc. }"
+      ],
+      "files": [
+        "frontend/src/App.jsx",
+        "frontend/src/components/AgentChat.jsx",
+        "frontend/src/components/TaskForm.jsx",
+        "frontend/src/contexts/EventContext.jsx"
+      ],
+      "priority": "P1",
+      "estimatedHours": 3,
+      "dependencies": ["US-2.5"],
+      "passes": false
+    },
+    {
+      "id": "US-2.7",
+      "title": "Backend Events API Endpoint",
+      "description": "As a frontend developer, I need a backend endpoint to receive platform events from the UI so that they can be published to Event Hubs",
+      "acceptanceCriteria": [
+        "POST /events endpoint accepts array of events",
+        "Validates events against Pydantic schema",
+        "Extracts session_id from headers",
+        "Publishes validated events to Event Hubs (platform_events topic)",
+        "Returns 202 Accepted (async processing)",
+        "Handles batch events (up to 100 events per request)",
+        "Rate limiting to prevent abuse (100 requests/minute per session)",
+        "Error responses include validation details"
+      ],
+      "technicalNotes": [
+        "Use BackgroundTasks for async event publishing",
+        "Validate each event in batch individually",
+        "Return 202 immediately, publish in background",
+        "Use slowapi for rate limiting",
+        "Session_id from header merged into each event",
+        "Log invalid events but don't fail entire batch"
+      ],
+      "files": [
+        "backend/app/main.py",
+        "backend/app/routers/events.py",
+        "backend/tests/test_events_endpoint.py",
+        "backend/requirements.txt"
+      ],
+      "priority": "P0",
+      "estimatedHours": 3,
+      "dependencies": ["US-2.2", "US-2.3"],
+      "passes": false
+    },
+    {
+      "id": "US-2.8",
+      "title": "OpenTelemetry Agent Instrumentation",
+      "description": "As a developer, I need OpenTelemetry tracing for the LangGraph agent so that I can observe LLM execution in detail",
+      "acceptanceCriteria": [
+        "OpenTelemetry SDK installed and configured",
+        "LangGraph agent wrapped with OTel tracing",
+        "GenAI semantic conventions followed (gen_ai.* attributes)",
+        "Traces include: model name, token counts, prompts, responses",
+        "Trace context propagated through agent graph",
+        "session_id attached as trace attribute (for joining with platform events)",
+        "Traces exported to Langfuse (OTLP exporter)",
+        "Spans visible in Langfuse UI"
+      ],
+      "technicalNotes": [
+        "Use opentelemetry-sdk-python",
+        "Install opentelemetry-instrumentation-langchain (if available) or manual instrumentation",
+        "GenAI conventions: gen_ai.request.model, gen_ai.usage.input_tokens, gen_ai.usage.output_tokens",
+        "Use trace.set_attribute('session_id', session_id) for join key",
+        "Langfuse as OTLP backend: configure endpoint in .env",
+        "Consider LangSmith as alternative to Langfuse"
+      ],
+      "files": [
+        "backend/app/telemetry.py",
+        "backend/app/agent.py",
+        "backend/requirements.txt",
+        "backend/.env.example"
+      ],
+      "priority": "P1",
+      "estimatedHours": 5,
+      "dependencies": ["US-1.6"],
+      "passes": false
+    },
+    {
+      "id": "US-2.9",
+      "title": "Agent Trace Publishing to Event Hubs",
+      "description": "As a data engineer, I need agent traces published to Event Hubs so that they can be joined with platform events in the lakehouse",
+      "acceptanceCriteria": [
+        "OTel spans exported to custom exporter (in addition to Langfuse)",
+        "Custom exporter publishes spans to Event Hubs (agent_traces topic)",
+        "Span data serialized to JSON with flattened structure",
+        "session_id included in trace payload (from OTel baggage)",
+        "Trace schema matches platform event schema structure (event_id, timestamp, session_id)",
+        "All GenAI attributes preserved (model, tokens, finish_reason)",
+        "Traces batched before publishing (max 50 spans or 10 seconds)",
+        "Graceful error handling (logs but doesn't crash agent)"
+      ],
+      "technicalNotes": [
+        "Create custom OTel SpanExporter class",
+        "Override export() method to publish to Event Hubs",
+        "Use BatchSpanProcessor for efficiency",
+        "Flatten nested span attributes for easier querying",
+        "Schema: { trace_id, span_id, span_name, session_id, gen_ai_* attributes, timestamp }",
+        "Register exporter in OTel pipeline: TracerProvider.add_span_processor()"
+      ],
+      "files": [
+        "backend/app/exporters/event_hub_exporter.py",
+        "backend/app/telemetry.py",
+        "backend/tests/test_trace_export.py"
+      ],
+      "priority": "P1",
+      "estimatedHours": 4,
+      "dependencies": ["US-2.8", "US-2.2"],
+      "passes": false
+    },
+    {
+      "id": "US-2.10",
+      "title": "Session ID Propagation End-to-End",
+      "description": "As a data engineer, I need session_id to flow from frontend → backend → events → traces so that I can join datasets in the lakehouse",
+      "acceptanceCriteria": [
+        "Frontend generates session_id on mount (crypto.randomUUID())",
+        "Frontend sends session_id in X-Session-Id header on all API requests",
+        "Backend extracts session_id from header",
+        "Backend includes session_id in platform events",
+        "Backend propagates session_id to OTel trace context (baggage)",
+        "session_id appears in both platform_events and agent_traces topics",
+        "End-to-end test validates session_id in Event Hubs messages",
+        "Documentation explains session_id join strategy"
+      ],
+      "technicalNotes": [
+        "Frontend: sessionStorage.setItem('session_id', crypto.randomUUID())",
+        "Frontend: axios.defaults.headers.common['X-Session-Id'] = sessionId",
+        "Backend: session_id = request.headers.get('X-Session-Id')",
+        "OTel: baggage.set_baggage('session_id', session_id)",
+        "Event publishing: include session_id in all events",
+        "Trace exporter: extract session_id from baggage",
+        "Test: send request → verify session_id in both topics"
+      ],
+      "files": [
+        "frontend/src/App.jsx",
+        "frontend/src/services/api.js",
+        "backend/app/main.py",
+        "backend/app/telemetry.py",
+        "backend/tests/test_session_propagation.py",
+        "docs/session_id_propagation.md"
+      ],
+      "priority": "P0",
+      "estimatedHours": 3,
+      "dependencies": ["US-2.4", "US-2.6", "US-2.9"],
+      "passes": false
+    },
+    {
+      "id": "US-2.11",
+      "title": "Langfuse Integration for Real-Time Trace Visualization",
+      "description": "As a developer, I want to see agent traces in Langfuse UI in real-time so that I can debug agent behavior quickly",
+      "acceptanceCriteria": [
+        "Langfuse account created and API keys configured",
+        "Langfuse SDK integrated in backend",
+        "Traces visible in Langfuse UI within 10 seconds",
+        "UI shows: prompts, responses, token counts, latency",
+        "Traces grouped by session_id",
+        "Can filter traces by model, user_id, date range",
+        "Error traces highlighted in UI",
+        "Documentation includes Langfuse dashboard screenshots"
+      ],
+      "technicalNotes": [
+        "Sign up at langfuse.com (free tier available)",
+        "Install langfuse-python SDK",
+        "Initialize: Langfuse(public_key, secret_key, host)",
+        "Use @observe decorator on agent functions",
+        "Or use OpenTelemetry → Langfuse integration (OTLP endpoint)",
+        "Environment variables: LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_HOST",
+        "Alternative: Use LangSmith if preferred"
+      ],
+      "files": [
+        "backend/app/telemetry.py",
+        "backend/app/agent.py",
+        "backend/.env.example",
+        "backend/requirements.txt",
+        "docs/langfuse_setup.md"
+      ],
+      "priority": "P1",
+      "estimatedHours": 2,
+      "dependencies": ["US-2.8"],
+      "passes": false
+    },
+    {
+      "id": "US-2.12",
+      "title": "End-to-End Event Flow Validation",
+      "description": "As a developer, I need to validate that events flow correctly from frontend → backend → Event Hubs so that I can trust the instrumentation",
+      "acceptanceCriteria": [
+        "Integration test simulates full user flow (create task via UI)",
+        "Test verifies platform events in Event Hubs (task_created)",
+        "Test verifies agent traces in Event Hubs (if agent involved)",
+        "Test validates session_id present in all events",
+        "Test validates event schema compliance",
+        "Test validates event ordering (within same session_id)",
+        "Event consumer script can read from Event Hubs and display events",
+        "Documentation includes example event payloads"
+      ],
+      "technicalNotes": [
+        "Use confluent-kafka-python consumer to read from Event Hubs",
+        "Consumer script: subscribe to both topics, print events",
+        "Integration test: use Playwright to automate frontend",
+        "Test: trigger action → wait → consume from Event Hubs → assert",
+        "Mock Event Hubs in unit tests (use aiokafka or mocking library)",
+        "Document partition key strategy for ordering guarantees"
+      ],
+      "files": [
+        "backend/tests/integration/test_event_flow.py",
+        "backend/scripts/consume_events.py",
+        "docs/event_flow_validation.md",
+        "docs/example_events.json"
+      ],
+      "priority": "P1",
+      "estimatedHours": 4,
+      "dependencies": ["US-2.10"],
+      "passes": false
+    },
+    {
+      "id": "US-2.13",
+      "title": "Documentation and Monitoring Setup",
+      "description": "As a new developer, I need clear documentation on event instrumentation and how to monitor event flow",
+      "acceptanceCriteria": [
+        "README updated with Phase 2 setup instructions",
+        "Event schema documentation generated from Pydantic models",
+        "Langfuse setup guide with screenshots",
+        "Event Hubs troubleshooting guide (common errors)",
+        "Architecture diagram showing event flow",
+        "Example event payloads for all event types",
+        "Monitoring checklist (how to verify events flowing)",
+        "Cost estimation for Event Hubs and Langfuse"
+      ],
+      "technicalNotes": [
+        "Generate schema docs: pydantic models → JSON Schema → markdown",
+        "Use Mermaid diagrams for architecture visualization",
+        "Include curl commands for testing endpoints",
+        "Document partition key strategy and ordering guarantees",
+        "Cost breakdown: Event Hubs throughput units + Langfuse usage",
+        "Add ARCHITECTURE.md to docs/"
+      ],
+      "files": [
+        "ai-todo-app/README.md",
+        "docs/ARCHITECTURE.md",
+        "docs/event_schemas.md",
+        "docs/langfuse_setup.md",
+        "docs/troubleshooting.md",
+        "docs/monitoring.md"
+      ],
+      "priority": "P2",
+      "estimatedHours": 3,
+      "dependencies": ["US-2.12"],
+      "passes": false
+    }
+  ],
+  "successMetrics": {
+    "functional": [
+      "All user interactions emit platform events to Event Hubs within 5 seconds",
+      "Agent traces visible in Langfuse UI within 10 seconds",
+      "session_id successfully joins platform events and agent traces (>95% match rate)",
+      "No event publishing failures under normal load (100 events/min)",
+      "Frontend gracefully handles Event Hubs downtime (no UI errors)"
+    ],
+    "technical": [
+      "Event Hubs receives >95% of published events (delivery guarantee)",
+      "Event publishing adds <50ms latency to API responses",
+      "OTel instrumentation adds <100ms to agent execution time",
+      "All events conform to defined Pydantic schemas (100% validation rate)",
+      "Event batch processing efficiency >90% (events/batch ratio)"
+    ],
+    "learning": [
+      "Understand Kafka fundamentals (partitions, consumer groups, offsets)",
+      "Understand OpenTelemetry GenAI conventions",
+      "Understand session ID propagation for distributed tracing",
+      "Understand event schema design and versioning",
+      "Understand event-driven architecture benefits and tradeoffs"
+    ]
+  },
+  "outOfScope": [
+    "Bronze layer ingestion from Event Hubs (Phase 3)",
+    "dbt transformations (Phase 4)",
+    "Agent evaluation (Phase 5)",
+    "Production deployment (Phase 6)",
+    "Event Hubs cost optimization (Phase 6)",
+    "Schema registry implementation (Phase 3)",
+    "Event replay/backfill tooling (Phase 6)"
+  ],
+  "technicalDecisions": [
+    {
+      "decision": "Use Azure Event Hubs instead of Kafka on VMs",
+      "rationale": "Managed service reduces operational overhead. Kafka API compatibility allows easy migration. Azure integration for future phases."
+    },
+    {
+      "decision": "Use Langfuse for agent trace visualization",
+      "rationale": "Open-source, GenAI-focused, beautiful UI. Alternative to LangSmith (vendor lock-in). OTLP support for flexibility."
+    },
+    {
+      "decision": "Separate topics for platform events and agent traces",
+      "rationale": "Different schemas, retention policies, and consumers. Easier to evolve independently. Clear separation of concerns."
+    },
+    {
+      "decision": "session_id as join key (not user_id)",
+      "rationale": "One user can have multiple sessions. Session = atomic unit of interaction. Better granularity for analysis."
+    },
+    {
+      "decision": "Fire-and-forget event publishing (async)",
+      "rationale": "Don't block API responses on event delivery. Eventual consistency acceptable for analytics. Retry logic handles transient failures."
+    },
+    {
+      "decision": "Pydantic for event schema validation",
+      "rationale": "Type safety, automatic documentation, validation at write time. Prevents bad data in Event Hubs."
+    }
+  ],
+  "risks": [
+    {
+      "risk": "Event Hubs connection failures cause event loss",
+      "mitigation": "Implement retry logic with exponential backoff. Log failures to local file as fallback. Monitor Event Hubs health."
+    },
+    {
+      "risk": "High event volume exceeds Event Hubs throughput",
+      "mitigation": "Start with Standard tier (1 MB/s ingress). Scale up if needed. Batch events to reduce overhead. Monitor throughput metrics."
+    },
+    {
+      "risk": "session_id not propagated correctly (join fails)",
+      "mitigation": "End-to-end integration tests validate propagation. Logging at each hop. Documentation with examples."
+    },
+    {
+      "risk": "OTel instrumentation impacts agent performance",
+      "mitigation": "Use sampling for high-volume production. Benchmark with/without OTel. Optimize span creation."
+    },
+    {
+      "risk": "Langfuse free tier limits exceeded",
+      "mitigation": "Monitor usage daily. Implement sampling in production. Budget for paid tier if needed."
+    }
+  ],
+  "nextPhase": {
+    "phase": "Phase 3",
+    "title": "Streaming Ingestion + Bronze Layer",
+    "description": "Auto Loader ingestion from Event Hubs to Databricks Bronze tables (medallion architecture)"
+  }
+}
