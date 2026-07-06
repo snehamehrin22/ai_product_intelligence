@@ -59,6 +59,7 @@ def test_zerobus_connection():
     except ImportError as e:
         print(f"\n❌ Failed to import Zerobus SDK: {e}")
         print("\nInstall with: pip install databricks-zerobus-ingest-sdk")
+        print("Or run: cd backend && source .venv/bin/activate && pip install databricks-zerobus-ingest-sdk")
         return False
 
     # Extract config from environment
@@ -71,9 +72,9 @@ def test_zerobus_connection():
     print(f"Workspace URL: {workspace_url}")
     print(f"Client ID: {client_id[:10]}...")
 
-    # Initialize SDK
+    # Initialize SDK (using unity_catalog_url parameter as shown in official docs)
     try:
-        sdk = ZerobusSdk(server_endpoint, workspace_url)
+        sdk = ZerobusSdk(server_endpoint, unity_catalog_url=workspace_url)
         print("\n✅ Zerobus SDK initialized")
     except Exception as e:
         print(f"\n❌ Failed to initialize Zerobus SDK: {e}")

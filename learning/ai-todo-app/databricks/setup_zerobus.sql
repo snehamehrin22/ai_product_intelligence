@@ -123,12 +123,22 @@ ORDER BY e.timestamp;
 -- Grant Permissions (for service principal)
 -- ============================================================================
 
--- Note: Replace <service-principal-name> with your actual service principal
--- GRANT CREATE TABLE ON SCHEMA main.events TO `<service-principal-name>`;
--- GRANT MODIFY ON TABLE main.events.platform_events TO `<service-principal-name>`;
--- GRANT MODIFY ON TABLE main.events.agent_traces TO `<service-principal-name>`;
--- GRANT SELECT ON TABLE main.events.platform_events TO `<service-principal-name>`;
--- GRANT SELECT ON TABLE main.events.agent_traces TO `<service-principal-name>`;
+-- IMPORTANT: Replace <service-principal-id> with your actual service principal application ID
+-- Get this from: Settings → Identity & Access → Service Principals → Copy Application ID
+--
+-- Example format: GRANT USE CATALOG ON CATALOG main TO `abc12345-6789-abcd-ef01-23456789abcd`;
+
+-- Grant catalog and schema access
+-- GRANT USE CATALOG ON CATALOG main TO `<service-principal-id>`;
+-- GRANT USE SCHEMA ON SCHEMA main.events TO `<service-principal-id>`;
+
+-- Grant table permissions (MODIFY for writes, SELECT for reads)
+-- GRANT MODIFY, SELECT ON TABLE main.events.platform_events TO `<service-principal-id>`;
+-- GRANT MODIFY, SELECT ON TABLE main.events.agent_traces TO `<service-principal-id>`;
+
+-- Verify grants (uncomment to check)
+-- SHOW GRANTS ON TABLE main.events.platform_events;
+-- SHOW GRANTS ON TABLE main.events.agent_traces;
 
 -- ============================================================================
 -- Setup Complete
