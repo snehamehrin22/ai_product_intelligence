@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import TaskList from './components/TaskList';
 import TaskForm from './components/TaskForm';
+import AgentChat from './components/AgentChat';
 import { getTasks, createTask, updateTask, deleteTask } from './services/api';
 
 const TEST_USER_ID = 'test-user-001';
@@ -132,6 +133,9 @@ function App() {
           </section>
         </div>
       </main>
+
+      {/* AI Agent Chat */}
+      <AgentChat userId={TEST_USER_ID} onTaskCreated={loadTasks} />
     </div>
   );
 }
