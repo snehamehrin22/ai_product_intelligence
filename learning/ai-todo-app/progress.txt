@@ -1,0 +1,81 @@
+## Codebase Patterns
+
+(This section will be populated as we discover reusable patterns during implementation)
+
+---
+
+## 2026-07-06 - Project Initialization
+
+### What was created:
+- Project structure initialized (backend/, frontend/, databricks/, eval/)
+- Documentation: SETUP_GUIDE.md, ACCESS_REQUIREMENTS.md, README.md
+- Phase 1 PRD with 9 user stories (prd.json)
+- Backend scaffolding:
+  - requirements.txt with all dependencies
+  - .env.example template
+  - .gitignore
+  - CLAUDE.md with architectural patterns
+- Ready for implementation
+
+### Files created:
+- learning/SETUP_GUIDE.md
+- learning/ACCESS_REQUIREMENTS.md
+- learning/ai-todo-app/README.md
+- learning/ai-todo-app/prd.json
+- learning/ai-todo-app/progress.txt
+- learning/ai-todo-app/backend/{requirements.txt, .env.example, .gitignore, CLAUDE.md}
+
+### Next steps:
+1. User completes cloud services setup (Databricks, OpenAI)
+2. Begin implementation of US-1.1 (Backend configuration + Databricks connection)
+3. Follow PRD user stories in priority order (P0 → P1 → P2)
+
+### Learnings for future iterations:
+- Project follows standard structure from global CLAUDE.md
+- Backend uses Databricks as OLTP (Lakebase pattern) - not traditional Postgres
+- OpenAI chosen over Anthropic for guaranteed JSON output
+- Databricks SQL Connector is synchronous - must wrap in asyncio.to_thread()
+- Phase 1 is local development only (no cloud deployment yet)
+
+---
+
+## 2026-07-06 10:20 - US-1.1
+
+### What was implemented:
+- FastAPI backend with proper project structure (app/ directory)
+- Pydantic Settings configuration management loading from .env
+- Databricks SQL Connector integration with connection management
+- Health check endpoint (/health) returning connection status
+- Root endpoint (/) with API info
+- Error handling for connection failures
+- Async wrappers (asyncio.to_thread) for synchronous Databricks connector
+
+### Files changed:
+- backend/app/config.py - Pydantic Settings for environment configuration
+- backend/app/db.py - Databricks connection and query functions
+- backend/app/main.py - FastAPI app with health check endpoints
+
+### Verification results:
+```
+GET /health
+{
+  "status": "healthy",
+  "database": "connected",
+  "databricks": {
+    "status": "connected",
+    "databricks_host": "https://adb-7405605390611356.16.azuredatabricks.net/",
+    "catalog": "signaltogrowth",
+    "schema": "todo_app",
+    "test_query_result": 1
+  }
+}
+```
+
+### Learnings for future iterations:
+- **Pattern**: Using asyncio.to_thread() is critical for wrapping synchronous Databricks SQL Connector in async FastAPI routes
+- **Gotcha**: Databricks SQL Warehouse can auto-stop, causing connection timeouts during initial testing
+- **Context**: Health check performs `SELECT 1` query on startup to validate connection before app fully starts
+- **Config**: Using signaltogrowth catalog (not default main) and todo_app schema
+- **Pattern**: DatabricksClient class manages connection lifecycle with health checks
+
+---
