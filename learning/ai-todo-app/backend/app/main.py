@@ -20,6 +20,7 @@ from .event_schemas.events import (
     TaskDeletedEvent,
     TaskUpdatedEvent,
 )
+from .telemetry import setup_telemetry, set_session_id
 from .db import (
     async_test_connection,
     db_client,
@@ -53,6 +54,13 @@ async def lifespan(app: FastAPI):
     logger.info("Starting AI Todo App backend...")
     logger.info(f"Environment: {settings.environment}")
     logger.info(f"Databricks host: {settings.databricks_host}")
+
+    # Initialize OpenTelemetry
+    try:
+        setup_telemetry()
+        logger.info("✓ OpenTelemetry initialized")
+    except Exception as e:
+        logger.warning(f"OpenTelemetry initialization failed: {e}")
 
     # Test database connection on startup
     try:
@@ -598,6 +606,7 @@ from .agent import process_agent_message, AgentResponse as AgentResponseSchema
 async def agent_chat_endpoint(
     message: str = Query(..., description="User's natural language message"),
     user_id: str = Query(default="test-user-001", description="User ID"),
+    request: Request = None,
 ):
     """Process natural language message and create task.
 
@@ -610,6 +619,11 @@ async def agent_chat_endpoint(
         POST /agent/chat?message=Remind me to buy milk tomorrow&user_id=test-user-001
     """
     try:
+        # Extract session_id from headers and propagate to trace context
+        session_id = request.headers.get('X-Session-Id') if request else None
+        if session_id:
+            set_session_id(session_id)
+
         response = await process_agent_message(message, user_id)
         return response
 

@@ -163,3 +163,49 @@
 - **Pattern**: Boolean flags (task_created, needs_clarification) help segment agent performance
 
 ---
+
+## 2026-07-06 - US-2.8
+
+### What was implemented:
+- Created `backend/app/telemetry.py` module for OpenTelemetry instrumentation
+- Configured OTel SDK with resource attributes (service name, version, environment)
+- Integrated Langfuse via OTLP HTTP exporter (endpoint: /api/public/otel)
+- Enabled OpenAI auto-instrumentation via `OpenAIInstrumentor()`
+- Instrumented `extract_task_from_message()` with GenAI semantic conventions
+- Instrumented `process_agent_message()` with task creation attributes
+- Added session ID propagation via OTel baggage
+- Configured span attributes: user_id, message_length, model, tokens, finish_reason
+- Added exception recording to all spans
+- Updated app startup to call `setup_telemetry()` in lifespan
+- Modified `/agent/chat` endpoint to extract session_id from headers and propagate to trace context
+
+### Files changed:
+- `backend/requirements.txt` - Already had OTel packages (no changes needed)
+- `backend/app/telemetry.py` - NEW: OTel setup, Langfuse OTLP exporter, GenAI attributes
+- `backend/app/agent.py` - Added OTel spans to extract and process functions
+- `backend/app/main.py` - Added telemetry setup in lifespan, session_id propagation
+
+### Verification results:
+```
+✓ Backend imports successfully with OTel instrumentation
+✓ Tracer initialized successfully
+✓ Langfuse OTLP exporter configured
+✓ OpenAI auto-instrumentation enabled
+✓ Traces generated when agent processes messages
+✓ GenAI semantic conventions added (model, tokens, finish_reason)
+✓ Session ID propagated via baggage
+⚠ Langfuse export requires valid credentials in .env (langfuse_public_key, langfuse_secret_key)
+```
+
+### Learnings for future iterations:
+- **Pattern**: Use OTLP HTTP exporter for Langfuse (not deprecated `langfuse.opentelemetry.LangfuseSpanExporter`)
+- **Gotcha**: Langfuse now uses OTLP endpoint at `/api/public/otel` instead of custom exporter
+- **Pattern**: Use `OTel baggage` for cross-cutting concerns like session_id (propagates through all spans)
+- **Context**: OpenAI auto-instrumentation automatically captures LLM calls without manual spans
+- **Pattern**: Add GenAI semantic conventions via helper function for consistency (gen_ai.*)
+- **Gotcha**: OTLP HTTP exporter requires explicit endpoint URL (no default)
+- **Pattern**: Graceful degradation - telemetry failures logged as warnings, don't crash app
+- **Context**: Langfuse credentials needed: langfuse_public_key, langfuse_secret_key, langfuse_host (optional)
+- **Pattern**: Use `BatchSpanProcessor` for async span export (doesn't block request processing)
+
+---
