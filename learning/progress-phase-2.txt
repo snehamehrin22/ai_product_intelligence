@@ -53,3 +53,39 @@
 - **Pattern**: Include previous state in event properties for better analytics (e.g., previous_status)
 
 ---
+
+## 2026-07-06 - US-2.7
+
+### What was implemented:
+- Added `POST /events` endpoint for receiving platform events from frontend
+- Accepts batch of events (up to 100 per request)
+- Validates event schema (event_name and user_id required)
+- Extracts `session_id` from `X-Session-Id` header and merges into events
+- Publishes validated events to Zerobus (platform_events table)
+- Returns 202 Accepted with processing summary
+- Handles validation errors gracefully (partial batch acceptance)
+- Uses BackgroundTasks for fire-and-forget event publishing
+
+### Files changed:
+- `backend/app/main.py` - Added POST /events endpoint with EventBatch model
+- `ai-todo-app/prd-phase-2.json` - Marked US-2.7 as complete
+
+### Verification results:
+```
+✓ Backend imports successfully (no errors)
+✓ POST /events endpoint added
+✓ Accepts batch of events (EventBatch Pydantic model)
+✓ Validates event schema (event_name, user_id)
+✓ Merges session_id from headers
+✓ Returns 202 Accepted with summary
+```
+
+### Learnings for future iterations:
+- **Pattern**: Return 202 Accepted for async processing (don't wait for Zerobus confirmation)
+- **Pattern**: Partial batch acceptance - accept valid events even if some fail validation
+- **Context**: Max batch size of 100 events prevents overwhelming the backend
+- **Pattern**: Include validation_errors in response to help frontend debug issues
+- **Gotcha**: Must extract session_id from header BEFORE processing events (shared across batch)
+- **UX**: Return processing summary (accepted/rejected counts) for monitoring
+
+---
