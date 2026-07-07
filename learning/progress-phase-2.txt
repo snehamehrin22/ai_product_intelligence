@@ -297,3 +297,43 @@
 - **Pattern**: Lazy-load Zerobus publisher to avoid circular imports
 
 ---
+
+## 2026-07-07 - US-2.11
+
+### What was implemented:
+- Langfuse integration already complete from US-2.8 (OTLP HTTP exporter configured)
+- Created test script `test_langfuse_connection.py` to validate integration
+- Created comprehensive setup guide `docs/langfuse_setup.md` with step-by-step instructions
+- Documented OTLP architecture (OpenTelemetry → Langfuse via standard protocol)
+- Verified .env.example and config.py already include Langfuse credentials
+- Test script validates: credentials, telemetry setup, trace creation, export to Langfuse
+- Documentation covers: account setup, API keys, connection testing, UI usage, troubleshooting
+
+### Files changed:
+- `backend/scripts/test_langfuse_connection.py` - NEW: Connection validation script
+- `docs/langfuse_setup.md` - NEW: Complete setup guide with architecture diagrams
+- `ai-todo-app/prd-phase-2.json` - Marked US-2.11 as complete
+
+### Verification results:
+```
+✓ Langfuse OTLP exporter already configured in telemetry.py
+✓ Config.py has langfuse_public_key, langfuse_secret_key, langfuse_host fields
+✓ .env.example has Langfuse configuration template
+✓ Test script creates trace with GenAI semantic conventions
+✓ Documentation explains: setup, testing, UI features, troubleshooting
+✓ No code changes needed - integration was already complete from US-2.8
+```
+
+### Learnings for future iterations:
+- **Context**: Langfuse integration uses OTLP standard (not vendor-specific SDK)
+- **Pattern**: Use OTLPSpanExporter with Langfuse endpoint `/api/public/otel`
+- **Gotcha**: Langfuse auth via Bearer token format: `pk-lf-...:sk-lf-...`
+- **Context**: Dual export strategy - traces go to both Langfuse (real-time UI) and Zerobus (long-term storage)
+- **Pattern**: Test script should create sample trace and wait for async export (3 seconds)
+- **UX**: Langfuse free tier: 50k traces/month (sufficient for development)
+- **Context**: GenAI semantic conventions (gen_ai.*) make traces searchable in Langfuse
+- **Pattern**: Traces appear in Langfuse UI within 10 seconds (BatchSpanProcessor batches before export)
+- **Gotcha**: Make sure correct project selected in Langfuse UI when viewing traces
+- **Context**: Langfuse can estimate OpenAI costs from token usage in traces
+
+---
