@@ -209,7 +209,7 @@
       "priority": "P1",
       "estimatedHours": 3,
       "dependencies": ["US-2.5"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-2.7",
