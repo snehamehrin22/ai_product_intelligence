@@ -468,6 +468,126 @@ async def toggle_task_completion_endpoint(
 
 
 # ============================================================================
+# PLATFORM EVENTS API ENDPOINT
+# ============================================================================
+
+from typing import List, Dict, Any
+from pydantic import BaseModel, ValidationError
+
+
+class EventBatch(BaseModel):
+    """Batch of platform events from frontend."""
+    events: List[Dict[str, Any]]
+
+
+@app.post("/events", status_code=202, tags=["Events"])
+async def receive_platform_events_endpoint(
+    event_batch: EventBatch,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    publisher: ZerobusPublisher = Depends(get_zerobus_publisher)
+):
+    """Receive platform events from frontend and publish to Zerobus.
+
+    Accepts batch of events, validates them, and publishes to Delta Lake via Zerobus.
+
+    Returns:
+        202 Accepted - Events are being processed asynchronously
+
+    Example:
+        POST /events
+        Headers: X-Session-Id: session-uuid
+        Body: {
+            "events": [
+                {
+                    "event_name": "page_viewed",
+                    "user_id": "user-123",
+                    "properties": {"page": "/tasks"}
+                }
+            ]
+        }
+    """
+    try:
+        # Extract session_id from headers (or generate if missing)
+        session_id = request.headers.get('X-Session-Id', str(uuid.uuid4()))
+
+        # Validate batch size (max 100 events)
+        if len(event_batch.events) > 100:
+            raise HTTPException(
+                status_code=400,
+                detail="Batch size exceeds maximum of 100 events"
+            )
+
+        # Merge session_id into each event if not present
+        processed_events = []
+        validation_errors = []
+
+        for idx, event in enumerate(event_batch.events):
+            try:
+                # Add session_id if missing
+                if 'session_id' not in event:
+                    event['session_id'] = session_id
+
+                # Validate required fields
+                if 'event_name' not in event:
+                    validation_errors.append({
+                        "index": idx,
+                        "error": "Missing required field: event_name"
+                    })
+                    continue
+
+                if 'user_id' not in event:
+                    validation_errors.append({
+                        "index": idx,
+                        "error": "Missing required field: user_id"
+                    })
+                    continue
+
+                processed_events.append(event)
+
+            except Exception as e:
+                validation_errors.append({
+                    "index": idx,
+                    "error": f"Validation error: {str(e)}"
+                })
+                logger.warning(f"Event validation failed at index {idx}: {e}")
+
+        # Publish valid events in background (fire-and-forget)
+        if processed_events:
+            for event in processed_events:
+                background_tasks.add_task(
+                    publisher.publish,
+                    event,
+                    table="platform_events"
+                )
+
+            logger.info(f"Accepted {len(processed_events)} events for processing (session: {session_id})")
+
+        # Return 202 Accepted with summary
+        response_data = {
+            "status": "accepted",
+            "total_events": len(event_batch.events),
+            "accepted_events": len(processed_events),
+            "rejected_events": len(validation_errors),
+            "session_id": session_id
+        }
+
+        if validation_errors:
+            response_data["validation_errors"] = validation_errors
+
+        return response_data
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error processing event batch: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to process events: {str(e)}"
+        )
+
+
+# ============================================================================
 # AGENT ENDPOINTS
 # ============================================================================
 

@@ -2,16 +2,54 @@
 
 ## Codebase Patterns
 
-(This section will be populated as patterns are discovered during implementation)
+- **Zerobus Event Publishing**: Use `ZerobusPublisher` dependency injection with FastAPI `Depends()` for event publishing
+- **Fire-and-forget pattern**: Events published via `BackgroundTasks` to avoid blocking API responses
+- **Session ID extraction**: `request.headers.get('X-Session-Id', str(uuid.uuid4()))` pattern for session tracking
+- **Event properties**: Store event-specific data in nested `properties` field (flexible JSON structure)
 
 ---
 
 ## Phase 2 Kickoff - 2026-07-06
 
-**Objective:** Add platform event emitter, Azure Event Hubs integration, and OpenTelemetry agent tracing
+**Objective:** Add platform event emitter, Zerobus Ingest integration, and OpenTelemetry agent tracing
 
 **User Stories:** 13 stories (US-2.1 through US-2.13)
 
 **Execution Mode:** Autonomous loop via Ralph script
+
+---
+
+## 2026-07-06 - US-2.4
+
+### What was implemented:
+- Added `PATCH /tasks/{task_id}/complete` endpoint for task completion toggle
+- Endpoint toggles task status between `completed` and `pending`
+- Emits `task_completed` event when task transitions to completed status
+- Event includes task context (task_id, title, previous_status, completed_at)
+- All 4 platform event types now fully implemented in backend:
+  - `task_created` (POST /tasks)
+  - `task_updated` (PUT /tasks/{id})
+  - `task_deleted` (DELETE /tasks/{id})
+  - `task_completed` (PATCH /tasks/{id}/complete)
+
+### Files changed:
+- `backend/app/main.py` - Added task completion toggle endpoint
+- `ai-todo-app/prd-phase-2.json` - Marked US-2.1, US-2.2, US-2.3, US-2.4 as complete
+
+### Verification results:
+```
+✓ Backend imports successfully (no errors)
+✓ PATCH /tasks/{task_id}/complete endpoint added
+✓ task_completed event emitted when status changes to completed
+✓ Fire-and-forget pattern via BackgroundTasks
+✓ session_id extracted from X-Session-Id header
+```
+
+### Learnings for future iterations:
+- **Pattern**: Use dependency injection (`Depends(get_zerobus_publisher)`) for clean publisher access in endpoints
+- **Pattern**: Fire-and-forget event publishing via FastAPI `BackgroundTasks` prevents blocking API responses
+- **Gotcha**: Only emit task_completed event when transitioning TO completed status (not when toggling back to pending)
+- **Context**: Task completion toggle endpoint provides cleaner UX than requiring full PUT update
+- **Pattern**: Include previous state in event properties for better analytics (e.g., previous_status)
 
 ---
