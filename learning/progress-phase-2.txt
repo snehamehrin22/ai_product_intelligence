@@ -209,3 +209,45 @@
 - **Pattern**: Use `BatchSpanProcessor` for async span export (doesn't block request processing)
 
 ---
+
+## 2026-07-06 - US-2.10
+
+### What was implemented:
+- Validated session_id propagation end-to-end (frontend → backend → events → traces)
+- Created comprehensive E2E test suite (`tests/test_session_id_e2e.py`)
+- Documented session_id join strategy with example queries (`SESSION_ID_JOIN_STRATEGY.md`)
+- Verified session_id flow through all layers:
+  1. Frontend generates `crypto.randomUUID()` and stores in sessionStorage
+  2. Frontend sends `X-Session-Id` header on all API requests
+  3. Backend extracts from `request.headers.get('X-Session-Id')`
+  4. Backend includes session_id in platform events (Zerobus)
+  5. Backend propagates session_id to OTel trace context (baggage)
+  6. Session_id appears in both Delta tables (platform_events, agent_traces)
+
+### Files changed:
+- `backend/tests/test_session_id_e2e.py` - NEW: E2E test suite with 6 test cases
+- `databricks/SESSION_ID_JOIN_STRATEGY.md` - NEW: Comprehensive join documentation
+
+### Verification results:
+```
+✓ Frontend session_id generation verified (eventEmitter.js)
+✓ Frontend X-Session-Id header verified (api.js)
+✓ Backend session_id extraction verified (main.py, all endpoints)
+✓ Platform events include session_id (events.py, main.py)
+✓ OTel baggage propagation verified (telemetry.py, set_session_id)
+✓ E2E test suite created with 6 test cases
+✓ Join strategy documented with 5 query patterns
+```
+
+### Learnings for future iterations:
+- **Pattern**: Use `sessionStorage` (not `localStorage`) so session_id clears when tab closes
+- **Context**: Session_id is the PRIMARY join key for combining platform_events + agent_traces
+- **Pattern**: Always add WHERE session_id IS NOT NULL to joins for data quality
+- **Pattern**: Use time-based filters before joining to prevent full table scans
+- **Gotcha**: OTel baggage is context-local - test with proper async context
+- **Context**: 5 main join patterns: basic join, latency analysis, token attribution, error debugging, user journey
+- **Pattern**: Monitor session_id coverage % as data quality metric
+- **UX**: Session timeline query (UNION events + traces) visualizes complete user flow
+- **Gotcha**: Events and traces should be within reasonable time window (add BETWEEN filters)
+
+---

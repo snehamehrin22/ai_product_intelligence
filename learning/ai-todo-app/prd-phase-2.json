@@ -364,7 +364,7 @@
         "US-2.6",
         "US-2.9"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-2.11",
