@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './AgentChat.css';
 import { sendAgentMessage } from '../services/api';
+import eventEmitter from '../services/eventEmitter';
 
 function AgentChat({ userId, onTaskCreated }) {
   const [messages, setMessages] = useState([]);
@@ -43,6 +44,13 @@ function AgentChat({ userId, onTaskCreated }) {
     setInputValue('');
     setIsLoading(true);
 
+    // Emit agent_message_sent event
+    eventEmitter.emit('agent_message_sent', userId, {
+      message_text: userMessage,
+      message_length: userMessage.length,
+      timestamp: userMsg.timestamp
+    });
+
     try {
       // Send to agent
       const response = await sendAgentMessage(userMessage, userId);
@@ -58,6 +66,16 @@ function AgentChat({ userId, onTaskCreated }) {
         timestamp: new Date().toISOString()
       };
       setMessages(prev => [...prev, agentMsg]);
+
+      // Emit agent_message_received event
+      eventEmitter.emit('agent_message_received', userId, {
+        message_text: response.message,
+        message_length: response.message.length,
+        task_created: response.task_created || false,
+        task_id: response.task_id || null,
+        needs_clarification: response.needs_clarification || false,
+        timestamp: agentMsg.timestamp
+      });
 
       // Notify parent if task was created
       if (response.task_created && onTaskCreated) {

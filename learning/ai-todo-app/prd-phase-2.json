@@ -176,7 +176,7 @@
       "priority": "P0",
       "estimatedHours": 4,
       "dependencies": [],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-2.6",
