@@ -128,3 +128,38 @@
 - **Context**: Max batch size prevents memory issues if backend is down for extended period
 
 ---
+
+## 2026-07-06 - US-2.6
+
+### What was implemented:
+- Added `session_started` event on App mount with user context (user_agent, screen_resolution)
+- Added `agent_message_sent` event when user sends chat message
+- Added `agent_message_received` event when agent responds
+- Events include rich context: message_text, message_length, task_created, needs_clarification
+- All events use singleton eventEmitter for consistent session_id across app
+- Note: Task CRUD events (task_created, task_updated, task_deleted, task_completed) emitted from backend (US-2.4)
+
+### Files changed:
+- `frontend/src/App.jsx` - Added session_started event on mount
+- `frontend/src/components/AgentChat.jsx` - Added agent message events
+- `ai-todo-app/prd-phase-2.json` - Marked US-2.6 as complete
+
+### Verification results:
+```
+✓ Frontend builds successfully (no errors)
+✓ session_started emitted on App mount
+✓ agent_message_sent emitted when user sends message
+✓ agent_message_received emitted when agent responds
+✓ Events include rich context properties
+✓ All events share same session_id via singleton
+```
+
+### Learnings for future iterations:
+- **Pattern**: Use useEffect with empty dependency array for mount-only events
+- **Context**: session_started includes user_agent and screen_resolution for analytics
+- **Pattern**: Emit events AFTER state updates to ensure data consistency
+- **Gotcha**: Task CRUD events emitted from backend (not frontend) to match where the actual DB writes happen
+- **UX**: Rich event properties (message_length, task_created) enable detailed analytics
+- **Pattern**: Boolean flags (task_created, needs_clarification) help segment agent performance
+
+---
