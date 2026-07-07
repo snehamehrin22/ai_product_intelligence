@@ -27,3 +27,6 @@ venv/
 
 # Local notebooks/checkpoints
 .ipynb_checkpoints/
+
+# Large data files
+agents/city-intelligence/sub-projects/toronto-hospitality/data/raw/*.csv
