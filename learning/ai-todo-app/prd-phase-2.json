@@ -9,7 +9,7 @@
     "Instrument backend LangGraph agent with OpenTelemetry traces",
     "Set up Databricks Zerobus Ingest for direct Delta Lake writes",
     "Implement session ID propagation for join key between events and traces",
-    "Validate end-to-end event flow: Frontend → Backend → Zerobus → Delta Lake",
+    "Validate end-to-end event flow: Frontend \u2192 Backend \u2192 Zerobus \u2192 Delta Lake",
     "Integrate Langfuse for real-time agent trace visualization"
   ],
   "technicalStack": {
@@ -17,7 +17,7 @@
     "frontend": "React + custom event emitter",
     "streaming": "Databricks Zerobus Ingest (gRPC API)",
     "storage": "Databricks Delta Lake (direct write via Zerobus)",
-    "observability_platform": "Custom events → Zerobus → Delta tables",
+    "observability_platform": "Custom events \u2192 Zerobus \u2192 Delta tables",
     "observability_agent": "OpenTelemetry + Langfuse + Zerobus",
     "infrastructure": "Local development + Databricks workspace"
   },
@@ -35,7 +35,7 @@
         "Schema evolution enabled for future field additions"
       ],
       "technicalNotes": [
-        "Enable Zerobus Ingest in Databricks workspace (Admin Settings → Lakeflow Connect)",
+        "Enable Zerobus Ingest in Databricks workspace (Admin Settings \u2192 Lakeflow Connect)",
         "Create catalog: main, schema: events (if not exists)",
         "Zerobus endpoint format: https://<workspace-id>.zerobus.<region>.cloud.databricks.com",
         "OAuth: Create service principal with CREATE TABLE and MODIFY permissions",
@@ -81,7 +81,9 @@
       ],
       "priority": "P0",
       "estimatedHours": 4,
-      "dependencies": ["US-2.1"],
+      "dependencies": [
+        "US-2.1"
+      ],
       "passes": true
     },
     {
@@ -143,7 +145,10 @@
       ],
       "priority": "P0",
       "estimatedHours": 3,
-      "dependencies": ["US-2.2", "US-2.3"],
+      "dependencies": [
+        "US-2.2",
+        "US-2.3"
+      ],
       "passes": true
     },
     {
@@ -208,7 +213,9 @@
       ],
       "priority": "P1",
       "estimatedHours": 3,
-      "dependencies": ["US-2.5"],
+      "dependencies": [
+        "US-2.5"
+      ],
       "passes": true
     },
     {
@@ -242,7 +249,10 @@
       ],
       "priority": "P0",
       "estimatedHours": 3,
-      "dependencies": ["US-2.2", "US-2.3"],
+      "dependencies": [
+        "US-2.2",
+        "US-2.3"
+      ],
       "passes": true
     },
     {
@@ -275,8 +285,10 @@
       ],
       "priority": "P1",
       "estimatedHours": 5,
-      "dependencies": ["US-1.6"],
-      "passes": false
+      "dependencies": [
+        "US-1.6"
+      ],
+      "passes": true
     },
     {
       "id": "US-2.9",
@@ -308,13 +320,16 @@
       ],
       "priority": "P1",
       "estimatedHours": 4,
-      "dependencies": ["US-2.8", "US-2.2"],
+      "dependencies": [
+        "US-2.8",
+        "US-2.2"
+      ],
       "passes": false
     },
     {
       "id": "US-2.10",
       "title": "Session ID Propagation End-to-End",
-      "description": "As a data engineer, I need session_id to flow from frontend → backend → events → traces so that I can join datasets in Delta Lake",
+      "description": "As a data engineer, I need session_id to flow from frontend \u2192 backend \u2192 events \u2192 traces so that I can join datasets in Delta Lake",
       "acceptanceCriteria": [
         "Frontend generates session_id on mount (crypto.randomUUID())",
         "Frontend sends session_id in X-Session-Id header on all API requests",
@@ -332,7 +347,7 @@
         "OTel: baggage.set_baggage('session_id', session_id)",
         "Event publishing: include session_id in all events",
         "Trace exporter: extract session_id from baggage",
-        "Test: send request → wait → query Delta tables → assert session_id match"
+        "Test: send request \u2192 wait \u2192 query Delta tables \u2192 assert session_id match"
       ],
       "files": [
         "frontend/src/App.jsx",
@@ -344,7 +359,11 @@
       ],
       "priority": "P0",
       "estimatedHours": 3,
-      "dependencies": ["US-2.4", "US-2.6", "US-2.9"],
+      "dependencies": [
+        "US-2.4",
+        "US-2.6",
+        "US-2.9"
+      ],
       "passes": false
     },
     {
@@ -366,7 +385,7 @@
         "Install langfuse-python SDK",
         "Initialize: Langfuse(public_key, secret_key, host)",
         "Use @observe decorator on agent functions",
-        "Or use OpenTelemetry → Langfuse integration (OTLP endpoint)",
+        "Or use OpenTelemetry \u2192 Langfuse integration (OTLP endpoint)",
         "Environment variables: LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_HOST",
         "Alternative: Use LangSmith if preferred"
       ],
@@ -379,13 +398,15 @@
       ],
       "priority": "P1",
       "estimatedHours": 2,
-      "dependencies": ["US-2.8"],
+      "dependencies": [
+        "US-2.8"
+      ],
       "passes": false
     },
     {
       "id": "US-2.12",
       "title": "End-to-End Event Flow Validation",
-      "description": "As a developer, I need to validate that events flow correctly from frontend → backend → Zerobus → Delta Lake so that I can trust the instrumentation",
+      "description": "As a developer, I need to validate that events flow correctly from frontend \u2192 backend \u2192 Zerobus \u2192 Delta Lake so that I can trust the instrumentation",
       "acceptanceCriteria": [
         "Integration test simulates full user flow (create task via UI)",
         "Test verifies platform events in Delta Lake (task_created)",
@@ -400,7 +421,7 @@
         "Use Databricks SQL connector to query Delta tables",
         "Query script: SELECT * FROM main.events.platform_events WHERE session_id = ?",
         "Integration test: use Playwright to automate frontend",
-        "Test: trigger action → wait (Zerobus ~5s latency) → query Delta → assert",
+        "Test: trigger action \u2192 wait (Zerobus ~5s latency) \u2192 query Delta \u2192 assert",
         "Mock Zerobus in unit tests (use in-memory dict)",
         "Document that Zerobus provides sub-5-second latency",
         "Query both tables and join on session_id to validate join key"
@@ -413,7 +434,9 @@
       ],
       "priority": "P1",
       "estimatedHours": 4,
-      "dependencies": ["US-2.10"],
+      "dependencies": [
+        "US-2.10"
+      ],
       "passes": false
     },
     {
@@ -425,13 +448,13 @@
         "Event schema documentation generated from Pydantic models",
         "Langfuse setup guide with screenshots",
         "Zerobus troubleshooting guide (common errors)",
-        "Architecture diagram showing event flow (Frontend → Backend → Zerobus → Delta Lake)",
+        "Architecture diagram showing event flow (Frontend \u2192 Backend \u2192 Zerobus \u2192 Delta Lake)",
         "Example event payloads for all event types",
         "Monitoring checklist (how to verify events flowing in Delta Lake)",
         "Cost estimation for Zerobus Ingest and Langfuse"
       ],
       "technicalNotes": [
-        "Generate schema docs: pydantic models → JSON Schema → markdown",
+        "Generate schema docs: pydantic models \u2192 JSON Schema \u2192 markdown",
         "Use Mermaid diagrams for architecture visualization",
         "Include curl commands for testing endpoints",
         "Document Zerobus benefits: no Kafka, direct Delta writes, sub-5s latency",
@@ -449,7 +472,9 @@
       ],
       "priority": "P2",
       "estimatedHours": 3,
-      "dependencies": ["US-2.12"],
+      "dependencies": [
+        "US-2.12"
+      ],
       "passes": false
     }
   ],

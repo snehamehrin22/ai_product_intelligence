@@ -17,6 +17,12 @@ langchain-openai==0.2.5
 opentelemetry-api==1.27.0
 opentelemetry-sdk==1.27.0
 opentelemetry-instrumentation-fastapi==0.48b0
+opentelemetry-exporter-otlp==1.27.0
+opentelemetry-instrumentation-openai==0.28.2
+opentelemetry-semantic-conventions==0.48b0
+
+# Langfuse (Phase 2+)
+langfuse==2.52.3
 
 # Azure Event Hubs (Phase 2+)
 azure-eventhub==5.11.7
