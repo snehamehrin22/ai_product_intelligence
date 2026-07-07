@@ -1,0 +1,713 @@
+{
+  "PlatformEvent": {
+    "description": "Base schema for all platform events",
+    "schema": {
+      "description": "Base schema for all platform events.\n\nCommon Fields:\n- event_id: Unique identifier (UUID v4)\n- event_name: Event type (e.g., 'task_created')\n- event_version: Schema version for evolution (default 'v1')\n- timestamp: Event occurrence time (ISO8601 with timezone)\n- session_id: User session identifier (join key for analysis)\n- user_id: User identifier\n- properties: Event-specific data (flexible dict)\n\nExample:\n    {\n        \"event_id\": \"f47ac10b-58cc-4372-a567-0e02b2c3d479\",\n        \"event_name\": \"task_created\",\n        \"event_version\": \"v1\",\n        \"timestamp\": \"2024-01-15T10:30:00.000Z\",\n        \"session_id\": \"abc-123-session\",\n        \"user_id\": \"user-456\",\n        \"properties\": {\"task_id\": \"task-789\", \"title\": \"Buy milk\"}\n    }",
+      "example": {
+        "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "event_name": "task_created",
+        "event_version": "v1",
+        "properties": {
+          "task_id": "task-789",
+          "title": "Buy milk"
+        },
+        "session_id": "abc-123-session",
+        "timestamp": "2024-01-15T10:30:00.000Z",
+        "user_id": "user-456"
+      },
+      "properties": {
+        "event_id": {
+          "description": "Unique event identifier (UUID v4)",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_name": {
+          "description": "Event type identifier",
+          "title": "Event Name",
+          "type": "string"
+        },
+        "event_version": {
+          "default": "v1",
+          "description": "Schema version for evolution (e.g., v1, v2)",
+          "pattern": "^v\\d+$",
+          "title": "Event Version",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Event occurrence time (ISO8601 with timezone)",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "session_id": {
+          "description": "User session identifier (join key with agent traces)",
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "user_id": {
+          "description": "User identifier",
+          "minLength": 1,
+          "title": "User Id",
+          "type": "string"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Event-specific data (flexible dict)",
+          "title": "Properties"
+        }
+      },
+      "required": [
+        "event_name",
+        "session_id",
+        "user_id"
+      ],
+      "title": "PlatformEvent",
+      "type": "object"
+    },
+    "example": {
+      "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "event_name": "task_created",
+      "event_version": "v1",
+      "timestamp": "2024-01-15T10:30:00.000Z",
+      "session_id": "abc-123-session",
+      "user_id": "user-456",
+      "properties": {
+        "task_id": "task-789",
+        "title": "Buy milk"
+      }
+    }
+  },
+  "TaskCreatedEvent": {
+    "description": "User creates a new task",
+    "schema": {
+      "description": "Event emitted when a user creates a new task.\n\nProperties:\n- task_id (str): Unique task identifier\n- title (str): Task title\n- description (str, optional): Task description\n- status (str): Initial task status (usually 'pending')\n- priority (str, optional): Task priority level\n- due_date (str, optional): Task due date (ISO8601)\n\nExample:\n    {\n        \"event_name\": \"task_created\",\n        \"session_id\": \"abc-123\",\n        \"user_id\": \"user-456\",\n        \"properties\": {\n            \"task_id\": \"task-789\",\n            \"title\": \"Buy milk\",\n            \"description\": \"Get 2% milk from store\",\n            \"status\": \"pending\",\n            \"priority\": \"high\",\n            \"due_date\": \"2024-01-16T18:00:00Z\"\n        }\n    }",
+      "example": {
+        "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "event_name": "task_created",
+        "event_version": "v1",
+        "properties": {
+          "task_id": "task-789",
+          "title": "Buy milk"
+        },
+        "session_id": "abc-123-session",
+        "timestamp": "2024-01-15T10:30:00.000Z",
+        "user_id": "user-456"
+      },
+      "properties": {
+        "event_id": {
+          "description": "Unique event identifier (UUID v4)",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_name": {
+          "const": "task_created",
+          "default": "task_created",
+          "title": "Event Name",
+          "type": "string"
+        },
+        "event_version": {
+          "default": "v1",
+          "description": "Schema version for evolution (e.g., v1, v2)",
+          "pattern": "^v\\d+$",
+          "title": "Event Version",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Event occurrence time (ISO8601 with timezone)",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "session_id": {
+          "description": "User session identifier (join key with agent traces)",
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "user_id": {
+          "description": "User identifier",
+          "minLength": 1,
+          "title": "User Id",
+          "type": "string"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Event-specific data (flexible dict)",
+          "title": "Properties"
+        }
+      },
+      "required": [
+        "session_id",
+        "user_id"
+      ],
+      "title": "TaskCreatedEvent",
+      "type": "object"
+    },
+    "example": {
+      "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "event_name": "task_created",
+      "event_version": "v1",
+      "timestamp": "2024-01-15T10:30:00.000Z",
+      "session_id": "abc-123-session",
+      "user_id": "user-456",
+      "properties": {
+        "task_id": "task-789",
+        "title": "Buy milk"
+      }
+    }
+  },
+  "TaskCompletedEvent": {
+    "description": "User marks task as completed",
+    "schema": {
+      "description": "Event emitted when a user marks a task as completed.\n\nProperties:\n- task_id (str): Unique task identifier\n- title (str): Task title\n- completed_at (str): Completion timestamp (ISO8601)\n- time_to_complete_seconds (int, optional): Time from creation to completion\n\nExample:\n    {\n        \"event_name\": \"task_completed\",\n        \"session_id\": \"abc-123\",\n        \"user_id\": \"user-456\",\n        \"properties\": {\n            \"task_id\": \"task-789\",\n            \"title\": \"Buy milk\",\n            \"completed_at\": \"2024-01-15T11:00:00Z\",\n            \"time_to_complete_seconds\": 1800\n        }\n    }",
+      "example": {
+        "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "event_name": "task_created",
+        "event_version": "v1",
+        "properties": {
+          "task_id": "task-789",
+          "title": "Buy milk"
+        },
+        "session_id": "abc-123-session",
+        "timestamp": "2024-01-15T10:30:00.000Z",
+        "user_id": "user-456"
+      },
+      "properties": {
+        "event_id": {
+          "description": "Unique event identifier (UUID v4)",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_name": {
+          "const": "task_completed",
+          "default": "task_completed",
+          "title": "Event Name",
+          "type": "string"
+        },
+        "event_version": {
+          "default": "v1",
+          "description": "Schema version for evolution (e.g., v1, v2)",
+          "pattern": "^v\\d+$",
+          "title": "Event Version",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Event occurrence time (ISO8601 with timezone)",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "session_id": {
+          "description": "User session identifier (join key with agent traces)",
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "user_id": {
+          "description": "User identifier",
+          "minLength": 1,
+          "title": "User Id",
+          "type": "string"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Event-specific data (flexible dict)",
+          "title": "Properties"
+        }
+      },
+      "required": [
+        "session_id",
+        "user_id"
+      ],
+      "title": "TaskCompletedEvent",
+      "type": "object"
+    },
+    "example": {
+      "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "event_name": "task_created",
+      "event_version": "v1",
+      "timestamp": "2024-01-15T10:30:00.000Z",
+      "session_id": "abc-123-session",
+      "user_id": "user-456",
+      "properties": {
+        "task_id": "task-789",
+        "title": "Buy milk"
+      }
+    }
+  },
+  "TaskDeletedEvent": {
+    "description": "User deletes a task",
+    "schema": {
+      "description": "Event emitted when a user deletes a task.\n\nProperties:\n- task_id (str): Unique task identifier\n- title (str): Task title\n- status (str): Task status at deletion time\n\nExample:\n    {\n        \"event_name\": \"task_deleted\",\n        \"session_id\": \"abc-123\",\n        \"user_id\": \"user-456\",\n        \"properties\": {\n            \"task_id\": \"task-789\",\n            \"title\": \"Buy milk\",\n            \"status\": \"pending\"\n        }\n    }",
+      "example": {
+        "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "event_name": "task_created",
+        "event_version": "v1",
+        "properties": {
+          "task_id": "task-789",
+          "title": "Buy milk"
+        },
+        "session_id": "abc-123-session",
+        "timestamp": "2024-01-15T10:30:00.000Z",
+        "user_id": "user-456"
+      },
+      "properties": {
+        "event_id": {
+          "description": "Unique event identifier (UUID v4)",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_name": {
+          "const": "task_deleted",
+          "default": "task_deleted",
+          "title": "Event Name",
+          "type": "string"
+        },
+        "event_version": {
+          "default": "v1",
+          "description": "Schema version for evolution (e.g., v1, v2)",
+          "pattern": "^v\\d+$",
+          "title": "Event Version",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Event occurrence time (ISO8601 with timezone)",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "session_id": {
+          "description": "User session identifier (join key with agent traces)",
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "user_id": {
+          "description": "User identifier",
+          "minLength": 1,
+          "title": "User Id",
+          "type": "string"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Event-specific data (flexible dict)",
+          "title": "Properties"
+        }
+      },
+      "required": [
+        "session_id",
+        "user_id"
+      ],
+      "title": "TaskDeletedEvent",
+      "type": "object"
+    },
+    "example": {
+      "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "event_name": "task_created",
+      "event_version": "v1",
+      "timestamp": "2024-01-15T10:30:00.000Z",
+      "session_id": "abc-123-session",
+      "user_id": "user-456",
+      "properties": {
+        "task_id": "task-789",
+        "title": "Buy milk"
+      }
+    }
+  },
+  "TaskUpdatedEvent": {
+    "description": "User updates task fields",
+    "schema": {
+      "description": "Event emitted when a user updates task fields.\n\nProperties:\n- task_id (str): Unique task identifier\n- title (str): Current task title\n- updated_fields (list[str]): Names of fields that were updated\n- previous_values (dict, optional): Previous values of updated fields\n- current_values (dict): Current values of updated fields\n\nExample:\n    {\n        \"event_name\": \"task_updated\",\n        \"session_id\": \"abc-123\",\n        \"user_id\": \"user-456\",\n        \"properties\": {\n            \"task_id\": \"task-789\",\n            \"title\": \"Buy milk\",\n            \"updated_fields\": [\"priority\", \"due_date\"],\n            \"previous_values\": {\"priority\": \"low\", \"due_date\": null},\n            \"current_values\": {\"priority\": \"high\", \"due_date\": \"2024-01-16T18:00:00Z\"}\n        }\n    }",
+      "example": {
+        "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "event_name": "task_created",
+        "event_version": "v1",
+        "properties": {
+          "task_id": "task-789",
+          "title": "Buy milk"
+        },
+        "session_id": "abc-123-session",
+        "timestamp": "2024-01-15T10:30:00.000Z",
+        "user_id": "user-456"
+      },
+      "properties": {
+        "event_id": {
+          "description": "Unique event identifier (UUID v4)",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_name": {
+          "const": "task_updated",
+          "default": "task_updated",
+          "title": "Event Name",
+          "type": "string"
+        },
+        "event_version": {
+          "default": "v1",
+          "description": "Schema version for evolution (e.g., v1, v2)",
+          "pattern": "^v\\d+$",
+          "title": "Event Version",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Event occurrence time (ISO8601 with timezone)",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "session_id": {
+          "description": "User session identifier (join key with agent traces)",
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "user_id": {
+          "description": "User identifier",
+          "minLength": 1,
+          "title": "User Id",
+          "type": "string"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Event-specific data (flexible dict)",
+          "title": "Properties"
+        }
+      },
+      "required": [
+        "session_id",
+        "user_id"
+      ],
+      "title": "TaskUpdatedEvent",
+      "type": "object"
+    },
+    "example": {
+      "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "event_name": "task_created",
+      "event_version": "v1",
+      "timestamp": "2024-01-15T10:30:00.000Z",
+      "session_id": "abc-123-session",
+      "user_id": "user-456",
+      "properties": {
+        "task_id": "task-789",
+        "title": "Buy milk"
+      }
+    }
+  },
+  "PageViewedEvent": {
+    "description": "User navigates to a page",
+    "schema": {
+      "description": "Event emitted when a user navigates to a page.\n\nProperties:\n- page_path (str): URL path or route (e.g., '/tasks', '/agent')\n- page_title (str, optional): Page title\n- referrer (str, optional): Previous page URL\n\nExample:\n    {\n        \"event_name\": \"page_viewed\",\n        \"session_id\": \"abc-123\",\n        \"user_id\": \"user-456\",\n        \"properties\": {\n            \"page_path\": \"/tasks\",\n            \"page_title\": \"My Tasks\",\n            \"referrer\": \"/dashboard\"\n        }\n    }",
+      "example": {
+        "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "event_name": "task_created",
+        "event_version": "v1",
+        "properties": {
+          "task_id": "task-789",
+          "title": "Buy milk"
+        },
+        "session_id": "abc-123-session",
+        "timestamp": "2024-01-15T10:30:00.000Z",
+        "user_id": "user-456"
+      },
+      "properties": {
+        "event_id": {
+          "description": "Unique event identifier (UUID v4)",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_name": {
+          "const": "page_viewed",
+          "default": "page_viewed",
+          "title": "Event Name",
+          "type": "string"
+        },
+        "event_version": {
+          "default": "v1",
+          "description": "Schema version for evolution (e.g., v1, v2)",
+          "pattern": "^v\\d+$",
+          "title": "Event Version",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Event occurrence time (ISO8601 with timezone)",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "session_id": {
+          "description": "User session identifier (join key with agent traces)",
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "user_id": {
+          "description": "User identifier",
+          "minLength": 1,
+          "title": "User Id",
+          "type": "string"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Event-specific data (flexible dict)",
+          "title": "Properties"
+        }
+      },
+      "required": [
+        "session_id",
+        "user_id"
+      ],
+      "title": "PageViewedEvent",
+      "type": "object"
+    },
+    "example": {
+      "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "event_name": "task_created",
+      "event_version": "v1",
+      "timestamp": "2024-01-15T10:30:00.000Z",
+      "session_id": "abc-123-session",
+      "user_id": "user-456",
+      "properties": {
+        "task_id": "task-789",
+        "title": "Buy milk"
+      }
+    }
+  },
+  "AgentMessageSentEvent": {
+    "description": "User sends message to AI agent",
+    "schema": {
+      "description": "Event emitted when a user sends a message to the AI agent.\n\nProperties:\n- message_id (str): Unique message identifier\n- message_text (str): User's message content\n- message_length (int): Character count\n- conversation_id (str, optional): Conversation thread identifier\n\nExample:\n    {\n        \"event_name\": \"agent_message_sent\",\n        \"session_id\": \"abc-123\",\n        \"user_id\": \"user-456\",\n        \"properties\": {\n            \"message_id\": \"msg-001\",\n            \"message_text\": \"Create a task to buy milk tomorrow\",\n            \"message_length\": 37,\n            \"conversation_id\": \"conv-789\"\n        }\n    }",
+      "example": {
+        "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "event_name": "task_created",
+        "event_version": "v1",
+        "properties": {
+          "task_id": "task-789",
+          "title": "Buy milk"
+        },
+        "session_id": "abc-123-session",
+        "timestamp": "2024-01-15T10:30:00.000Z",
+        "user_id": "user-456"
+      },
+      "properties": {
+        "event_id": {
+          "description": "Unique event identifier (UUID v4)",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_name": {
+          "const": "agent_message_sent",
+          "default": "agent_message_sent",
+          "title": "Event Name",
+          "type": "string"
+        },
+        "event_version": {
+          "default": "v1",
+          "description": "Schema version for evolution (e.g., v1, v2)",
+          "pattern": "^v\\d+$",
+          "title": "Event Version",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Event occurrence time (ISO8601 with timezone)",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "session_id": {
+          "description": "User session identifier (join key with agent traces)",
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "user_id": {
+          "description": "User identifier",
+          "minLength": 1,
+          "title": "User Id",
+          "type": "string"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Event-specific data (flexible dict)",
+          "title": "Properties"
+        }
+      },
+      "required": [
+        "session_id",
+        "user_id"
+      ],
+      "title": "AgentMessageSentEvent",
+      "type": "object"
+    },
+    "example": {
+      "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "event_name": "task_created",
+      "event_version": "v1",
+      "timestamp": "2024-01-15T10:30:00.000Z",
+      "session_id": "abc-123-session",
+      "user_id": "user-456",
+      "properties": {
+        "task_id": "task-789",
+        "title": "Buy milk"
+      }
+    }
+  },
+  "AgentMessageReceivedEvent": {
+    "description": "AI agent responds to user",
+    "schema": {
+      "description": "Event emitted when the AI agent responds to a user message.\n\nProperties:\n- message_id (str): Unique message identifier\n- response_text (str): Agent's response content\n- response_length (int): Character count\n- conversation_id (str, optional): Conversation thread identifier\n- user_message_id (str, optional): ID of user message being responded to\n- response_time_ms (int, optional): Time to generate response in milliseconds\n\nExample:\n    {\n        \"event_name\": \"agent_message_received\",\n        \"session_id\": \"abc-123\",\n        \"user_id\": \"user-456\",\n        \"properties\": {\n            \"message_id\": \"msg-002\",\n            \"response_text\": \"I've created a task 'Buy milk' with due date tomorrow.\",\n            \"response_length\": 59,\n            \"conversation_id\": \"conv-789\",\n            \"user_message_id\": \"msg-001\",\n            \"response_time_ms\": 1250\n        }\n    }",
+      "example": {
+        "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "event_name": "task_created",
+        "event_version": "v1",
+        "properties": {
+          "task_id": "task-789",
+          "title": "Buy milk"
+        },
+        "session_id": "abc-123-session",
+        "timestamp": "2024-01-15T10:30:00.000Z",
+        "user_id": "user-456"
+      },
+      "properties": {
+        "event_id": {
+          "description": "Unique event identifier (UUID v4)",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_name": {
+          "const": "agent_message_received",
+          "default": "agent_message_received",
+          "title": "Event Name",
+          "type": "string"
+        },
+        "event_version": {
+          "default": "v1",
+          "description": "Schema version for evolution (e.g., v1, v2)",
+          "pattern": "^v\\d+$",
+          "title": "Event Version",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Event occurrence time (ISO8601 with timezone)",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "session_id": {
+          "description": "User session identifier (join key with agent traces)",
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "user_id": {
+          "description": "User identifier",
+          "minLength": 1,
+          "title": "User Id",
+          "type": "string"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Event-specific data (flexible dict)",
+          "title": "Properties"
+        }
+      },
+      "required": [
+        "session_id",
+        "user_id"
+      ],
+      "title": "AgentMessageReceivedEvent",
+      "type": "object"
+    },
+    "example": {
+      "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "event_name": "task_created",
+      "event_version": "v1",
+      "timestamp": "2024-01-15T10:30:00.000Z",
+      "session_id": "abc-123-session",
+      "user_id": "user-456",
+      "properties": {
+        "task_id": "task-789",
+        "title": "Buy milk"
+      }
+    }
+  },
+  "SessionStartedEvent": {
+    "description": "User session begins",
+    "schema": {
+      "description": "Event emitted when a user session begins.\n\nProperties:\n- user_agent (str, optional): Browser user agent string\n- screen_width (int, optional): Browser screen width in pixels\n- screen_height (int, optional): Browser screen height in pixels\n- timezone (str, optional): User's timezone (e.g., 'America/Los_Angeles')\n- language (str, optional): Browser language (e.g., 'en-US')\n\nExample:\n    {\n        \"event_name\": \"session_started\",\n        \"session_id\": \"abc-123\",\n        \"user_id\": \"user-456\",\n        \"properties\": {\n            \"user_agent\": \"Mozilla/5.0...\",\n            \"screen_width\": 1920,\n            \"screen_height\": 1080,\n            \"timezone\": \"America/Los_Angeles\",\n            \"language\": \"en-US\"\n        }\n    }",
+      "example": {
+        "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "event_name": "task_created",
+        "event_version": "v1",
+        "properties": {
+          "task_id": "task-789",
+          "title": "Buy milk"
+        },
+        "session_id": "abc-123-session",
+        "timestamp": "2024-01-15T10:30:00.000Z",
+        "user_id": "user-456"
+      },
+      "properties": {
+        "event_id": {
+          "description": "Unique event identifier (UUID v4)",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_name": {
+          "const": "session_started",
+          "default": "session_started",
+          "title": "Event Name",
+          "type": "string"
+        },
+        "event_version": {
+          "default": "v1",
+          "description": "Schema version for evolution (e.g., v1, v2)",
+          "pattern": "^v\\d+$",
+          "title": "Event Version",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Event occurrence time (ISO8601 with timezone)",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "session_id": {
+          "description": "User session identifier (join key with agent traces)",
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "user_id": {
+          "description": "User identifier",
+          "minLength": 1,
+          "title": "User Id",
+          "type": "string"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Event-specific data (flexible dict)",
+          "title": "Properties"
+        }
+      },
+      "required": [
+        "session_id",
+        "user_id"
+      ],
+      "title": "SessionStartedEvent",
+      "type": "object"
+    },
+    "example": {
+      "event_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "event_name": "task_created",
+      "event_version": "v1",
+      "timestamp": "2024-01-15T10:30:00.000Z",
+      "session_id": "abc-123-session",
+      "user_id": "user-456",
+      "properties": {
+        "task_id": "task-789",
+        "title": "Buy milk"
+      }
+    }
+  }
+}
