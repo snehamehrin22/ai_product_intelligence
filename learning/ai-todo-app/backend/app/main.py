@@ -4,7 +4,7 @@ Entry point for the AI Todo App backend.
 Provides REST API for task management and AI agent interaction.
 """
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request, BackgroundTasks, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
@@ -13,6 +13,13 @@ from datetime import datetime
 from typing import Optional
 
 from .config import settings
+from .events import get_zerobus_publisher, ZerobusPublisher
+from .event_schemas.events import (
+    TaskCreatedEvent,
+    TaskCompletedEvent,
+    TaskDeletedEvent,
+    TaskUpdatedEvent,
+)
 from .db import (
     async_test_connection,
     db_client,
@@ -133,7 +140,12 @@ async def health_check():
 
 
 @app.post("/tasks", response_model=TaskResponse, status_code=201, tags=["Tasks"])
-async def create_task_endpoint(task: TaskCreate):
+async def create_task_endpoint(
+    task: TaskCreate,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    publisher: ZerobusPublisher = Depends(get_zerobus_publisher)
+):
     """Create a new task.
 
     Returns:
@@ -159,6 +171,28 @@ async def create_task_endpoint(task: TaskCreate):
 
         if not created_task:
             raise HTTPException(status_code=500, detail="Failed to create task")
+
+        # Extract session_id from headers (or generate if missing)
+        session_id = request.headers.get('X-Session-Id', str(uuid.uuid4()))
+
+        # Emit task_created event (fire-and-forget)
+        background_tasks.add_task(
+            publisher.publish,
+            {
+                "event_name": "task_created",
+                "session_id": session_id,
+                "user_id": task.user_id,
+                "properties": {
+                    "task_id": task_id,
+                    "title": task.title,
+                    "description": task.description or "",
+                    "status": task.status.value,
+                    "priority": task.priority.value,
+                    "due_date": task.due_date.isoformat() if task.due_date else None
+                }
+            },
+            table="platform_events"
+        )
 
         return TaskResponse(**created_task)
 
@@ -219,7 +253,13 @@ async def get_task_endpoint(task_id: str):
 
 
 @app.put("/tasks/{task_id}", response_model=TaskResponse, tags=["Tasks"])
-async def update_task_endpoint(task_id: str, task_update: TaskUpdate):
+async def update_task_endpoint(
+    task_id: str,
+    task_update: TaskUpdate,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    publisher: ZerobusPublisher = Depends(get_zerobus_publisher)
+):
     """Update a task.
 
     Only provided fields will be updated.
@@ -238,23 +278,62 @@ async def update_task_endpoint(task_id: str, task_update: TaskUpdate):
 
         # Build updates dict (only include provided fields)
         updates = {"updated_at": datetime.utcnow().isoformat()}
+        updated_fields = []
+        previous_values = {}
+        current_values = {}
 
         if task_update.title is not None:
             updates["title"] = task_update.title
+            updated_fields.append("title")
+            previous_values["title"] = existing_task["title"]
+            current_values["title"] = task_update.title
         if task_update.description is not None:
             updates["description"] = task_update.description
+            updated_fields.append("description")
+            previous_values["description"] = existing_task.get("description")
+            current_values["description"] = task_update.description
         if task_update.status is not None:
             updates["status"] = task_update.status.value
+            updated_fields.append("status")
+            previous_values["status"] = existing_task["status"]
+            current_values["status"] = task_update.status.value
         if task_update.priority is not None:
             updates["priority"] = task_update.priority.value
+            updated_fields.append("priority")
+            previous_values["priority"] = existing_task["priority"]
+            current_values["priority"] = task_update.priority.value
         if task_update.due_date is not None:
             updates["due_date"] = task_update.due_date.isoformat()
+            updated_fields.append("due_date")
+            previous_values["due_date"] = existing_task.get("due_date")
+            current_values["due_date"] = task_update.due_date.isoformat()
 
         # Update task
         updated_task = await async_update_task(task_id, updates)
 
         if not updated_task:
             raise HTTPException(status_code=500, detail="Failed to update task")
+
+        # Extract session_id from headers (or generate if missing)
+        session_id = request.headers.get('X-Session-Id', str(uuid.uuid4()))
+
+        # Emit task_updated event (fire-and-forget)
+        background_tasks.add_task(
+            publisher.publish,
+            {
+                "event_name": "task_updated",
+                "session_id": session_id,
+                "user_id": existing_task["user_id"],
+                "properties": {
+                    "task_id": task_id,
+                    "title": updated_task["title"],
+                    "updated_fields": updated_fields,
+                    "previous_values": previous_values,
+                    "current_values": current_values
+                }
+            },
+            table="platform_events"
+        )
 
         return TaskResponse(**updated_task)
 
@@ -266,7 +345,12 @@ async def update_task_endpoint(task_id: str, task_update: TaskUpdate):
 
 
 @app.delete("/tasks/{task_id}", status_code=204, tags=["Tasks"])
-async def delete_task_endpoint(task_id: str):
+async def delete_task_endpoint(
+    task_id: str,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    publisher: ZerobusPublisher = Depends(get_zerobus_publisher)
+):
     """Delete a task.
 
     Returns:
@@ -276,10 +360,35 @@ async def delete_task_endpoint(task_id: str):
         404: Task not found
     """
     try:
+        # Get task before deletion (for event properties)
+        existing_task = await async_get_task_by_id(task_id)
+        if not existing_task:
+            raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+
+        # Delete task
         deleted = await async_delete_task(task_id)
 
         if not deleted:
             raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+
+        # Extract session_id from headers (or generate if missing)
+        session_id = request.headers.get('X-Session-Id', str(uuid.uuid4()))
+
+        # Emit task_deleted event (fire-and-forget)
+        background_tasks.add_task(
+            publisher.publish,
+            {
+                "event_name": "task_deleted",
+                "session_id": session_id,
+                "user_id": existing_task["user_id"],
+                "properties": {
+                    "task_id": task_id,
+                    "title": existing_task["title"],
+                    "status": existing_task["status"]
+                }
+            },
+            table="platform_events"
+        )
 
         return None  # 204 No Content
 
@@ -288,6 +397,74 @@ async def delete_task_endpoint(task_id: str):
     except Exception as e:
         logger.error(f"Error deleting task {task_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to delete task: {str(e)}")
+
+
+@app.patch("/tasks/{task_id}/complete", response_model=TaskResponse, tags=["Tasks"])
+async def toggle_task_completion_endpoint(
+    task_id: str,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    publisher: ZerobusPublisher = Depends(get_zerobus_publisher)
+):
+    """Toggle task completion status.
+
+    If task is not completed, marks it as completed.
+    If task is completed, marks it as pending.
+
+    Returns:
+        Updated task
+
+    Raises:
+        404: Task not found
+    """
+    try:
+        # Get current task
+        existing_task = await async_get_task_by_id(task_id)
+        if not existing_task:
+            raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+
+        # Determine new status (toggle between completed and pending)
+        current_status = existing_task["status"]
+        new_status = "completed" if current_status != "completed" else "pending"
+
+        # Update task status
+        updates = {
+            "status": new_status,
+            "updated_at": datetime.utcnow().isoformat()
+        }
+        updated_task = await async_update_task(task_id, updates)
+
+        if not updated_task:
+            raise HTTPException(status_code=500, detail="Failed to update task")
+
+        # Extract session_id from headers (or generate if missing)
+        session_id = request.headers.get('X-Session-Id', str(uuid.uuid4()))
+
+        # Emit task_completed event only when transitioning TO completed status
+        if new_status == "completed":
+            background_tasks.add_task(
+                publisher.publish,
+                {
+                    "event_name": "task_completed",
+                    "session_id": session_id,
+                    "user_id": existing_task["user_id"],
+                    "properties": {
+                        "task_id": task_id,
+                        "title": existing_task["title"],
+                        "previous_status": current_status,
+                        "completed_at": updates["updated_at"]
+                    }
+                },
+                table="platform_events"
+            )
+
+        return TaskResponse(**updated_task)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error toggling task completion {task_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to toggle task completion: {str(e)}")
 
 
 # ============================================================================
