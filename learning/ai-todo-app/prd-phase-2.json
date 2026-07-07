@@ -324,7 +324,7 @@
         "US-2.8",
         "US-2.2"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-2.10",

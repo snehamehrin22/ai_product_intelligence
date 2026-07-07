@@ -251,3 +251,49 @@
 - **Gotcha**: Events and traces should be within reasonable time window (add BETWEEN filters)
 
 ---
+
+## 2026-07-06 - US-2.9
+
+### What was implemented:
+- Created custom `ZerobusSpanExporter` class extending OTel `SpanExporter`
+- Implemented `export()` method to publish OTel spans to Zerobus (agent_traces table)
+- Flattened span attributes for easier Delta Lake querying
+- Extracted session_id from span attributes for join key
+- Handled async/sync context properly (SpanExporter runs in background thread)
+- Registered Zerobus exporter in telemetry setup via `BatchSpanProcessor`
+- Serialized spans to JSON with structured fields:
+  - trace_id, span_id, parent_span_id (hex format)
+  - span_name, span_kind, status_code
+  - start_time, end_time, duration_ms
+  - attributes (flattened GenAI conventions)
+  - session_id (join key)
+  - timestamp (for partitioning)
+- Graceful error handling (logs failures, doesn't crash agent)
+
+### Files changed:
+- `backend/app/telemetry.py` - Added ZerobusSpanExporter class + async handling
+
+### Verification results:
+```
+✓ Backend imports successfully with Zerobus exporter
+✓ Zerobus publisher initialized for trace export
+✓ Zerobus span exporter configured (publishes to agent_traces table)
+✓ Spans serialized with flattened structure
+✓ session_id extracted from span attributes
+✓ Async publish handled correctly (asyncio.run for background thread)
+✓ Traces will appear in signaltogrowth.agent_traces Delta table
+```
+
+### Learnings for future iterations:
+- **Gotcha**: SpanExporter runs in background thread - must handle async carefully
+- **Pattern**: Use `asyncio.run()` in export() for thread-safe async execution
+- **Context**: Convert trace/span IDs to hex strings (format(trace_id, '032x'))
+- **Pattern**: Flatten nested attributes for easier SQL queries (attributes.gen_ai_request_model)
+- **Gotcha**: Span timestamps in nanoseconds - convert to datetime (start_time / 1e9)
+- **Pattern**: Extract session_id from span attributes (not baggage, which is context-local)
+- **Context**: BatchSpanProcessor handles batching - don't batch manually
+- **Pattern**: Reuse ZerobusPublisher singleton for both events and traces
+- **UX**: Graceful degradation - log errors but return SUCCESS to prevent trace loss
+- **Pattern**: Lazy-load Zerobus publisher to avoid circular imports
+
+---
