@@ -89,3 +89,42 @@
 - **UX**: Return processing summary (accepted/rejected counts) for monitoring
 
 ---
+
+## 2026-07-06 - US-2.5
+
+### What was implemented:
+- Created `EventEmitter` class as singleton service
+- Generates session_id with `crypto.randomUUID()` on first load
+- Stores session_id in `sessionStorage` for persistence across page refreshes
+- Event batching with configurable limits (10 events or 5 seconds)
+- Retry logic with exponential backoff (3 retries, 1s→2s→4s delays)
+- Sends batched events to POST /events endpoint
+- Includes `X-Session-Id` header in all API requests (api.js updated)
+- Graceful degradation on errors (logs to console, doesn't crash app)
+- Flush API for immediate event sending
+
+### Files changed:
+- `frontend/src/services/eventEmitter.js` - New EventEmitter service
+- `frontend/src/services/api.js` - Added session_id header to all API calls
+- `ai-todo-app/prd-phase-2.json` - Marked US-2.5 as complete
+
+### Verification results:
+```
+✓ Frontend builds successfully (no errors)
+✓ EventEmitter singleton created
+✓ Session ID generated and stored in sessionStorage
+✓ Event batching implemented (max 10 or 5s timeout)
+✓ Retry logic with exponential backoff
+✓ X-Session-Id header added to all API requests
+```
+
+### Learnings for future iterations:
+- **Pattern**: Singleton pattern for event emitter ensures consistent session_id across app
+- **Pattern**: Use `sessionStorage` (not `localStorage`) for session_id - clears on tab close
+- **Pattern**: Batch timer reset on each new event prevents premature flushes
+- **Gotcha**: Use `crypto.randomUUID()` instead of manual UUID generation (native browser API)
+- **UX**: Console logging helps debug event flow without impacting production
+- **Pattern**: Fire-and-forget publishing - don't wait for backend response
+- **Context**: Max batch size prevents memory issues if backend is down for extended period
+
+---

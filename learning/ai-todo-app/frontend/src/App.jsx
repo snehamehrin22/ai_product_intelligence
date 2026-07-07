@@ -4,6 +4,7 @@ import TaskList from './components/TaskList';
 import TaskForm from './components/TaskForm';
 import AgentChat from './components/AgentChat';
 import { getTasks, createTask, updateTask, deleteTask } from './services/api';
+import eventEmitter from './services/eventEmitter';
 
 const TEST_USER_ID = 'test-user-001';
 
@@ -26,6 +27,15 @@ function App() {
       setLoading(false);
     }
   }, [filter]);
+
+  // Emit session_started event on mount
+  useEffect(() => {
+    eventEmitter.emit('session_started', TEST_USER_ID, {
+      timestamp: new Date().toISOString(),
+      user_agent: navigator.userAgent,
+      screen_resolution: `${window.screen.width}x${window.screen.height}`
+    });
+  }, []); // Empty dependency array = run once on mount
 
   // Load tasks on mount and when filter changes
   useEffect(() => {
