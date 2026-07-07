@@ -18,6 +18,7 @@ from tenacity import (
 )
 
 from .config import settings
+from .event_schemas.events import PlatformEvent
 
 # Zerobus SDK imports (only if configured)
 try:
@@ -52,12 +53,18 @@ class ZerobusPublisher:
         await publisher.close()
     """
 
-    def __init__(self):
-        """Initialize Zerobus publisher with SDK connection."""
+    def __init__(self, validate_schemas: bool = True):
+        """
+        Initialize Zerobus publisher with SDK connection.
+
+        Args:
+            validate_schemas: Whether to validate events against Pydantic schemas before publishing
+        """
         self._sdk: Optional[ZerobusSdk] = None
         self._streams: Dict[str, Any] = {}  # table_name -> stream
         self._lock = asyncio.Lock()
         self._initialized = False
+        self._validate_schemas = validate_schemas
 
         # Configuration
         self.zerobus_endpoint = settings.databricks_zerobus_endpoint
@@ -157,6 +164,31 @@ class ZerobusPublisher:
             self._streams[table] = self._create_stream(table)
         return self._streams[table]
 
+    def _validate_event(self, event: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Validate event against Pydantic schema.
+
+        Args:
+            event: Event dictionary
+
+        Returns:
+            Validated event dictionary
+
+        Raises:
+            ValidationError: If event doesn't match schema
+        """
+        if not self._validate_schemas:
+            return event
+
+        try:
+            # Validate using PlatformEvent base schema
+            validated_event = PlatformEvent(**event)
+            return validated_event.model_dump()
+        except Exception as e:
+            logger.error(f"Event validation failed: {e}", exc_info=True)
+            # Re-raise to allow caller to handle
+            raise
+
     def _add_metadata(self, event: Dict[str, Any]) -> Dict[str, Any]:
         """
         Add automatic metadata to event if missing.
@@ -199,8 +231,21 @@ class ZerobusPublisher:
             return
 
         try:
-            # Add metadata
+            # Add metadata first
             enriched_event = self._add_metadata(event)
+
+            # Validate schema (if enabled)
+            if self._validate_schemas:
+                try:
+                    enriched_event = self._validate_event(enriched_event)
+                except Exception as validation_error:
+                    logger.error(
+                        f"Event validation failed for {enriched_event.get('event_name', 'unknown')}: "
+                        f"{validation_error}",
+                        exc_info=True
+                    )
+                    # Skip publishing invalid events
+                    return
 
             # Get or create stream
             stream = self._get_or_create_stream(table)
