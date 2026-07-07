@@ -5,6 +5,31 @@
 const API_BASE_URL = 'http://localhost:8000';
 
 /**
+ * Get session ID from sessionStorage
+ * @returns {string|null} Session ID
+ */
+function getSessionId() {
+  return sessionStorage.getItem('session_id');
+}
+
+/**
+ * Get common headers including session ID
+ * @returns {Object} Headers object
+ */
+function getHeaders() {
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  const sessionId = getSessionId();
+  if (sessionId) {
+    headers['X-Session-Id'] = sessionId;
+  }
+
+  return headers;
+}
+
+/**
  * Fetch all tasks for a user
  * @param {string} userId - User ID
  * @param {string} [status] - Optional status filter
@@ -33,9 +58,7 @@ export async function getTasks(userId, status = null) {
 export async function createTask(task) {
   const response = await fetch(`${API_BASE_URL}/tasks`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: getHeaders(),
     body: JSON.stringify(task),
   });
 
@@ -56,9 +79,7 @@ export async function createTask(task) {
 export async function updateTask(taskId, updates) {
   const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: getHeaders(),
     body: JSON.stringify(updates),
   });
 
@@ -78,6 +99,7 @@ export async function updateTask(taskId, updates) {
 export async function deleteTask(taskId) {
   const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
     method: 'DELETE',
+    headers: getHeaders(),
   });
 
   if (!response.ok) {
