@@ -337,3 +337,45 @@
 - **Context**: Langfuse can estimate OpenAI costs from token usage in traces
 
 ---
+
+## 2026-07-07 - US-2.12
+
+### What was implemented:
+- Created comprehensive integration test suite (`test_event_flow.py`) with 5 test classes
+- Tests validate complete flow: API → Zerobus → Delta Lake
+- Test coverage: event ingestion, trace export, session_id joins, event ordering, schema compliance
+- Created CLI query script (`query_events.py`) for manual Delta Lake queries
+- Script supports: events query, traces query, session timeline (joined view)
+- Created example event payloads (`example_events.json`) showing all event types
+- Created validation guide (`event_flow_validation.md`) with troubleshooting
+
+### Files changed:
+- `backend/tests/integration/test_event_flow.py` - NEW: 5 integration test classes
+- `backend/scripts/query_events.py` - NEW: CLI tool for querying Delta Lake
+- `docs/example_events.json` - NEW: Complete event/trace examples with schema docs
+- `docs/event_flow_validation.md` - NEW: Validation guide with troubleshooting
+- `ai-todo-app/prd-phase-2.json` - Marked US-2.12 as complete
+
+### Verification results:
+```
+✓ Integration tests created for all validation scenarios
+✓ Tests validate: event flow, trace flow, session joins, ordering, schema
+✓ Query script provides CLI for events, traces, and joined timeline view
+✓ Example payloads show platform events + agent traces with GenAI conventions
+✓ Validation guide covers testing strategy, troubleshooting, performance metrics
+✓ Checklist for validating event flow after setup or changes
+```
+
+### Learnings for future iterations:
+- **Pattern**: Integration tests should wait 5-7 seconds for Zerobus ingestion latency
+- **Context**: Tests validate 3 levels: unit (component), integration (E2E), system (monitoring)
+- **Pattern**: Use pytest.skip() for tests requiring external dependencies (OpenAI, Zerobus)
+- **Gotcha**: Not all events have traces (only agent interactions create traces)
+- **Context**: session_id coverage target: >95% for agent-related events
+- **Pattern**: CLI query script helps debug event flow issues manually
+- **UX**: Session timeline view (UNION events + traces) shows complete user journey
+- **Context**: Performance targets: event ingestion <5s, trace export <10s, session_id coverage >95%
+- **Pattern**: Test both positive cases (event found) and negative cases (event not found with helpful error)
+- **Gotcha**: Databricks SQL connector returns rows as tuples (not dicts) - unpack carefully
+
+---
