@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: agent
-        image: <ACR_NAME>.azurecr.io/agent:v1  # Will be replaced by setup script
+        image: acr8409.azurecr.io/agent:v1
         ports:
         - name: http
           containerPort: 8080

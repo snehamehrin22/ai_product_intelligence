@@ -6,6 +6,10 @@ metadata:
     app: otel-collector
 data:
   otel-config.yaml: |
+    extensions:
+      health_check:
+        endpoint: 0.0.0.0:13133
+
     receivers:
       otlp:
         protocols:
@@ -20,28 +24,25 @@ data:
         send_batch_size: 100
 
     exporters:
-      # Logging exporter for debugging
-      logging:
+      # Debug exporter for debugging (replaces deprecated logging)
+      debug:
         verbosity: detailed
 
-      # Kafka exporter (Azure Event Hubs)
+      # Kafka exporter (self-hosted Kafka in AKS)
       kafka:
         brokers:
-          - ${EVENTHUB_BROKER}  # Will be substituted by script
+          - kafka-0.kafka:9092
         protocol_version: 2.0.0
         topic: agent-traces
-        auth:
-          sasl:
-            mechanism: PLAIN
-            username: "$ConnectionString"
-            password: "${EVENTHUB_CONNECTION_STRING}"  # From K8s secret
+        metadata:
+          full: false
         producer:
-          compression: gzip
           max_message_bytes: 1000000
 
     service:
+      extensions: [health_check]
       pipelines:
         traces:
           receivers: [otlp]
           processors: [batch]
-          exporters: [logging, kafka]  # Both logging and kafka
+          exporters: [debug, kafka]

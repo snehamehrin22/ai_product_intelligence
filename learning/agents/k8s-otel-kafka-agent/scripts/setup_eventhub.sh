@@ -36,7 +36,6 @@ az eventhubs eventhub create \
   --namespace-name $NAMESPACE_NAME \
   --resource-group $RESOURCE_GROUP \
   --partition-count 2 \
-  --message-retention 1 \
   --output table
 
 # Step 3: Get connection string

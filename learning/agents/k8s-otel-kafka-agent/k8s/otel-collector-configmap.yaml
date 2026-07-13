@@ -6,6 +6,10 @@ metadata:
     app: otel-collector
 data:
   otel-config.yaml: |
+    extensions:
+      health_check:
+        endpoint: 0.0.0.0:13133
+
     receivers:
       otlp:
         protocols:
@@ -20,8 +24,8 @@ data:
         send_batch_size: 100
 
     exporters:
-      # Logging exporter for debugging
-      logging:
+      # Debug exporter for debugging (replaces deprecated logging exporter)
+      debug:
         verbosity: detailed
 
       # Kafka exporter (will be configured in US-6)
@@ -37,8 +41,9 @@ data:
       #       password: "${EVENTHUB_CONNECTION_STRING}"
 
     service:
+      extensions: [health_check]
       pipelines:
         traces:
           receivers: [otlp]
           processors: [batch]
-          exporters: [logging]  # Add kafka later
+          exporters: [debug]  # Add kafka later
