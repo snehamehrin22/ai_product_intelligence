@@ -1,0 +1,30 @@
+# Progress Log - K8s + OpenTelemetry + Kafka Learning Project
+
+## Codebase Patterns
+
+(Will be populated as patterns are discovered)
+
+---
+
+## 2026-07-13 - Project Kickoff
+
+**Objective:** Learn Kubernetes, OpenTelemetry Collector, and Kafka-based telemetry pipeline in 5 hours
+
+**Architecture:**
+```
+Agent (AKS pod)
+  → OTLP Collector (AKS pod)
+  → Azure Event Hubs (Kafka)
+  → Databricks Auto Loader
+  → Delta Lake
+```
+
+**User Stories:** 8 stories (US-1 through US-8)
+- US-1 to US-7: Core pipeline (P0)
+- US-8: Documentation (P1, optional if time runs out)
+
+**Execution Mode:** Manual execution with Claude Code guidance
+
+**Time Budget:** 320 minutes total, target 300 minutes
+
+---
