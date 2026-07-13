@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  labels:
+    app: otel-collector
+data:
+  otel-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      batch:
+        timeout: 10s
+        send_batch_size: 100
+
+    exporters:
+      # Logging exporter for debugging
+      logging:
+        verbosity: detailed
+
+      # Kafka exporter (Azure Event Hubs)
+      kafka:
+        brokers:
+          - ${EVENTHUB_BROKER}  # Will be substituted by script
+        protocol_version: 2.0.0
+        topic: agent-traces
+        auth:
+          sasl:
+            mechanism: PLAIN
+            username: "$ConnectionString"
+            password: "${EVENTHUB_CONNECTION_STRING}"  # From K8s secret
+        producer:
+          compression: gzip
+          max_message_bytes: 1000000
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [logging, kafka]  # Both logging and kafka
