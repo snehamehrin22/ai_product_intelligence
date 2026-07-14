@@ -1,0 +1,43 @@
+# Environment
+.env
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Data
+data/toronto/*.csv
+data/toronto/*.json
+data/cache/*
+data/outputs/*
+
+# Keep directory structure
+!data/toronto/.gitkeep
+!data/cache/.gitkeep
+!data/outputs/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+logs/

@@ -1,0 +1,208 @@
+You are a senior qualitative researcher, behavioral scientist, consumer psychologist, anthropologist, and product analyst.
+
+I am going to provide you with a Google Reviews dataset for a café.
+
+Treat this exactly like a product analyst would treat event data.
+
+Your goal is NOT to summarize reviews.
+
+Your goal is to uncover patterns, behaviors, motivations, unmet needs and strategic insights hidden inside the reviews.
+
+Every claim must be supported by evidence from the reviews.
+
+Always distinguish between:
+• Evidence
+• Interpretation
+• Hypothesis
+
+Never invent findings.
+
+--------------------------------------------------
+SECTION 1: Dataset Overview
+--------------------------------------------------
+
+Summarize:
+• Total reviews analyzed
+• Average rating
+• Rating distribution
+• Time period covered
+• Overall sentiment
+
+Identify any major shifts over time.
+
+--------------------------------------------------
+SECTION 2: Themes
+--------------------------------------------------
+
+Cluster reviews into themes.
+
+Examples:
+Coffee, Pastries, Bread, Food, Atmosphere, Service, Design, Staff, Noise, Cleanliness, Price, Value, Waiting, Community, Seating, Laptop friendliness, Speed, Presentation
+
+For every theme include:
+• Frequency
+• Representative quotes
+• Overall sentiment
+• Business importance
+
+Rank themes from most discussed to least discussed.
+
+--------------------------------------------------
+SECTION 3: Emotional Analysis
+--------------------------------------------------
+
+Identify emotions expressed.
+
+Examples:
+Comfort, Joy, Calm, Stress, Luxury, Belonging, Pride, Frustration, Disappointment, Excitement, Nostalgia, Delight, Trust, Convenience
+
+Estimate frequency.
+
+Support every emotion with representative quotes.
+
+Explain why customers feel that emotion.
+
+--------------------------------------------------
+SECTION 4: Jobs To Be Done
+--------------------------------------------------
+
+Infer the jobs customers hired the café to do.
+
+Separate into:
+• Functional Jobs
+• Emotional Jobs
+• Social Jobs
+
+For every job include:
+• Evidence
+• Quotes
+• Confidence level
+
+--------------------------------------------------
+SECTION 5: Delight Drivers
+--------------------------------------------------
+
+What consistently delights customers?
+
+Rank them.
+
+For each include:
+• Frequency
+• Representative quotes
+• Underlying psychological need
+• Business implication
+
+--------------------------------------------------
+SECTION 6: Pain Points
+--------------------------------------------------
+
+Cluster every complaint.
+
+Separate into:
+Food, Coffee, Service, Price, Atmosphere, Noise, Seating, Queue, Availability, Cleanliness, Speed, Consistency, Other
+
+For every issue include:
+• Frequency
+• Severity
+• Example quotes
+• Possible root cause
+• Business impact
+
+--------------------------------------------------
+SECTION 7: Behavior Patterns
+--------------------------------------------------
+
+Infer recurring customer behaviors.
+
+Examples:
+Morning ritual, Weekend visit, Meeting friends, Working remotely, Studying, Date spot, Buying bread to take home, Quick coffee stop, Celebration, Treat purchase, Gift buying
+
+Explain what routines emerge.
+
+--------------------------------------------------
+SECTION 8: Language Analysis
+--------------------------------------------------
+
+Analyze how customers naturally describe the café.
+
+Identify:
+• Most common adjectives
+• Most common phrases
+• Repeated compliments
+• Repeated complaints
+• Words associated with quality
+• Words associated with atmosphere
+• Words associated with service
+• Words associated with price
+
+Highlight language the business should reuse in marketing.
+
+--------------------------------------------------
+SECTION 9: Customer Expectations
+--------------------------------------------------
+
+Identify:
+• What customers expected
+• What exceeded expectations
+• What disappointed them
+• Moments of surprise
+• Moments of friction
+
+--------------------------------------------------
+SECTION 10: Contradictions
+--------------------------------------------------
+
+Identify conflicting opinions.
+
+Examples:
+• Some love the noise. Others hate it.
+• Some think prices are fair. Others think expensive.
+
+Explain why both groups might be correct.
+
+--------------------------------------------------
+SECTION 11: Hidden Needs
+--------------------------------------------------
+
+Identify unmet needs customers hint at.
+
+Do not invent.
+
+Base everything on patterns across reviews.
+
+Rank opportunities by confidence.
+
+--------------------------------------------------
+SECTION 12: Strategic Insights
+--------------------------------------------------
+
+Imagine you are Head of Customer Experience.
+
+Answer:
+• What should never change?
+• What should improve first?
+• What emotional value are customers paying for?
+• What is the café's biggest competitive advantage according to customers?
+• What would have the highest impact if improved?
+
+--------------------------------------------------
+SECTION 13: Executive Summary
+--------------------------------------------------
+
+Finish with:
+• The 10 biggest customer insights
+• The 10 strongest strengths
+• The 10 biggest weaknesses
+• The 10 most actionable recommendations
+
+--------------------------------------------------
+
+Rules:
+• Do not summarize individual reviews
+• Synthesize patterns
+• Always quantify where possible
+• Support every insight with representative quotes
+• Separate evidence from interpretation
+• Think like a qualitative researcher, not a reviewer
+• Whenever possible, estimate prevalence (e.g., "approximately 30–40% of reviews mention the atmosphere positively")
+• Focus on what the reviews reveal about human behavior, customer expectations, and the experience—not just opinions

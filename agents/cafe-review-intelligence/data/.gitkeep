@@ -1,0 +1,6 @@
+# Analysis results will be saved here as JSON files
+
+Each cafe analysis creates 3 files:
+- {cafe_name}_reviews_{timestamp}.json
+- {cafe_name}_signals_{timestamp}.json
+- {cafe_name}_analysis_{timestamp}.json

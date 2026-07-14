@@ -1,0 +1,390 @@
+{
+  "projectName": "K8s + OpenTelemetry + Kafka Agent Learning Project",
+  "version": "1.0.0",
+  "phase": "Learning Sprint - Kubernetes Observability Pipeline",
+  "description": "Build and deploy a containerized AI agent to AKS with full OpenTelemetry instrumentation, streaming traces through Azure Event Hubs (Kafka) to Databricks Delta Lake",
+  "branchName": "main",
+  "timeBox": "5 hours",
+  "objectives": [
+    "Understand how agents run in Kubernetes (AKS)",
+    "Learn OpenTelemetry Collector architecture and configuration",
+    "Build Kafka-based telemetry pipeline with Azure Event Hubs",
+    "Ingest traces into Databricks using Auto Loader",
+    "Validate end-to-end trace flow from agent to Delta Lake"
+  ],
+  "technicalStack": {
+    "agent": "Python FastAPI + OpenAI",
+    "telemetry": "OpenTelemetry SDK + OTLP Collector",
+    "container": "Docker + Azure Container Registry (ACR)",
+    "orchestration": "Azure Kubernetes Service (AKS)",
+    "streaming": "Azure Event Hubs (Kafka-compatible)",
+    "storage": "Databricks Delta Lake (Auto Loader)"
+  },
+  "userStories": [
+    {
+      "id": "US-1",
+      "title": "Extract Agent as Standalone Service",
+      "description": "As a developer, I need to extract the todo agent from the existing FastAPI monolith into a standalone microservice so it can be deployed independently",
+      "acceptanceCriteria": [
+        "New directory: agents/k8s-otel-kafka-agent/agent-service/",
+        "Agent runs as standalone FastAPI service on port 8080",
+        "Single endpoint: POST /process with {message: string}",
+        "Returns: {task: string, confidence: float}",
+        "OpenTelemetry SDK integrated with OTLP exporter",
+        "Environment variables for OTEL_EXPORTER_OTLP_ENDPOINT",
+        "Health check endpoint: GET /health",
+        "Runs locally with python app.py"
+      ],
+      "technicalNotes": [
+        "Reuse existing agent logic from ai-todo-app/backend/app/agent.py",
+        "Simplify: Remove Databricks writes (just parse task, don't save)",
+        "Add OTLP exporter pointing to collector (default: http://localhost:4317)",
+        "Use GenAI semantic conventions: gen_ai.request.model, gen_ai.usage.input_tokens",
+        "Create span for entire request: agent.process_message",
+        "Add nested span for LLM call: openai.chat.completions",
+        "Test locally first, OTLP can fail gracefully if collector not running"
+      ],
+      "files": [
+        "agents/k8s-otel-kafka-agent/agent-service/app.py",
+        "agents/k8s-otel-kafka-agent/agent-service/requirements.txt",
+        "agents/k8s-otel-kafka-agent/agent-service/.env.example"
+      ],
+      "priority": "P0",
+      "estimatedMinutes": 45,
+      "dependencies": [],
+      "passes": false
+    },
+    {
+      "id": "US-2",
+      "title": "Containerize Agent with Dockerfile",
+      "description": "As a DevOps engineer, I need a Docker image for the agent so it can be deployed to Kubernetes",
+      "acceptanceCriteria": [
+        "Dockerfile in agent-service/ directory",
+        "Multi-stage build for small image size",
+        "Uses python:3.13-slim base image",
+        "Exposes port 8080",
+        "Builds successfully: docker build -t agent:local .",
+        "Runs locally: docker run -p 8080:8080 -e OPENAI_API_KEY=... agent:local",
+        "Health check returns 200 OK",
+        "Image size < 500MB"
+      ],
+      "technicalNotes": [
+        "Use .dockerignore to exclude .env, .venv, __pycache__",
+        "COPY requirements.txt first (for caching)",
+        "pip install with --no-cache-dir flag",
+        "Set PYTHONUNBUFFERED=1 for proper logging",
+        "Use CMD not ENTRYPOINT for easier overrides",
+        "Test with: curl http://localhost:8080/health"
+      ],
+      "files": [
+        "agents/k8s-otel-kafka-agent/agent-service/Dockerfile",
+        "agents/k8s-otel-kafka-agent/agent-service/.dockerignore"
+      ],
+      "priority": "P0",
+      "estimatedMinutes": 20,
+      "dependencies": ["US-1"],
+      "passes": false
+    },
+    {
+      "id": "US-3",
+      "title": "Create AKS Cluster and Push Image to ACR",
+      "description": "As a DevOps engineer, I need an AKS cluster and the agent image in Azure Container Registry so I can deploy",
+      "acceptanceCriteria": [
+        "AKS cluster created with 1-2 nodes (cheapest SKU)",
+        "kubectl configured to connect to AKS",
+        "Azure Container Registry (ACR) created",
+        "Agent image tagged and pushed to ACR",
+        "AKS has pull permissions for ACR",
+        "Can run: kubectl get nodes (shows nodes)",
+        "Script to automate setup: scripts/setup_aks.sh"
+      ],
+      "technicalNotes": [
+        "Create resource group: az group create -n rg-k8s-learning -l eastus",
+        "Create ACR: az acr create -n <unique-name> -g rg-k8s-learning --sku Basic",
+        "Create AKS: az aks create -n aks-learning -g rg-k8s-learning --node-count 1 --node-vm-size Standard_B2s --attach-acr <acr-name>",
+        "Get credentials: az aks get-credentials -n aks-learning -g rg-k8s-learning",
+        "Build and push: az acr build -r <acr-name> -t agent:v1 ./agent-service",
+        "Standard_B2s = cheapest AKS node (~$30/month, can delete after)",
+        "Attach ACR to AKS for automatic pull permissions"
+      ],
+      "files": [
+        "agents/k8s-otel-kafka-agent/scripts/setup_aks.sh",
+        "agents/k8s-otel-kafka-agent/scripts/cleanup_aks.sh",
+        "agents/k8s-otel-kafka-agent/docs/AKS_SETUP.md"
+      ],
+      "priority": "P0",
+      "estimatedMinutes": 30,
+      "dependencies": ["US-2"],
+      "passes": false
+    },
+    {
+      "id": "US-4",
+      "title": "Deploy OTLP Collector to AKS",
+      "description": "As a developer, I need the OpenTelemetry Collector running in Kubernetes so the agent has somewhere to send traces",
+      "acceptanceCriteria": [
+        "OTLP Collector ConfigMap with receivers, processors, exporters",
+        "Collector Deployment with 1 replica",
+        "Collector Service exposing port 4317 (OTLP gRPC)",
+        "Collector configured to export to console (logging exporter) for now",
+        "Can view collector logs: kubectl logs -l app=otel-collector",
+        "Collector shows 'Everything is ready' in logs"
+      ],
+      "technicalNotes": [
+        "Use official image: otel/opentelemetry-collector-contrib:latest",
+        "ConfigMap contains collector config YAML",
+        "Receivers: otlp (grpc: 4317, http: 4318)",
+        "Processors: batch (10s timeout)",
+        "Exporters: logging (debug mode), kafka (to be added in US-5)",
+        "Service type: ClusterIP (internal only)",
+        "Mount ConfigMap as volume: /etc/otel-config.yaml",
+        "Container arg: --config=/etc/otel-config.yaml"
+      ],
+      "files": [
+        "agents/k8s-otel-kafka-agent/k8s/otel-collector-configmap.yaml",
+        "agents/k8s-otel-kafka-agent/k8s/otel-collector-deployment.yaml",
+        "agents/k8s-otel-kafka-agent/k8s/otel-collector-service.yaml"
+      ],
+      "priority": "P0",
+      "estimatedMinutes": 40,
+      "dependencies": ["US-3"],
+      "passes": false
+    },
+    {
+      "id": "US-5",
+      "title": "Deploy Agent to AKS and Verify OTLP Flow",
+      "description": "As a developer, I need the agent running in Kubernetes sending traces to the collector",
+      "acceptanceCriteria": [
+        "Agent Deployment with 1 replica",
+        "Agent Service exposing port 80 (LoadBalancer or NodePort)",
+        "Environment variable OTEL_EXPORTER_OTLP_ENDPOINT set to collector service",
+        "Secret for OPENAI_API_KEY",
+        "Agent pod is Running (kubectl get pods)",
+        "Can call agent: curl http://<external-ip>/process -d '{\"message\":\"buy milk\"}'",
+        "Collector logs show received spans from agent",
+        "End-to-end test: send message → see span in collector logs"
+      ],
+      "technicalNotes": [
+        "Use image from ACR: <acr-name>.azurecr.io/agent:v1",
+        "OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317",
+        "Create secret: kubectl create secret generic openai-key --from-literal=OPENAI_API_KEY=sk-...",
+        "Service type: LoadBalancer (gets public IP) or NodePort for testing",
+        "Wait for external IP: kubectl get svc -w",
+        "Test from local machine, not inside cluster",
+        "Check agent logs: kubectl logs -l app=agent",
+        "Check collector logs: kubectl logs -l app=otel-collector"
+      ],
+      "files": [
+        "agents/k8s-otel-kafka-agent/k8s/agent-deployment.yaml",
+        "agents/k8s-otel-kafka-agent/k8s/agent-service.yaml",
+        "agents/k8s-otel-kafka-agent/scripts/test_agent.sh"
+      ],
+      "priority": "P0",
+      "estimatedMinutes": 40,
+      "dependencies": ["US-4"],
+      "passes": false
+    },
+    {
+      "id": "US-6",
+      "title": "Create Azure Event Hubs and Configure Kafka Exporter",
+      "description": "As a data engineer, I need traces flowing from the collector to Azure Event Hubs (Kafka) so Databricks can consume them",
+      "acceptanceCriteria": [
+        "Azure Event Hubs namespace created",
+        "Event hub (topic) created: agent-traces",
+        "Connection string obtained and stored as K8s secret",
+        "OTLP Collector ConfigMap updated with Kafka exporter",
+        "Collector redeployed with new config",
+        "Traces visible in Event Hubs metrics (incoming messages > 0)",
+        "Python consumer script can read traces from Event Hubs"
+      ],
+      "technicalNotes": [
+        "Create namespace: az eventhubs namespace create -n eh-k8s-learning -g rg-k8s-learning --sku Standard",
+        "Create hub: az eventhubs eventhub create -n agent-traces --namespace-name eh-k8s-learning -g rg-k8s-learning",
+        "Get connection string: az eventhubs namespace authorization-rule keys list",
+        "Event Hubs is Kafka-compatible (port 9093)",
+        "Collector Kafka exporter config:",
+        "  brokers: [<namespace>.servicebus.windows.net:9093]",
+        "  protocol_version: 2.0.0",
+        "  topic: agent-traces",
+        "  auth: SASL PLAIN with connection string",
+        "Create K8s secret: kubectl create secret generic eventhub-conn --from-literal=connstring=...",
+        "Test with kafka-python consumer script"
+      ],
+      "files": [
+        "agents/k8s-otel-kafka-agent/k8s/otel-collector-configmap.yaml (update)",
+        "agents/k8s-otel-kafka-agent/scripts/setup_eventhub.sh",
+        "agents/k8s-otel-kafka-agent/scripts/consume_traces.py",
+        "agents/k8s-otel-kafka-agent/docs/KAFKA_CONFIG.md"
+      ],
+      "priority": "P0",
+      "estimatedMinutes": 50,
+      "dependencies": ["US-5"],
+      "passes": false
+    },
+    {
+      "id": "US-7",
+      "title": "Databricks Auto Loader - Ingest Traces to Delta Lake",
+      "description": "As a data engineer, I need traces from Event Hubs landing in Databricks Delta Lake so I can query them",
+      "acceptanceCriteria": [
+        "Databricks notebook created: ingest_traces_from_kafka.py",
+        "Uses Auto Loader (cloudFiles) to read from Event Hubs",
+        "Parses OTLP JSON format (nested span structure)",
+        "Flattens to table schema: trace_id, span_id, span_name, attributes, timestamp, session_id",
+        "Writes to Delta table: main.observability.agent_traces_k8s",
+        "Streaming job runs continuously",
+        "Can query traces: SELECT * FROM main.observability.agent_traces_k8s",
+        "End-to-end test: send agent request → wait 30s → see trace in Delta"
+      ],
+      "technicalNotes": [
+        "Event Hubs connection string from Azure portal",
+        "Use structured streaming with Kafka source",
+        "OTLP format: spans are nested JSON (resourceSpans → scopeSpans → spans)",
+        "Extract fields: traceId (hex), spanId (hex), name, kind, status",
+        "Extract attributes: flatten gen_ai.* fields",
+        "Checkpoint location: /mnt/checkpoints/agent_traces_k8s",
+        "Schema evolution: mergeSchema option",
+        "Latency: ~30-60 seconds from agent to Delta (Event Hubs + streaming micro-batch)",
+        "Test query: SELECT span_name, attributes['gen_ai.request.model'] FROM ... WHERE timestamp > current_timestamp() - INTERVAL 5 MINUTES"
+      ],
+      "files": [
+        "agents/k8s-otel-kafka-agent/databricks/ingest_traces_from_kafka.py",
+        "agents/k8s-otel-kafka-agent/databricks/query_traces.sql",
+        "agents/k8s-otel-kafka-agent/docs/DATABRICKS_SETUP.md"
+      ],
+      "priority": "P0",
+      "estimatedMinutes": 60,
+      "dependencies": ["US-6"],
+      "passes": false
+    },
+    {
+      "id": "US-8",
+      "title": "End-to-End Validation and Documentation",
+      "description": "As a learner, I need to validate the complete pipeline and document what I learned",
+      "acceptanceCriteria": [
+        "Test script that exercises full pipeline",
+        "Sends 5 agent requests with different messages",
+        "Waits for traces to appear in Delta Lake",
+        "Validates all 5 traces present with correct attributes",
+        "Architecture diagram showing all components",
+        "README with setup instructions and learnings",
+        "Cost breakdown for resources used",
+        "Cleanup script to delete all Azure resources"
+      ],
+      "technicalNotes": [
+        "Test script sends requests to agent LoadBalancer IP",
+        "Waits 60 seconds for streaming ingestion",
+        "Queries Delta Lake via Databricks SQL connector",
+        "Validates: trace_id exists, span_name correct, gen_ai attributes present",
+        "Architecture diagram: Agent pod → Collector pod → Event Hubs → Databricks",
+        "Document: What is OTLP Collector, why Kafka, how K8s service discovery works",
+        "Cost: AKS (~$1/day), Event Hubs (~$0.10/day), ACR (~$0.17/day)",
+        "Cleanup: az group delete -n rg-k8s-learning (deletes everything)"
+      ],
+      "files": [
+        "agents/k8s-otel-kafka-agent/tests/test_e2e_pipeline.py",
+        "agents/k8s-otel-kafka-agent/README.md",
+        "agents/k8s-otel-kafka-agent/docs/ARCHITECTURE.md",
+        "agents/k8s-otel-kafka-agent/docs/LEARNINGS.md",
+        "agents/k8s-otel-kafka-agent/scripts/cleanup_all.sh"
+      ],
+      "priority": "P1",
+      "estimatedMinutes": 35,
+      "dependencies": ["US-7"],
+      "passes": false
+    }
+  ],
+  "successMetrics": {
+    "functional": [
+      "Agent responds to HTTP requests within 3 seconds",
+      "Traces visible in OTLP Collector logs within 1 second",
+      "Traces arrive in Event Hubs within 5 seconds",
+      "Traces queryable in Delta Lake within 60 seconds",
+      "100% of agent requests generate traces end-to-end"
+    ],
+    "learning": [
+      "Understand Kubernetes Deployments, Services, ConfigMaps, Secrets",
+      "Understand OTLP protocol (agent → collector communication)",
+      "Understand OTLP Collector configuration (receivers, processors, exporters)",
+      "Understand Kafka as telemetry backbone (vs direct writes)",
+      "Understand Databricks Auto Loader for streaming ingestion",
+      "Understand GenAI semantic conventions in OpenTelemetry"
+    ],
+    "technical": [
+      "Agent container runs in AKS with 100% uptime",
+      "OTLP Collector buffers traces during Event Hubs downtime",
+      "Kafka provides durability (traces not lost if Databricks is down)",
+      "Delta Lake receives all traces (validated via SQL queries)",
+      "Total pipeline latency < 90 seconds (agent → Delta)"
+    ]
+  },
+  "technicalDecisions": [
+    {
+      "decision": "Use AKS instead of Azure Container Apps",
+      "rationale": "Learning goal is Kubernetes. AKS provides full K8s API and transferable skills. Container Apps is simpler but Azure-specific."
+    },
+    {
+      "decision": "Use OTLP Collector instead of direct Kafka export from agent",
+      "rationale": "Collector is industry best practice. Decouples agent from backend. Enables buffering, batching, and multi-export without agent code changes."
+    },
+    {
+      "decision": "Use Azure Event Hubs instead of Confluent Kafka or Redpanda",
+      "rationale": "Event Hubs is Kafka-compatible, fully managed, and integrates well with Azure ecosystem. Lower operational overhead."
+    },
+    {
+      "decision": "Use Databricks Auto Loader instead of Kafka Connect",
+      "rationale": "Auto Loader is native to Databricks, simpler setup, handles schema evolution automatically. No separate Kafka Connect cluster needed."
+    },
+    {
+      "decision": "Single replica for agent and collector",
+      "rationale": "Learning project. Single replica is simpler and cheaper. Production would use multiple replicas for HA."
+    },
+    {
+      "decision": "LoadBalancer service for agent (not Ingress)",
+      "rationale": "Faster setup. Ingress requires additional controller and TLS config. LoadBalancer gets public IP immediately."
+    }
+  ],
+  "risks": [
+    {
+      "risk": "AKS cluster creation takes 15-20 minutes",
+      "mitigation": "Start AKS creation in Hour 2 while working on other tasks. Parallelize work."
+    },
+    {
+      "risk": "OTLP Collector config errors cause silent failures",
+      "mitigation": "Test collector config locally with docker-compose first. Use logging exporter to validate data flow."
+    },
+    {
+      "risk": "Event Hubs connection string auth issues",
+      "mitigation": "Test with simple Python consumer before integrating with collector. Validate connection string format."
+    },
+    {
+      "risk": "5-hour time limit too aggressive",
+      "mitigation": "If time runs out, skip US-8 (documentation). Core pipeline (US-1 to US-7) is the priority."
+    },
+    {
+      "risk": "Azure costs exceed budget",
+      "mitigation": "Use cheapest SKUs (B2s nodes, Basic Event Hubs). Delete resources immediately after learning. Total cost ~$2-5 for 5 hours."
+    }
+  ],
+  "outOfScope": [
+    "Production hardening (HA, monitoring, alerts)",
+    "Multiple agent replicas and load testing",
+    "Ingress controller and TLS termination",
+    "Horizontal Pod Autoscaling (HPA)",
+    "Prometheus metrics (focus on traces only)",
+    "Logs aggregation (focus on traces)",
+    "GitOps deployment (Flux/ArgoCD)",
+    "CI/CD pipeline (GitHub Actions)",
+    "Cost optimization (spot instances, reserved capacity)",
+    "Multi-region deployment"
+  ],
+  "timeBreakdown": {
+    "US-1": "45 minutes",
+    "US-2": "20 minutes",
+    "US-3": "30 minutes (includes waiting for AKS)",
+    "US-4": "40 minutes",
+    "US-5": "40 minutes",
+    "US-6": "50 minutes",
+    "US-7": "60 minutes",
+    "US-8": "35 minutes (optional if time runs out)",
+    "total": "320 minutes (5h 20m) - target 5 hours by skipping US-8 or working faster"
+  }
+}

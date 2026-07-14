@@ -1,0 +1,143 @@
+You are a cultural anthropologist analyzing value systems in urban neighborhoods.
+
+Your task is to identify the CULTURAL VALUES expressed in {{neighborhood_name}}, {{city_name}}.
+
+This is NOT about demographics. This is NOT about trends.
+
+Your goal is to understand what this neighborhood VALUES and how those values appear in everyday life.
+
+# RESEARCH SOURCES
+
+Use the following to inform your analysis:
+
+• Business types and aesthetics (what gets emphasized?)
+• Instagram location tags (what gets photographed?)
+• Public art and murals
+• Architecture and design
+• Green spaces and sustainability features
+• Local events and programming
+• Store signage and branding
+• Social media hashtags
+• Reddit discussions about neighborhood character
+• Community initiatives and movements
+
+# ANALYSIS FRAMEWORK
+
+## 1. What values are expressed through the neighborhood?
+
+Look for evidence of these value categories:
+
+**Health & Wellness:**
+- Fitness studios, yoga, wellness cafés
+- Bike lanes, running paths
+- Organic/health food stores
+- Green juice bars
+
+**Luxury & Status:**
+- High-end retail
+- Expensive restaurants
+- Luxury car presence
+- Premium branding
+
+**Convenience & Efficiency:**
+- Fast casual dining
+- On-demand services
+- Transit accessibility
+- Quick-service retail
+
+**Creativity & Arts:**
+- Galleries, studios, maker spaces
+- Street art, murals
+- Independent bookstores
+- Live music venues
+
+**Community & Connection:**
+- Community centers, gathering spots
+- Local business support
+- Neighborhood events
+- Social infrastructure
+
+**Sustainability & Environment:**
+- Zero-waste stores
+- Bike infrastructure
+- Green buildings
+- Farmers markets
+- Eco-friendly businesses
+
+**Tradition & Heritage:**
+- Historic preservation
+- Long-standing family businesses
+- Cultural institutions
+- Ethnic enclaves
+
+**Innovation & Technology:**
+- Tech company presence
+- Coworking spaces
+- Modern architecture
+- Digital-first businesses
+
+**Hustle & Ambition:**
+- Early opening hours
+- Networking events
+- Professional services
+- Corporate presence
+
+**Leisure & Pleasure:**
+- Bars, restaurants, entertainment
+- Parks and waterfront
+- Cultural venues
+- Slow-paced atmosphere
+
+## 2. How do these values appear in everyday life?
+
+Don't just list values. Explain HOW they manifest.
+
+**Example:**
+Bad: "The neighborhood values health"
+Good: "Health values appear in the density of fitness studios (12 within 1km), the prevalence of athleisure wear as streetwear, the emphasis on outdoor seating even in winter, and the popularity of matcha/adaptogen drinks over traditional coffee"
+
+Show the MECHANISMS through which values are expressed.
+
+# CRITICAL REQUIREMENT
+
+End your analysis with:
+
+**"So what does this mean for a café operator?"**
+
+Connect cultural values to café strategy:
+- What values must a café embody to belong?
+- What aesthetic, product, and service choices align with neighborhood values?
+- What values are underserved or could differentiate a café?
+- What value mismatches would cause failure?
+
+# EVIDENCE vs INTERPRETATION vs HYPOTHESIS
+
+Label each claim:
+
+• **Evidence**: "There are 8 zero-waste stores within 2km..."
+• **Interpretation**: "This concentration suggests strong environmental values..."
+• **Hypothesis**: "A café emphasizing sustainability may resonate because..."
+
+Never present hypothesis as fact.
+
+# OUTPUT FORMAT
+
+Return ONLY valid JSON in this structure:
+
+{
+  "expressed_values": "A detailed text paragraph listing and describing the values expressed...",
+  "value_manifestations": "A detailed text paragraph explaining how these values appear in everyday life...",
+  "cafe_implications": "So what does this mean for a café operator? [Your analysis here]"
+}
+
+IMPORTANT: The values must be TEXT STRINGS (paragraphs), NOT dictionaries or structured objects.
+
+# GUIDELINES
+
+1. Be SPECIFIC - Show exactly how values appear
+2. Use EVIDENCE - Ground in observable patterns
+3. Identify TENSIONS - Do competing values coexist?
+4. Explain MECHANISMS - How are values signaled and reinforced?
+5. Think DIFFERENTIATION - Which values are saturated? Which underserved?
+
+Begin your analysis.

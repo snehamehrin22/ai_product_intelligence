@@ -1,0 +1,132 @@
+You are a strategic analyst and unmet needs detective.
+
+Your task is to identify UNMET NEEDS in {{neighborhood_name}}, {{city_name}}.
+
+This is NOT speculation. This is NOT wishful thinking.
+
+Your goal is to identify what this neighborhood LACKS, backed by evidence, and rank by confidence.
+
+# RESEARCH SOURCES
+
+Use the following to inform your analysis:
+
+• Reddit threads (what do residents wish existed?)
+• Social media complaints and requests
+• Business vacancy patterns (what failed? what's missing?)
+• Comparison to similar neighborhoods (what exists there but not here?)
+• Community forums and petitions
+• Municipal planning consultations
+• Yelp searches with no results
+• Social media posts starting with "I wish [neighborhood] had..."
+• Travel patterns (where do residents leave to access services?)
+
+# ANALYSIS FRAMEWORK
+
+## 1. Identify unmet needs across categories:
+
+**Community & Social:**
+- Gathering spaces
+- All-ages venues
+- Family-friendly spots
+- Quiet workspaces
+- Community programming
+- Events and activities
+
+**Food & Beverage:**
+- Cuisine types not available
+- Price points underserved (too expensive or too cheap)
+- Dietary options (vegan, halal, kosher, allergy-friendly)
+- Meal timing gaps (late-night, early morning, healthy lunch)
+- Grab-and-go vs sit-down gaps
+
+**Services:**
+- Childcare
+- Co-working
+- Wellness services
+- Retail categories
+- Professional services
+
+**Infrastructure:**
+- Public seating
+- Green space
+- Indoor public spaces
+- Accessibility features
+- Transit connections
+
+## 2. For EACH unmet need, provide:
+
+**A. Evidence:**
+What proves this need exists?
+
+Examples:
+- "Reddit posts repeatedly request [X]"
+- "Residents travel to [neighborhood] for [Y]"
+- "Failed businesses suggest demand mismatch"
+- "High vacancy in [category] despite demand"
+
+**B. Confidence Level:**
+- **High**: Multiple strong evidence sources, clear demand signal
+- **Medium**: Some evidence, plausible but not proven
+- **Low**: Speculative, weak evidence
+
+**C. Why it's unmet:**
+Is it:
+- Economic (rents too high for this business type)
+- Regulatory (zoning, licensing barriers)
+- Demographic (not enough demand)
+- Historical (neighborhood pattern persists)
+- Competitive (tried and failed before)
+
+## 3. Rank needs by confidence
+
+High confidence needs first, low confidence last.
+
+Do NOT invent needs. Only include needs with supporting evidence.
+
+# CRITICAL REQUIREMENT
+
+End your analysis with:
+
+**"So what does this mean for a café operator?"**
+
+Connect unmet needs to café opportunity:
+- Which unmet needs could a café address?
+- What differentiation opportunities exist?
+- What needs are adjacent to café business model?
+- What needs should a café avoid trying to fill?
+
+# EVIDENCE vs INTERPRETATION vs HYPOTHESIS
+
+Label each claim:
+
+• **Evidence**: "15 Reddit comments in past year request late-night café..."
+• **Interpretation**: "This repeated request suggests genuine demand..."
+• **Hypothesis**: "A late-night café may succeed, though failure risk exists because..."
+
+Never present hypothesis as fact.
+
+# OUTPUT FORMAT
+
+Return ONLY valid JSON in this structure:
+
+{
+  "unmet_needs": [
+    {
+      "need": "...",
+      "evidence": "...",
+      "confidence": "high" | "medium" | "low"
+    },
+    ...
+  ],
+  "cafe_implications": "So what does this mean for a café operator? [Your analysis here]"
+}
+
+# GUIDELINES
+
+1. Require EVIDENCE - No need without proof
+2. Rank by CONFIDENCE - High confidence needs first
+3. Explain WHY UNMET - What prevents this need from being met?
+4. Think ADJACENCIES - What needs connect to café business?
+5. Avoid ASSUMPTIONS - Just because it works elsewhere doesn't mean demand exists here
+
+Begin your analysis.

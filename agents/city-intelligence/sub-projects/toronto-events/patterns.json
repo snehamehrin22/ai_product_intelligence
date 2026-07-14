@@ -1,0 +1,79 @@
+{
+  "summary": {
+    "total_events": 20,
+    "sources": [
+      "luma",
+      "eventbrite",
+      "meetup"
+    ],
+    "city": "Toronto",
+    "extracted_at": "2026-06-01 12:29:26.050306"
+  },
+  "timing": {
+    "day_distribution": {
+      "Monday": 4,
+      "Tuesday": 1,
+      "Wednesday": 6,
+      "Thursday": 3,
+      "Friday": 2,
+      "Saturday": 4
+    },
+    "time_distribution": {
+      "morning": 3,
+      "afternoon": 5,
+      "evening": 12,
+      "night": 0
+    }
+  },
+  "locations": {
+    "online_vs_inperson": {
+      "online": 0,
+      "in_person": 20
+    },
+    "top_venues": {
+      "Toronto, ON": 5,
+      "Centre for Social Innovation (CSI)": 2,
+      "The Garrison": 1,
+      "Firkin on Yonge": 1,
+      "Hot Docs Ted Rogers Cinema": 1
+    }
+  },
+  "pricing": {
+    "free_vs_paid": {
+      "free": 13,
+      "paid": 7
+    },
+    "price_stats": {
+      "avg": 27.199999999999996,
+      "min": 15.0,
+      "max": 39.55
+    }
+  },
+  "organizers": {
+    "organizer_types": {
+      "Organization": 13,
+      "Person": 7
+    },
+    "top_organizers": {
+      "Toronto Climate Week": 7,
+      "Centre for Social Innovation": 2,
+      "Trampoline Hall": 1,
+      "Michelle's Community Events": 1,
+      "Preeti Jagwani": 1
+    }
+  },
+  "themes": {
+    "top_keywords": {
+      "climate": 6,
+      "toronto": 5,
+      "presents:": 3,
+      "official": 2,
+      "canadian": 2,
+      "innovation": 2,
+      "offline": 2,
+      "tomato": 2,
+      "tocw's": 1,
+      "kick-off:": 1
+    }
+  }
+}

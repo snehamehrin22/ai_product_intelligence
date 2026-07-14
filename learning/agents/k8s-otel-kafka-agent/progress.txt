@@ -1,0 +1,161 @@
+# Progress Log - K8s + OpenTelemetry + Kafka Learning Project
+
+## Codebase Patterns
+
+(Will be populated as patterns are discovered)
+
+---
+
+## 2026-07-13 - Project Kickoff
+
+**Objective:** Learn Kubernetes, OpenTelemetry Collector, and Kafka-based telemetry pipeline in 5 hours
+
+**Architecture:**
+```
+Agent (AKS pod)
+  → OTLP Collector (AKS pod)
+  → Azure Event Hubs (Kafka)
+  → Databricks Auto Loader
+  → Delta Lake
+```
+
+**User Stories:** 8 stories (US-1 through US-8)
+- US-1 to US-7: Core pipeline (P0)
+- US-8: Documentation (P1, optional if time runs out)
+
+**Execution Mode:** Manual execution with Claude Code guidance
+
+**Time Budget:** 320 minutes total, target 300 minutes
+
+---
+
+## 2026-07-13 - Complete K8s + OTLP + Kafka Pipeline Implementation
+
+### Completed User Stories
+- **US-1**: Agent service extraction with OpenTelemetry SDK ✅
+- **US-2**: Dockerization with multi-stage build ✅
+- **US-3**: AKS setup automation scripts ✅
+- **US-4**: OTLP Collector Kubernetes manifests ✅
+- **US-5**: Agent Kubernetes manifests ✅
+- **US-6**: Azure Event Hubs setup and Kafka exporter ✅
+- **US-7**: Databricks streaming ingestion notebook ✅
+- **US-8**: Validation, deployment scripts, and troubleshooting guide ✅
+
+### Files Created/Modified
+1. **agent-service/app.py** - FastAPI agent with OTLP instrumentation
+2. **agent-service/Dockerfile** - Multi-stage build for minimal image size
+3. **agent-service/requirements.txt** - Python dependencies with httpx<0.28 fix
+4. **k8s/otel-collector-configmap.yaml** - Collector config (logging exporter)
+5. **k8s/otel-collector-configmap-with-kafka.yaml** - With Kafka exporter
+6. **k8s/otel-collector-deployment.yaml** - Collector deployment
+7. **k8s/otel-collector-service.yaml** - Collector service (ClusterIP)
+8. **k8s/agent-deployment.yaml** - Agent deployment
+9. **k8s/agent-service.yaml** - Agent service (LoadBalancer)
+10. **scripts/setup_aks.sh** - Full AKS + ACR automation
+11. **scripts/setup_eventhub.sh** - Event Hubs creation with secrets
+12. **scripts/deploy_all.sh** - Complete deployment orchestration
+13. **scripts/validate_e2e.sh** - End-to-end validation
+14. **scripts/cleanup_aks.sh** - Resource cleanup
+15. **databricks/ingest_traces_from_kafka.py** - Streaming ingestion notebook
+16. **TROUBLESHOOTING.md** - Comprehensive troubleshooting guide
+17. **README.md** - Complete project documentation
+
+### Learnings for Future Iterations
+
+#### OpenTelemetry Patterns
+- **SDK Setup**: Use `TracerProvider` with `Resource` for service identification
+- **OTLP Export**: BatchSpanProcessor with OTLPSpanExporter (gRPC endpoint)
+- **GenAI Conventions**: Use standardized attributes like `gen_ai.request.model`, `gen_ai.usage.input_tokens`
+- **Span Hierarchy**: Use `start_as_current_span()` with context managers for proper parent-child relationships
+- **Gotcha**: OTLP warnings expected when collector is unreachable (non-fatal)
+
+#### OTLP Collector Architecture
+- **Pipeline Structure**: Receivers → Processors → Exporters (explicit pipeline definition)
+- **Batch Processor**: Essential for efficiency (timeout + send_batch_size)
+- **Multiple Exporters**: Can send to multiple destinations (logging + kafka simultaneously)
+- **ConfigMap Pattern**: Mount collector config as volume from ConfigMap for easy updates
+- **Environment Variables**: Use `${VAR}` syntax in YAML, inject via deployment env or secrets
+- **Kafka Exporter**: Requires `opentelemetry-collector-contrib` image (not core)
+
+#### Kubernetes Patterns
+- **Service Discovery**: Use service names as DNS (e.g., `http://otel-collector:4317`)
+- **Secrets Management**: Create via kubectl, reference in deployment via `valueFrom.secretKeyRef`
+- **Multi-Stage Builds**: Separate builder and runtime stages for smaller images
+- **Health Probes**: Use `livenessProbe` and `readinessProbe` for proper orchestration
+- **LoadBalancer vs ClusterIP**: External access vs internal-only services
+- **Image Pull**: AKS can pull from attached ACR without manual authentication
+
+#### Azure-Specific Patterns
+- **Event Hubs as Kafka**: Use port 9093, SASL_SSL, connection string as password
+- **ACR Integration**: Use `--attach-acr` during cluster creation for automatic auth
+- **Resource Groups**: All resources share lifecycle (easy cleanup with group delete)
+- **Cost Management**: Use `az aks stop/start` instead of deleting for dev environments
+- **Gotcha**: LoadBalancer IP provisioning can take 3-5 minutes
+
+#### Databricks Streaming
+- **Kafka Source**: Use `format("kafka")` with structured streaming
+- **OTLP JSON Parsing**: Define nested schema for `from_json()` (resourceSpans → scopeSpans → spans)
+- **Flattening Pattern**: Use `explode()` at each nested level
+- **Schema Evolution**: Enable `mergeSchema` for flexibility
+- **Checkpoint Location**: Required for exactly-once processing
+- **GenAI Attributes**: Extract with `filter()` and array indexing
+
+#### Errors Encountered and Fixed
+1. **.env not loading** → Added `load_dotenv()` at top of app.py
+2. **httpx incompatibility** → Downgraded to `httpx<0.28` in requirements.txt
+3. **Git cherry-pick state** → Aborted with `git cherry-pick --abort` before committing
+4. **Script permissions** → Made executable with `chmod +x scripts/*.sh`
+
+#### Code Organization Insights
+- **Agent-Collector Separation**: Agents shouldn't know about backends (collector abstracts)
+- **Configuration as Code**: All K8s manifests in git, environment-specific values via secrets
+- **Automation Scripts**: Idempotent scripts that can be re-run safely
+- **Documentation Structure**: README (what/how), TROUBLESHOOTING (problems), PRD (why)
+- **Multi-Stage Docker**: 43% smaller image by separating build and runtime dependencies
+
+#### Key Technical Decisions
+- **OpenAI vs Anthropic**: Used OpenAI for structured JSON output guarantee
+- **Kafka vs Direct Write**: Chose Kafka for decoupling and multi-consumer architecture
+- **Databricks vs Other**: Delta Lake provides schema evolution and time travel
+- **Standard_B2s nodes**: Cheapest option for learning (~$30/month for 2 nodes)
+- **Event Hubs Standard**: Required for Kafka protocol (Basic doesn't support it)
+
+#### What I Would Change
+- Add sampling in collector to reduce data volume (currently sends 100% of traces)
+- Implement resource limits on K8s deployments (currently unbounded)
+- Add TLS between agent and collector (currently plaintext gRPC)
+- Create Helm chart for easier deployment configuration
+- Add Prometheus metrics alongside traces for fuller observability
+
+#### Next Steps Recommendations
+1. Deploy using `deploy_all.sh` to see full pipeline in action
+2. Generate varied trace data to test Databricks queries
+3. Experiment with collector processors (filtering, tail sampling)
+4. Add more agent operations beyond simple task extraction
+5. Implement alerting based on trace patterns in Databricks
+
+---
+
+## Codebase Patterns (Consolidated)
+
+### OpenTelemetry
+- Use `BatchSpanProcessor` for efficiency, not individual span exports
+- GenAI semantic conventions: `gen_ai.request.model`, `gen_ai.usage.*_tokens`
+- OTLP endpoint format: `http://host:4317` (gRPC) or `http://host:4318` (HTTP)
+
+### Kubernetes
+- Service DNS format: `<service-name>:<port>` within same namespace
+- ConfigMaps for configuration files, Secrets for credentials
+- Multi-stage Docker builds: `FROM ... AS builder` then `COPY --from=builder`
+
+### Azure
+- Event Hubs Kafka: Broker on port 9093, username `$ConnectionString`, password is connection string
+- AKS stop/start saves ~78% cost vs. running 24/7
+- ACR naming: Must be globally unique, lowercase alphanumeric only
+
+### Databricks
+- Kafka streaming: Use `readStream.format("kafka")` with SASL_SSL config
+- OTLP parsing: Define schema matching exact JSON structure from collector
+- GenAI attributes: Extract from arrays with `filter(attributes, x -> x.key = 'name')[0].value`
+
+---

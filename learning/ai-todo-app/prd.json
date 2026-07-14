@@ -1,0 +1,352 @@
+{
+  "projectName": "AI Todo App - Phase 1: Core App",
+  "version": "1.0.0",
+  "phase": "Phase 1 - Core App (Week 1)",
+  "description": "Build a working todo list application with AI agent assistant, backed by Databricks Lakebase",
+  "branchName": "phase-1-core-app",
+  "objectives": [
+    "Create functional todo CRUD operations via REST API",
+    "Implement React UI for task management",
+    "Connect backend to Databricks as primary database (Lakebase pattern)",
+    "Build basic LangGraph AI agent for natural language task creation",
+    "Validate Databricks as OLTP replacement (not just analytics)"
+  ],
+  "technicalStack": {
+    "backend": "FastAPI (Python 3.11+)",
+    "frontend": "React 18+",
+    "database": "Databricks (Unity Catalog, Delta Lake)",
+    "ai": "OpenAI GPT-4o-mini + LangGraph",
+    "infrastructure": "Local development (backend + frontend)"
+  },
+  "userStories": [
+    {
+      "id": "US-1.1",
+      "title": "Backend Configuration and Databricks Connection",
+      "description": "As a developer, I need to set up the FastAPI backend with proper configuration management and establish a working connection to Databricks so that I can build on a solid foundation",
+      "acceptanceCriteria": [
+        "FastAPI app initializes with proper project structure",
+        "Pydantic Settings loads environment variables from .env file",
+        "Databricks SQL Connector successfully connects to SQL Warehouse",
+        "Health check endpoint returns Databricks connection status",
+        "Error handling for missing credentials or connection failures"
+      ],
+      "technicalNotes": [
+        "Use pydantic-settings for config management",
+        "Databricks connector is synchronous - wrap in asyncio.to_thread() for FastAPI",
+        "Connection string format: server_hostname + http_path + access_token",
+        "Test with: SELECT 1 query to validate connection"
+      ],
+      "files": [
+        "backend/app/config.py",
+        "backend/app/db.py",
+        "backend/app/main.py"
+      ],
+      "priority": "P0",
+      "estimatedHours": 2,
+      "dependencies": [],
+      "passes": true
+    },
+    {
+      "id": "US-1.2",
+      "title": "Database Schema and Test Data Setup",
+      "description": "As a developer, I need to create the necessary tables in Databricks and populate test data so that the API has data to work with",
+      "acceptanceCriteria": [
+        "Tasks table exists in main.todo_app.tasks with correct schema",
+        "Users table exists in main.todo_app.users",
+        "At least one test user is created",
+        "Delta Lake ACID properties are enabled",
+        "Schema includes proper constraints (PK, NOT NULL, etc.)",
+        "SQL setup script is documented and repeatable"
+      ],
+      "technicalNotes": [
+        "Run SQL commands in Databricks SQL Editor",
+        "Use Delta Lake format (USING DELTA)",
+        "Enable Change Data Feed for future streaming (Phase 3)",
+        "Schema: task_id, user_id, title, description, status, priority, due_date, created_at, updated_at"
+      ],
+      "files": [
+        "databricks/setup_schema.sql"
+      ],
+      "priority": "P0",
+      "estimatedHours": 1,
+      "dependencies": [],
+      "passes": true
+    },
+    {
+      "id": "US-1.3",
+      "title": "Task CRUD API Endpoints",
+      "description": "As a backend developer, I need REST API endpoints for creating, reading, updating, and deleting tasks so that the frontend can manage tasks",
+      "acceptanceCriteria": [
+        "POST /tasks creates a new task and returns task object with generated ID",
+        "GET /tasks returns list of all tasks for a user",
+        "GET /tasks/{task_id} returns a single task by ID",
+        "PUT /tasks/{task_id} updates task fields and returns updated task",
+        "DELETE /tasks/{task_id} removes task and returns 204 No Content",
+        "All endpoints use Pydantic schemas for validation",
+        "Proper HTTP status codes (200, 201, 404, 422, 500)",
+        "Error responses include helpful error messages"
+      ],
+      "technicalNotes": [
+        "Use UUID for task_id generation",
+        "Validate user_id exists before creating task",
+        "Use Pydantic models in schemas.py as single source of truth",
+        "Wrap all DB operations in asyncio.to_thread()",
+        "Handle Databricks-specific errors (connection loss, query timeout)"
+      ],
+      "files": [
+        "backend/app/main.py",
+        "backend/app/schemas.py",
+        "backend/app/db.py"
+      ],
+      "priority": "P0",
+      "estimatedHours": 4,
+      "dependencies": ["US-1.1", "US-1.2"],
+      "passes": true
+    },
+    {
+      "id": "US-1.4",
+      "title": "Pydantic Schemas for Request/Response Validation",
+      "description": "As a developer, I need well-defined Pydantic schemas to validate all API requests and responses so that data integrity is maintained",
+      "acceptanceCriteria": [
+        "TaskCreate schema validates task creation requests",
+        "TaskUpdate schema validates partial updates (all fields optional except task_id)",
+        "TaskResponse schema formats task data for API responses",
+        "TaskStatus enum restricts values to: pending, in_progress, completed, cancelled",
+        "TaskPriority enum restricts values to: low, medium, high, urgent",
+        "Field validation includes length limits and format checks",
+        "Clear error messages on validation failures"
+      ],
+      "technicalNotes": [
+        "Use Field() with constraints (min_length, max_length, description)",
+        "Use Enum for categorical fields (status, priority)",
+        "due_date should be datetime | None",
+        "created_at and updated_at are auto-generated, not in Create schema"
+      ],
+      "files": [
+        "backend/app/schemas.py"
+      ],
+      "priority": "P0",
+      "estimatedHours": 2,
+      "dependencies": [],
+      "passes": true
+    },
+    {
+      "id": "US-1.5",
+      "title": "React Todo List UI",
+      "description": "As a user, I need a clean web interface to view, create, update, and delete my tasks so that I can manage my todos visually",
+      "acceptanceCriteria": [
+        "Task list displays all tasks with title, status, priority, due date",
+        "Add task form allows creating new tasks",
+        "Each task has edit and delete buttons",
+        "Task status can be toggled (pending ↔ completed)",
+        "Tasks are grouped by status (pending, completed)",
+        "UI updates immediately after API calls (optimistic updates)",
+        "Loading states shown during API calls",
+        "Error messages displayed on API failures"
+      ],
+      "technicalNotes": [
+        "Use React hooks (useState, useEffect) for state management",
+        "Use fetch or axios for API calls",
+        "Consider using React Hook Form for form validation",
+        "Style with Tailwind CSS or basic CSS",
+        "Component structure: App → TaskList → TaskItem, TaskForm"
+      ],
+      "files": [
+        "frontend/src/App.jsx",
+        "frontend/src/components/TaskList.jsx",
+        "frontend/src/components/TaskItem.jsx",
+        "frontend/src/components/TaskForm.jsx",
+        "frontend/src/services/api.js"
+      ],
+      "priority": "P0",
+      "estimatedHours": 6,
+      "dependencies": ["US-1.3"],
+      "passes": true
+    },
+    {
+      "id": "US-1.6",
+      "title": "Basic AI Agent for Natural Language Task Creation",
+      "description": "As a user, I want to create tasks using natural language (e.g., 'Remind me to buy milk tomorrow at 3pm') so that I don't have to fill out forms manually",
+      "acceptanceCriteria": [
+        "POST /agent/chat endpoint accepts natural language input",
+        "Agent extracts task details: title, due_date from user message",
+        "Agent creates task via internal API call",
+        "Agent responds with confirmation message",
+        "Agent handles ambiguous input gracefully (asks clarifying questions)",
+        "Response is streamed back to client (Server-Sent Events or WebSocket)",
+        "Agent uses tool calling to invoke create_task function"
+      ],
+      "technicalNotes": [
+        "Use LangGraph for agent orchestration",
+        "Use OpenAI function calling (tools) for structured output",
+        "Model: gpt-4o-mini (cost-effective for simple tasks)",
+        "System prompt guides agent to extract task fields",
+        "Use response_format={'type': 'json_object'} for structured extraction",
+        "Wrap agent execution in asyncio to avoid blocking FastAPI"
+      ],
+      "files": [
+        "backend/app/agent.py",
+        "backend/app/main.py"
+      ],
+      "priority": "P1",
+      "estimatedHours": 5,
+      "dependencies": ["US-1.3", "US-1.4"],
+      "passes": true
+    },
+    {
+      "id": "US-1.7",
+      "title": "AI Agent Chat Interface in Frontend",
+      "description": "As a user, I want a chat interface where I can talk to the AI agent to create tasks using natural language",
+      "acceptanceCriteria": [
+        "Chat interface displays message history (user + agent)",
+        "User can type message and send to agent",
+        "Agent responses stream in real-time",
+        "Loading indicator while agent is thinking",
+        "Tasks created by agent appear in task list immediately",
+        "Chat interface is separate from task list (modal or sidebar)"
+      ],
+      "technicalNotes": [
+        "Use EventSource API for SSE streaming from backend",
+        "Or use WebSocket for bidirectional communication",
+        "Store chat history in local state (no backend persistence in Phase 1)",
+        "Component: AgentChat.jsx"
+      ],
+      "files": [
+        "frontend/src/components/AgentChat.jsx",
+        "frontend/src/services/api.js"
+      ],
+      "priority": "P1",
+      "estimatedHours": 4,
+      "dependencies": ["US-1.6", "US-1.5"],
+      "passes": true
+    },
+    {
+      "id": "US-1.8",
+      "title": "API Testing and Validation",
+      "description": "As a developer, I need automated tests for API endpoints to ensure reliability and catch regressions",
+      "acceptanceCriteria": [
+        "Tests cover all CRUD endpoints (create, read, update, delete)",
+        "Tests verify Pydantic validation errors return 422 status",
+        "Tests verify 404 errors for non-existent tasks",
+        "Tests verify database writes succeed",
+        "Tests use pytest with pytest-asyncio",
+        "Tests can run against real Databricks (integration tests) or mocked DB (unit tests)",
+        "All tests pass before marking user story complete"
+      ],
+      "technicalNotes": [
+        "Use pytest fixtures for test data setup/teardown",
+        "Use httpx.AsyncClient for API testing",
+        "Consider using testcontainers or mocking DB for faster tests",
+        "Test file: tests/test_api.py"
+      ],
+      "files": [
+        "backend/tests/test_api.py",
+        "backend/tests/conftest.py"
+      ],
+      "priority": "P1",
+      "estimatedHours": 3,
+      "dependencies": ["US-1.3"],
+      "passes": true
+    },
+    {
+      "id": "US-1.9",
+      "title": "Documentation and Setup Instructions",
+      "description": "As a new developer, I need clear documentation to set up and run the project locally",
+      "acceptanceCriteria": [
+        "README includes setup instructions for backend and frontend",
+        "Environment variables are documented in .env.example",
+        "SQL setup script is documented with step-by-step instructions",
+        "API endpoints are documented (can use FastAPI auto-docs)",
+        "Common errors and troubleshooting tips are listed"
+      ],
+      "technicalNotes": [
+        "Update ai-todo-app/README.md with Phase 1 completion status",
+        "Add backend/README.md if needed for detailed setup",
+        "FastAPI automatically generates /docs endpoint (Swagger UI)"
+      ],
+      "files": [
+        "ai-todo-app/README.md",
+        "backend/CLAUDE.md"
+      ],
+      "priority": "P2",
+      "estimatedHours": 2,
+      "dependencies": ["US-1.3", "US-1.5"],
+      "passes": true
+    }
+  ],
+  "successMetrics": {
+    "functional": [
+      "User can create, view, update, delete tasks via UI",
+      "AI agent successfully creates tasks from natural language in >80% of simple test cases",
+      "All API endpoints return correct status codes and data formats",
+      "Frontend handles errors gracefully"
+    ],
+    "technical": [
+      "Backend connects to Databricks successfully",
+      "API response times < 500ms for CRUD operations",
+      "Agent response time < 3 seconds for simple task creation",
+      "All tests pass (100% success rate)",
+      "Zero database connection errors during normal operation"
+    ],
+    "learning": [
+      "Understand when to use Databricks as OLTP vs traditional databases",
+      "Understand Databricks SQL Connector usage patterns",
+      "Understand OpenAI function calling for structured output",
+      "Understand LangGraph basics (agent, tools, state)"
+    ]
+  },
+  "outOfScope": [
+    "User authentication/authorization (hardcode test user for Phase 1)",
+    "Event instrumentation (Phase 2)",
+    "Azure Event Hubs integration (Phase 2)",
+    "Agent telemetry with OpenTelemetry (Phase 2)",
+    "Data pipeline (Bronze/Silver/Gold layers) (Phase 3+)",
+    "Agent evaluation (Phase 5)",
+    "Production deployment (Phase 6)"
+  ],
+  "technicalDecisions": [
+    {
+      "decision": "Use Databricks as primary database (Lakebase pattern)",
+      "rationale": "Learn lakehouse as OLTP replacement. Eliminates ETL from app DB to warehouse. Unity Catalog provides governance."
+    },
+    {
+      "decision": "Use OpenAI instead of Anthropic",
+      "rationale": "OpenAI response_format guarantees valid JSON without wrapper text. Better for structured output."
+    },
+    {
+      "decision": "Use LangGraph instead of raw LangChain",
+      "rationale": "LangGraph provides better state management and tool orchestration for multi-step agents. Easier to extend in later phases."
+    },
+    {
+      "decision": "Synchronous DB connector with asyncio.to_thread()",
+      "rationale": "Databricks SQL Connector is synchronous. Wrapping in asyncio.to_thread() prevents blocking FastAPI event loop."
+    },
+    {
+      "decision": "Local development (no cloud deployment in Phase 1)",
+      "rationale": "Focus on learning core concepts. Phase 6 will cover production deployment to Azure AKS."
+    }
+  ],
+  "risks": [
+    {
+      "risk": "Databricks SQL Warehouse auto-stops during development",
+      "mitigation": "Set auto-stop to 60+ minutes. Document how to restart warehouse."
+    },
+    {
+      "risk": "OpenAI API rate limits or costs exceed budget",
+      "mitigation": "Use gpt-4o-mini (cheapest model). Set max_tokens=500 limit. Track usage daily."
+    },
+    {
+      "risk": "Synchronous DB calls cause FastAPI performance issues",
+      "mitigation": "Always wrap DB calls in asyncio.to_thread(). Monitor response times. Consider connection pooling."
+    },
+    {
+      "risk": "Agent fails to parse natural language correctly",
+      "mitigation": "Start with simple prompts. Add examples to system prompt. Phase 5 will add evaluation."
+    }
+  ],
+  "nextPhase": {
+    "phase": "Phase 2",
+    "title": "Event Instrumentation",
+    "description": "Add platform event emitter, Azure Event Hubs integration, and OpenTelemetry agent tracing"
+  }
+}

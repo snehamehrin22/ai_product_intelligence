@@ -1,0 +1,221 @@
+{
+  "platform_events": [
+    {
+      "event_id": "evt_123e4567-e89b-12d3-a456-426614174000",
+      "event_name": "session_started",
+      "event_timestamp": "2026-07-07T10:00:00.000Z",
+      "session_id": "sess_abc123-def456-789012",
+      "user_id": "test-user-001",
+      "properties": {
+        "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+        "screen_resolution": "1920x1080",
+        "referrer": "direct"
+      }
+    },
+    {
+      "event_id": "evt_223e4567-e89b-12d3-a456-426614174001",
+      "event_name": "agent_message_sent",
+      "event_timestamp": "2026-07-07T10:01:15.234Z",
+      "session_id": "sess_abc123-def456-789012",
+      "user_id": "test-user-001",
+      "properties": {
+        "message_text": "Buy milk tomorrow",
+        "message_length": 18,
+        "input_method": "text"
+      }
+    },
+    {
+      "event_id": "evt_323e4567-e89b-12d3-a456-426614174002",
+      "event_name": "task_created",
+      "event_timestamp": "2026-07-07T10:01:17.891Z",
+      "session_id": "sess_abc123-def456-789012",
+      "user_id": "test-user-001",
+      "properties": {
+        "task_id": "task_456def-789ghi-012jkl",
+        "title": "Buy milk",
+        "description": "Get milk from grocery store tomorrow",
+        "status": "pending",
+        "created_by": "agent"
+      }
+    },
+    {
+      "event_id": "evt_423e4567-e89b-12d3-a456-426614174003",
+      "event_name": "agent_message_received",
+      "event_timestamp": "2026-07-07T10:01:18.123Z",
+      "session_id": "sess_abc123-def456-789012",
+      "user_id": "test-user-001",
+      "properties": {
+        "message_text": "I've created a task to buy milk tomorrow.",
+        "message_length": 45,
+        "task_created": true,
+        "task_id": "task_456def-789ghi-012jkl",
+        "needs_clarification": false,
+        "response_time_ms": 2889
+      }
+    },
+    {
+      "event_id": "evt_523e4567-e89b-12d3-a456-426614174004",
+      "event_name": "task_updated",
+      "event_timestamp": "2026-07-07T10:05:22.567Z",
+      "session_id": "sess_abc123-def456-789012",
+      "user_id": "test-user-001",
+      "properties": {
+        "task_id": "task_456def-789ghi-012jkl",
+        "updated_fields": ["title", "description"],
+        "previous_title": "Buy milk",
+        "new_title": "Buy organic milk from Whole Foods",
+        "updated_by": "user"
+      }
+    },
+    {
+      "event_id": "evt_623e4567-e89b-12d3-a456-426614174005",
+      "event_name": "task_completed",
+      "event_timestamp": "2026-07-07T14:30:45.890Z",
+      "session_id": "sess_abc123-def456-789012",
+      "user_id": "test-user-001",
+      "properties": {
+        "task_id": "task_456def-789ghi-012jkl",
+        "title": "Buy organic milk from Whole Foods",
+        "previous_status": "pending",
+        "completed_at": "2026-07-07T14:30:45.890Z",
+        "time_to_complete_hours": 4.49
+      }
+    },
+    {
+      "event_id": "evt_723e4567-e89b-12d3-a456-426614174006",
+      "event_name": "task_deleted",
+      "event_timestamp": "2026-07-07T15:00:12.345Z",
+      "session_id": "sess_abc123-def456-789012",
+      "user_id": "test-user-001",
+      "properties": {
+        "task_id": "task_789xyz-012abc-345def",
+        "title": "Old task no longer needed",
+        "status": "pending",
+        "deleted_by": "user",
+        "reason": "duplicate"
+      }
+    }
+  ],
+  "agent_traces": [
+    {
+      "trace_id": "00112233445566778899aabbccddeeff",
+      "span_id": "0011223344556677",
+      "parent_span_id": null,
+      "span_name": "agent.process_message",
+      "span_kind": "INTERNAL",
+      "start_time": "2026-07-07T10:01:15.345Z",
+      "end_time": "2026-07-07T10:01:18.123Z",
+      "duration_ms": 2778,
+      "status_code": "OK",
+      "status_message": null,
+      "session_id": "sess_abc123-def456-789012",
+      "attributes": {
+        "user_id": "test-user-001",
+        "message_length": 18,
+        "agent.task_created": true,
+        "agent.needs_clarification": false
+      }
+    },
+    {
+      "trace_id": "00112233445566778899aabbccddeeff",
+      "span_id": "8899aabbccddeeff",
+      "parent_span_id": "0011223344556677",
+      "span_name": "agent.extract_task",
+      "span_kind": "INTERNAL",
+      "start_time": "2026-07-07T10:01:15.456Z",
+      "end_time": "2026-07-07T10:01:17.234Z",
+      "duration_ms": 1778,
+      "status_code": "OK",
+      "status_message": null,
+      "session_id": "sess_abc123-def456-789012",
+      "attributes": {
+        "user_id": "test-user-001",
+        "gen_ai.system": "openai",
+        "gen_ai.request.model": "gpt-4o-mini",
+        "gen_ai.request.temperature": 0.2,
+        "gen_ai.usage.input_tokens": 85,
+        "gen_ai.usage.output_tokens": 42,
+        "gen_ai.usage.total_tokens": 127,
+        "gen_ai.response.finish_reason": "stop",
+        "task_extracted": true
+      }
+    },
+    {
+      "trace_id": "00112233445566778899aabbccddeeff",
+      "span_id": "ffeeddccbbaa9988",
+      "parent_span_id": "8899aabbccddeeff",
+      "span_name": "openai.chat.completions.create",
+      "span_kind": "CLIENT",
+      "start_time": "2026-07-07T10:01:15.500Z",
+      "end_time": "2026-07-07T10:01:17.200Z",
+      "duration_ms": 1700,
+      "status_code": "OK",
+      "status_message": null,
+      "session_id": "sess_abc123-def456-789012",
+      "attributes": {
+        "gen_ai.system": "openai",
+        "gen_ai.request.model": "gpt-4o-mini",
+        "gen_ai.request.temperature": 0.2,
+        "gen_ai.request.max_tokens": 500,
+        "gen_ai.usage.input_tokens": 85,
+        "gen_ai.usage.output_tokens": 42,
+        "gen_ai.usage.total_tokens": 127,
+        "gen_ai.response.finish_reason": "stop",
+        "gen_ai.response.id": "chatcmpl-123abc",
+        "http.request.method": "POST",
+        "http.response.status_code": 200,
+        "server.address": "api.openai.com"
+      }
+    }
+  ],
+  "schema_notes": {
+    "platform_events": {
+      "event_id": "UUID (string) - Unique event identifier",
+      "event_name": "String - Event type (task_created, agent_message_sent, etc.)",
+      "event_timestamp": "ISO 8601 timestamp - When event occurred",
+      "session_id": "UUID (string) - Session identifier (JOIN KEY with agent_traces)",
+      "user_id": "String - User identifier",
+      "properties": "JSON object - Event-specific data (flexible schema)"
+    },
+    "agent_traces": {
+      "trace_id": "Hex string (32 chars) - OpenTelemetry trace ID",
+      "span_id": "Hex string (16 chars) - OpenTelemetry span ID",
+      "parent_span_id": "Hex string or null - Parent span ID for hierarchy",
+      "span_name": "String - Operation name (agent.process_message, openai.chat, etc.)",
+      "span_kind": "Enum - INTERNAL, CLIENT, SERVER, PRODUCER, CONSUMER",
+      "start_time": "ISO 8601 timestamp - Span start",
+      "end_time": "ISO 8601 timestamp - Span end",
+      "duration_ms": "Integer - Duration in milliseconds",
+      "status_code": "Enum - OK, ERROR, UNSET",
+      "status_message": "String or null - Error message if status is ERROR",
+      "session_id": "UUID (string) - Session identifier (JOIN KEY with platform_events)",
+      "attributes": "JSON object - Span attributes (GenAI conventions, custom attrs)"
+    },
+    "join_key": "session_id is the primary join key for combining platform events and agent traces"
+  },
+  "genai_semantic_conventions": {
+    "gen_ai.system": "LLM provider (e.g., 'openai', 'anthropic')",
+    "gen_ai.request.model": "Model name (e.g., 'gpt-4o-mini')",
+    "gen_ai.request.temperature": "Sampling temperature (0.0-2.0)",
+    "gen_ai.request.max_tokens": "Max tokens requested",
+    "gen_ai.usage.input_tokens": "Number of input/prompt tokens",
+    "gen_ai.usage.output_tokens": "Number of output/completion tokens",
+    "gen_ai.usage.total_tokens": "Total tokens (input + output)",
+    "gen_ai.response.finish_reason": "Why generation stopped (e.g., 'stop', 'length', 'content_filter')",
+    "gen_ai.response.id": "LLM response ID"
+  },
+  "custom_attributes": {
+    "user_id": "User identifier (for filtering/grouping)",
+    "message_length": "Length of user message in characters",
+    "agent.task_created": "Boolean - Whether agent created a task",
+    "agent.needs_clarification": "Boolean - Whether agent needs more info from user",
+    "task_extracted": "Boolean - Whether task was successfully extracted from message"
+  },
+  "example_queries": {
+    "recent_events": "SELECT * FROM signaltogrowth.platform_events WHERE event_timestamp >= CURRENT_TIMESTAMP - INTERVAL 1 HOUR ORDER BY event_timestamp DESC LIMIT 10",
+    "recent_traces": "SELECT * FROM signaltogrowth.agent_traces WHERE timestamp >= CURRENT_TIMESTAMP - INTERVAL 1 HOUR ORDER BY start_time DESC LIMIT 10",
+    "session_timeline": "SELECT e.event_name, e.event_timestamp, t.span_name, t.duration_ms FROM signaltogrowth.platform_events e LEFT JOIN signaltogrowth.agent_traces t ON e.session_id = t.session_id WHERE e.session_id = 'sess_abc123-def456-789012' ORDER BY e.event_timestamp",
+    "token_usage_by_session": "SELECT session_id, SUM(attributes.gen_ai_usage_total_tokens) as total_tokens FROM signaltogrowth.agent_traces WHERE timestamp >= CURRENT_DATE GROUP BY session_id ORDER BY total_tokens DESC LIMIT 10",
+    "agent_latency_analysis": "SELECT e.session_id, e.event_name, t.span_name, t.duration_ms FROM signaltogrowth.platform_events e INNER JOIN signaltogrowth.agent_traces t ON e.session_id = t.session_id WHERE e.event_name = 'agent_message_sent' AND t.span_name = 'agent.process_message' ORDER BY t.duration_ms DESC LIMIT 20"
+  }
+}
