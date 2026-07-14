@@ -528,34 +528,445 @@ Trace (trace_id: abc123)
 
 ## Databricks Schema
 
-### Bronze Layer: `raw_traces`
+### Architecture: Multi-Agent, Multi-Provider Support
 
-Raw OTLP protobuf data from Kafka.
+This schema is designed to handle:
+- **Multiple agents** (todo agent, email agent, research agent, etc.)
+- **Multiple LLM providers** (OpenAI, Anthropic, Cohere, Azure OpenAI, Bedrock, etc.)
+- **Multiple use cases** (different teams, products, environments)
+- **Schema evolution** (new attributes added over time without breaking changes)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ BRONZE LAYER (Universal, Schema-Agnostic)                    │
+│ ✓ Single table for ALL agents, ALL providers                 │
+│ ✓ Schema evolution handled automatically                     │
+│ ✓ Raw OTLP protobuf OR flattened MAP<STRING, STRING>         │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│ SILVER LAYER (Normalized by Use Case)                        │
+│ ├─ llm_traces (LLM calls, agent reasoning)                   │
+│ ├─ tool_traces (tool usage, MCP calls)                       │
+│ ├─ http_traces (API calls, latency)                          │
+│ └─ custom_events (business-specific)                         │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│ GOLD LAYER (Aggregated Metrics)                              │
+│ ├─ llm_cost_daily (by provider, model, team)                 │
+│ ├─ agent_performance_hourly (latency, success rate)          │
+│ └─ tool_usage_summary (which tools used most)                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Bronze Layer: `raw.otlp_spans_json`
+
+**Purpose**: Universal append-only table storing ALL telemetry from ALL agents and providers.
+
+**Design decisions**:
+- Uses `MAP<STRING, STRING>` for attributes (infinite schema flexibility)
+- Never modified or deleted (audit trail)
+- Partitioned by date and topic for performance
+- Supports schema evolution without migrations
 
 ```sql
-CREATE TABLE telemetry.agent_traces.raw_traces (
-  kafka_key BINARY,
-  kafka_value BINARY COMMENT 'OTLP trace data in Protobuf format',
-  kafka_topic STRING,
-  kafka_partition INT,
-  kafka_offset BIGINT,
-  kafka_timestamp TIMESTAMP,
-  ingestion_timestamp TIMESTAMP,
-  ingestion_date DATE GENERATED ALWAYS AS (CAST(ingestion_timestamp AS DATE))
+-- Create catalog and schema
+CREATE CATALOG IF NOT EXISTS telemetry;
+USE CATALOG telemetry;
+
+CREATE SCHEMA IF NOT EXISTS raw;
+USE SCHEMA raw;
+
+-- Universal Bronze table for ALL agents
+CREATE TABLE IF NOT EXISTS otlp_spans_json (
+  -- Kafka metadata
+  kafka_topic STRING NOT NULL COMMENT 'agent-traces, platform-events, custom-events',
+  kafka_partition INT NOT NULL,
+  kafka_offset BIGINT NOT NULL,
+  kafka_timestamp TIMESTAMP NOT NULL,
+
+  -- Message metadata
+  ingestion_timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+  ingestion_date DATE NOT NULL GENERATED ALWAYS AS (CAST(ingestion_timestamp AS DATE)),
+
+  -- Core OTLP fields (always present)
+  trace_id STRING NOT NULL,
+  span_id STRING NOT NULL,
+  parent_span_id STRING,
+  trace_state STRING,
+  span_name STRING NOT NULL,
+  span_kind STRING COMMENT 'INTERNAL, CLIENT, SERVER, PRODUCER, CONSUMER',
+  start_time_unix_nano BIGINT NOT NULL,
+  end_time_unix_nano BIGINT NOT NULL,
+
+  -- Resource attributes (service-level, applies to all spans)
+  -- Stored as MAP for schema flexibility
+  resource_attributes MAP<STRING, STRING> COMMENT 'service.name, deployment.environment, etc.',
+
+  -- Span attributes (ALL span-specific attributes)
+  -- Stored as MAP to handle infinite schema evolution
+  attributes MAP<STRING, STRING> COMMENT 'gen_ai.*, tool.*, agent.*, custom.*',
+
+  -- Events (logs within span)
+  events ARRAY<STRUCT<
+    time_unix_nano: BIGINT,
+    name: STRING,
+    attributes: MAP<STRING, STRING>
+  >> COMMENT 'Span events like tool.input, tool.output',
+
+  -- Links (to other spans in different traces)
+  links ARRAY<STRUCT<
+    trace_id: STRING,
+    span_id: STRING,
+    trace_state: STRING,
+    attributes: MAP<STRING, STRING>
+  >>,
+
+  -- Status
+  status_code STRING COMMENT 'OK, ERROR, UNSET',
+  status_message STRING,
+
+  PRIMARY KEY (kafka_topic, kafka_partition, kafka_offset)
 )
 USING DELTA
-PARTITIONED BY (ingestion_date)
+PARTITIONED BY (ingestion_date, kafka_topic)
 TBLPROPERTIES (
+  'delta.enableChangeDataFeed' = 'true',
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true',
+  'delta.minReaderVersion' = '2',
+  'delta.minWriterVersion' = '5'
+);
+
+-- Indexes for common queries
+CREATE INDEX idx_trace_id ON otlp_spans_json (trace_id);
+CREATE INDEX idx_service ON otlp_spans_json ((resource_attributes['service.name']));
+CREATE INDEX idx_span_name ON otlp_spans_json (span_name);
+```
+
+**Why MAP<STRING, STRING>?**
+
+✅ **Schema evolution**: New `gen_ai.*` attributes automatically captured without DDL changes
+✅ **Multi-provider**: Works with ANY LLM provider's semantic conventions
+✅ **Custom attributes**: Teams can add domain-specific attributes without coordination
+✅ **No data loss**: Every attribute from OTLP is preserved
+✅ **Future-proof**: When OpenTelemetry adds new conventions, they're already stored
+
+---
+
+### Silver Layer: `agent_traces.llm_traces`
+
+**Purpose**: Typed, queryable table for LLM and agent-specific analysis.
+
+**Design decisions**:
+- Strongly-typed columns for common queries (fast)
+- Derived from Bronze via streaming job
+- Includes cost calculation logic
+- Supports all LLM providers uniformly
+
+```sql
+-- Create schema for agent traces
+CREATE SCHEMA IF NOT EXISTS agent_traces;
+USE SCHEMA agent_traces;
+
+-- Silver table for LLM/Agent traces specifically
+CREATE TABLE IF NOT EXISTS llm_traces (
+  -- Core identifiers
+  trace_id STRING NOT NULL,
+  span_id STRING NOT NULL,
+  parent_span_id STRING,
+  span_name STRING NOT NULL,
+
+  -- Timing
+  start_time TIMESTAMP NOT NULL,
+  end_time TIMESTAMP NOT NULL,
+  duration_ms DOUBLE NOT NULL,
+
+  -- Service info (extracted from resource_attributes MAP)
+  service_name STRING NOT NULL COMMENT 'Which agent: todo-agent, email-agent, etc.',
+  service_version STRING,
+  deployment_environment STRING COMMENT 'production, staging, development',
+
+  -- User context
+  user_id STRING,
+  user_org_id STRING,
+  user_session_id STRING,
+
+  -- Agent attributes
+  agent_name STRING,
+  agent_version STRING,
+  agent_framework STRING,
+  agent_task_completed BOOLEAN,
+  agent_iterations INT,
+  agent_stopped_reason STRING,
+
+  -- Agent reasoning
+  agent_reasoning_step INT,
+  agent_reasoning_strategy STRING,
+  agent_reasoning_decision STRING,
+  agent_reasoning_confidence DOUBLE,
+
+  -- GenAI semantic conventions (works for ALL providers)
+  gen_ai_system STRING COMMENT 'openai, anthropic, cohere, azure, bedrock',
+  gen_ai_request_model STRING,
+  gen_ai_response_model STRING,
+  gen_ai_request_temperature DOUBLE,
+  gen_ai_request_max_tokens INT,
+  gen_ai_usage_input_tokens INT,
+  gen_ai_usage_output_tokens INT,
+  gen_ai_usage_total_tokens INT,
+  gen_ai_response_id STRING,
+  gen_ai_response_finish_reason STRING,
+
+  -- Cost (calculated dynamically based on provider + model)
+  cost_input_usd DOUBLE,
+  cost_output_usd DOUBLE,
+  cost_total_usd DOUBLE,
+
+  -- Status
+  status_code STRING COMMENT 'OK, ERROR, UNSET',
+  status_message STRING,
+
+  -- Metadata
+  ingestion_timestamp TIMESTAMP NOT NULL,
+  ingestion_date DATE NOT NULL,
+
+  PRIMARY KEY (trace_id, span_id)
+)
+USING DELTA
+PARTITIONED BY (ingestion_date, service_name)
+TBLPROPERTIES (
+  'delta.enableChangeDataFeed' = 'true',
   'delta.autoOptimize.optimizeWrite' = 'true',
   'delta.autoOptimize.autoCompact' = 'true'
+);
+
+CREATE INDEX idx_user ON llm_traces (user_id);
+CREATE INDEX idx_model ON llm_traces (gen_ai_request_model);
+```
+
+---
+
+### Silver Layer: `agent_traces.tool_traces`
+
+**Purpose**: Typed table for tool call analysis.
+
+**Design decisions**:
+- Common tool attributes as columns
+- Tool-specific I/O stored as JSON for flexibility
+- Supports any tool type (MCP, API, database, etc.)
+
+```sql
+CREATE TABLE IF NOT EXISTS tool_traces (
+  -- Core identifiers
+  trace_id STRING NOT NULL,
+  span_id STRING NOT NULL,
+  parent_span_id STRING,
+  span_name STRING NOT NULL,
+
+  -- Timing
+  start_time TIMESTAMP NOT NULL,
+  end_time TIMESTAMP NOT NULL,
+  duration_ms DOUBLE NOT NULL,
+
+  -- Service context
+  service_name STRING NOT NULL,
+  deployment_environment STRING,
+  user_id STRING,
+
+  -- Common tool attributes
+  tool_name STRING NOT NULL,
+  tool_type STRING NOT NULL COMMENT 'mcp, api, database, filesystem, web, shell',
+  tool_success BOOLEAN,
+  tool_error_message STRING,
+  tool_retry_count INT,
+
+  -- MCP-specific (if applicable)
+  mcp_server_name STRING,
+  mcp_server_version STRING,
+
+  -- Tool-specific I/O (stored as JSON for schema flexibility)
+  tool_input JSON COMMENT 'Full input parameters as JSON',
+  tool_output JSON COMMENT 'Full output response as JSON',
+
+  -- Security
+  security_authenticated BOOLEAN,
+  security_permission_granted BOOLEAN,
+
+  -- Status
+  status_code STRING,
+  status_message STRING,
+
+  -- Metadata
+  ingestion_timestamp TIMESTAMP NOT NULL,
+  ingestion_date DATE NOT NULL,
+
+  PRIMARY KEY (trace_id, span_id)
+)
+USING DELTA
+PARTITIONED BY (ingestion_date, tool_type)
+TBLPROPERTIES (
+  'delta.enableChangeDataFeed' = 'true',
+  'delta.autoOptimize.optimizeWrite' = 'true'
 );
 ```
 
 ---
 
-### Silver Layer: `parsed_traces`
+### Silver Layer: Streaming Transformation Example
 
-Parsed, queryable trace data with all attributes.
+**Purpose**: Shows how to materialize Silver from Bronze using Spark Structured Streaming.
+
+```python
+# databricks/silver_llm_traces_streaming.py
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import *
+from pyspark.sql.types import *
+
+spark = SparkSession.builder.appName("SilverLLMTraces").getOrCreate()
+
+# Read from Bronze (change data feed for incremental processing)
+bronze_df = spark.readStream \
+    .format("delta") \
+    .option("readChangeFeed", "true") \
+    .option("startingVersion", 0) \
+    .table("telemetry.raw.otlp_spans_json")
+
+# Filter to only LLM-related spans
+llm_df = bronze_df.filter(
+    (col("span_name").like("llm.%")) |
+    (col("span_name").like("agent.%")) |
+    (col("attributes")["gen_ai.system"].isNotNull())
+)
+
+# Define cost calculation UDF (handles all providers)
+@udf(returnType=DoubleType())
+def calculate_cost(provider, model, input_tokens, output_tokens, cost_type):
+    """Calculate cost based on provider/model pricing."""
+    pricing = {
+        # OpenAI pricing
+        ("openai", "gpt-4o-mini", "input"): 0.15,
+        ("openai", "gpt-4o-mini", "output"): 0.60,
+        ("openai", "gpt-4o", "input"): 2.50,
+        ("openai", "gpt-4o", "output"): 10.00,
+        # Anthropic pricing
+        ("anthropic", "claude-3-5-sonnet-20241022", "input"): 3.00,
+        ("anthropic", "claude-3-5-sonnet-20241022", "output"): 15.00,
+        # Cohere pricing
+        ("cohere", "command-r-plus", "input"): 2.50,
+        ("cohere", "command-r-plus", "output"): 10.00,
+        # Add more as needed
+    }
+
+    # Handle model variations (e.g., "claude-3-5-sonnet-20241022" vs "claude-3.5-sonnet")
+    for (p, m, t), price in pricing.items():
+        if provider == p and model.startswith(m[:20]) and cost_type == t:
+            tokens = input_tokens if cost_type == "input" else output_tokens
+            return (tokens / 1_000_000.0) * price
+
+    return 0.0
+
+# Transform to Silver schema
+silver_df = llm_df.select(
+    col("trace_id"),
+    col("span_id"),
+    col("parent_span_id"),
+    col("span_name"),
+
+    # Parse timestamps
+    (col("start_time_unix_nano") / 1000).cast("timestamp").alias("start_time"),
+    (col("end_time_unix_nano") / 1000).cast("timestamp").alias("end_time"),
+    ((col("end_time_unix_nano") - col("start_time_unix_nano")) / 1000000.0).alias("duration_ms"),
+
+    # Extract from resource_attributes MAP
+    col("resource_attributes")["service.name"].alias("service_name"),
+    col("resource_attributes")["service.version"].alias("service_version"),
+    col("resource_attributes")["deployment.environment"].alias("deployment_environment"),
+
+    # Extract user context from attributes MAP
+    col("attributes")["user.id"].alias("user_id"),
+    col("attributes")["user.org_id"].alias("user_org_id"),
+    col("attributes")["user.session_id"].alias("user_session_id"),
+
+    # Extract agent attributes
+    col("attributes")["agent.name"].alias("agent_name"),
+    col("attributes")["agent.version"].alias("agent_version"),
+    col("attributes")["agent.framework"].alias("agent_framework"),
+    col("attributes")["agent.task_completed"].cast("boolean").alias("agent_task_completed"),
+    col("attributes")["agent.iterations"].cast("int").alias("agent_iterations"),
+    col("attributes")["agent.stopped_reason"].alias("agent_stopped_reason"),
+
+    # Extract reasoning attributes
+    col("attributes")["agent.reasoning.step"].cast("int").alias("agent_reasoning_step"),
+    col("attributes")["agent.reasoning.strategy"].alias("agent_reasoning_strategy"),
+    col("attributes")["agent.reasoning.decision"].alias("agent_reasoning_decision"),
+    col("attributes")["agent.reasoning.confidence"].cast("double").alias("agent_reasoning_confidence"),
+
+    # Extract GenAI attributes (works for ALL providers)
+    col("attributes")["gen_ai.system"].alias("gen_ai_system"),
+    col("attributes")["gen_ai.request.model"].alias("gen_ai_request_model"),
+    col("attributes")["gen_ai.response.model"].alias("gen_ai_response_model"),
+    col("attributes")["gen_ai.request.temperature"].cast("double").alias("gen_ai_request_temperature"),
+    col("attributes")["gen_ai.request.max_tokens"].cast("int").alias("gen_ai_request_max_tokens"),
+    col("attributes")["gen_ai.usage.input_tokens"].cast("int").alias("gen_ai_usage_input_tokens"),
+    col("attributes")["gen_ai.usage.output_tokens"].cast("int").alias("gen_ai_usage_output_tokens"),
+    col("attributes")["gen_ai.usage.total_tokens"].cast("int").alias("gen_ai_usage_total_tokens"),
+    col("attributes")["gen_ai.response.id"].alias("gen_ai_response_id"),
+    col("attributes")["gen_ai.response.finish_reason"].alias("gen_ai_response_finish_reason"),
+
+    # Status
+    col("status_code"),
+    col("status_message"),
+
+    # Metadata
+    col("ingestion_timestamp"),
+    col("ingestion_date")
+)
+
+# Add cost calculation
+silver_with_cost = silver_df.withColumn(
+    "cost_input_usd",
+    calculate_cost(
+        col("gen_ai_system"),
+        col("gen_ai_request_model"),
+        col("gen_ai_usage_input_tokens"),
+        col("gen_ai_usage_output_tokens"),
+        lit("input")
+    )
+).withColumn(
+    "cost_output_usd",
+    calculate_cost(
+        col("gen_ai_system"),
+        col("gen_ai_request_model"),
+        col("gen_ai_usage_input_tokens"),
+        col("gen_ai_usage_output_tokens"),
+        lit("output")
+    )
+).withColumn(
+    "cost_total_usd",
+    col("cost_input_usd") + col("cost_output_usd")
+)
+
+# Write to Silver table
+query = silver_with_cost.writeStream \
+    .format("delta") \
+    .outputMode("append") \
+    .option("checkpointLocation", "/mnt/checkpoints/silver_llm") \
+    .option("mergeSchema", "true") \
+    .partitionBy("ingestion_date", "service_name") \
+    .trigger(processingTime="30 seconds") \
+    .toTable("telemetry.agent_traces.llm_traces")
+
+query.awaitTermination()
+```
+
+---
+
+### Parsed, queryable trace data with all attributes (DEPRECATED - see above for production schema)
 
 ```sql
 CREATE TABLE telemetry.agent_traces.parsed_traces (
@@ -729,20 +1140,55 @@ TBLPROPERTIES (
 
 ## Query Examples
 
-### 1. Find all traces for a user
+All queries work uniformly across **all agents** and **all LLM providers**.
+
+### 1. Multi-Agent Cost Comparison
+
+```sql
+-- Compare costs across different agents (OpenAI, Anthropic, Cohere, etc.)
+SELECT
+  service_name as agent,
+  gen_ai_system as provider,
+  gen_ai_request_model as model,
+  COUNT(*) as total_calls,
+  SUM(gen_ai_usage_total_tokens) as total_tokens,
+  SUM(cost_total_usd) as total_cost_usd,
+  AVG(cost_total_usd) as avg_cost_per_call,
+  AVG(duration_ms) as avg_latency_ms
+FROM telemetry.agent_traces.llm_traces
+WHERE ingestion_date >= CURRENT_DATE() - INTERVAL 7 DAYS
+GROUP BY service_name, gen_ai_system, gen_ai_request_model
+ORDER BY total_cost_usd DESC;
+```
+
+**Output example**:
+```
+agent              | provider  | model                      | total_calls | total_tokens | total_cost_usd | avg_cost_per_call | avg_latency_ms
+-------------------|-----------|----------------------------|-------------|--------------|----------------|-------------------|----------------
+todo-agent         | openai    | gpt-4o                     | 1,245       | 524,300      | $45.23         | $0.036            | 1,850
+email-agent        | anthropic | claude-3-5-sonnet-20241022 | 892         | 412,100      | $38.15         | $0.043            | 2,120
+research-agent     | openai    | gpt-4o-mini                | 3,421       | 1,234,500    | $8.94          | $0.003            | 950
+```
+
+---
+
+### 2. Find all traces for a user (across all agents)
 
 ```sql
 SELECT
   trace_id,
+  service_name as agent,
   span_name,
   duration_ms,
-  gen_ai_usage_total_tokens,
+  gen_ai_system as llm_provider,
+  gen_ai_usage_total_tokens as tokens,
   tool_name,
+  cost_total_usd,
   status_code
-FROM telemetry.agent_traces.parsed_traces
+FROM telemetry.agent_traces.llm_traces
 WHERE user_id = 'user-sneha-123'
   AND ingestion_date = CURRENT_DATE()
-ORDER BY start_time_unix_nano;
+ORDER BY start_time;
 ```
 
 ---
@@ -895,11 +1341,168 @@ ORDER BY start_time_unix_nano;
 
 ---
 
+---
+
+## Auto-Instrumentation vs Manual Instrumentation
+
+### Auto-Instrumentation (Recommended)
+
+**What it is**: Libraries that automatically wrap LLM API calls to create spans without manual code.
+
+**Available libraries**:
+```bash
+# OpenAI
+pip install opentelemetry-instrumentation-openai
+
+# Anthropic
+pip install opentelemetry-instrumentation-anthropic
+
+# Universal (LiteLLM, LangChain, LlamaIndex)
+pip install opentelemetry-instrumentation-litellm
+pip install traceloop-sdk  # OpenLLMetry - supports all providers
+```
+
+**Setup example**:
+```python
+from opentelemetry.instrumentation.openai import OpenAIInstrumentor
+from opentelemetry.instrumentation.anthropic import AnthropicInstrumentor
+
+# One-time setup
+OpenAIInstrumentor().instrument()
+AnthropicInstrumentor().instrument()
+
+# Now ALL calls are automatically traced:
+from openai import OpenAI
+from anthropic import Anthropic
+
+openai_client = OpenAI()
+anthropic_client = Anthropic()
+
+# Both automatically generate spans with GenAI semantic conventions
+response = openai_client.chat.completions.create(...)
+response = anthropic_client.messages.create(...)
+```
+
+**Benefits**:
+- ✅ Zero boilerplate per LLM call
+- ✅ Automatic GenAI semantic conventions
+- ✅ Token usage, costs, latency tracked automatically
+- ✅ Works across all providers uniformly
+
+---
+
+### LLM Routing Support
+
+When using **LLM routers** (LiteLLM, Portkey) that dynamically choose providers:
+
+```python
+from opentelemetry.instrumentation.litellm import LiteLLMInstrumentor
+import litellm
+
+# Instrument the router (not individual providers)
+LiteLLMInstrumentor().instrument()
+
+# Now ANY provider call through LiteLLM is traced:
+response = litellm.completion(
+    model="gpt-4o",  # OpenAI
+    messages=[...]
+)
+
+response = litellm.completion(
+    model="claude-3-5-sonnet-20241022",  # Anthropic
+    messages=[...]
+)
+
+response = litellm.completion(
+    model="command-r-plus",  # Cohere
+    messages=[...]
+)
+
+# All generate uniform telemetry in Databricks
+```
+
+**Databricks queries work identically**:
+```sql
+-- Works for ALL providers, regardless of routing
+SELECT
+  gen_ai_system,  -- "openai", "anthropic", "cohere", etc.
+  COUNT(*) as calls,
+  SUM(cost_total_usd) as cost
+FROM telemetry.agent_traces.llm_traces
+GROUP BY gen_ai_system;
+```
+
+---
+
+### Manual Instrumentation (Custom Attributes)
+
+For **custom attributes** (agent reasoning, tool calls, etc.):
+
+```python
+from opentelemetry import trace
+
+tracer = trace.get_tracer(__name__)
+
+def agent_process_message(message: str):
+    with tracer.start_as_current_span("agent.process_message") as span:
+        # Custom agent attributes
+        span.set_attribute("agent.name", "todo-agent")
+        span.set_attribute("agent.reasoning.strategy", "ReAct")
+
+        # LLM call (auto-instrumented)
+        response = openai_client.chat.completions.create(...)
+
+        # Tool call (manual instrumentation)
+        with tracer.start_as_current_span("tool.github_create_issue") as tool_span:
+            tool_span.set_attribute("tool.name", "github_create_issue")
+            tool_span.set_attribute("tool.type", "mcp")
+            # ... tool execution
+```
+
+---
+
+### Hybrid Approach (Best Practice)
+
+**Recommendation**: Use auto-instrumentation for standard operations + manual for custom logic.
+
+```python
+# Auto-instrument all LLM providers
+from opentelemetry.instrumentation.openai import OpenAIInstrumentor
+from opentelemetry.instrumentation.anthropic import AnthropicInstrumentor
+
+OpenAIInstrumentor().instrument()
+AnthropicInstrumentor().instrument()
+
+# Manually instrument agent-specific logic
+from opentelemetry import trace
+
+tracer = trace.get_tracer(__name__)
+
+def agent_workflow(user_input: str):
+    with tracer.start_as_current_span("agent.user_request") as span:
+        # Custom attributes
+        span.set_attribute("user.id", "user-123")
+        span.set_attribute("agent.task_completed", True)
+
+        # LLM call (auto-instrumented - no manual tracing needed)
+        response = openai_client.chat.completions.create(...)
+
+        # Tool call (manual - custom attributes)
+        with tracer.start_as_current_span("tool.custom_api") as tool_span:
+            tool_span.set_attribute("tool.name", "custom_api")
+            # ... tool execution
+```
+
+---
+
 ## References
 
 - [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/)
 - [GenAI Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/)
 - [HTTP Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/http/)
 - [OpenTelemetry Trace Specification](https://opentelemetry.io/docs/specs/otel/trace/)
+- [OpenTelemetry Auto-Instrumentation](https://opentelemetry.io/docs/instrumentation/python/automatic/)
+- [LiteLLM Observability](https://docs.litellm.ai/docs/observability/opentelemetry)
+- [OpenLLMetry (Universal Instrumentation)](https://github.com/traceloop/openllmetry)
 - [Langfuse MCP Tracing](https://langfuse.com/docs/observability/features/mcp-tracing)
 - [Arize Phoenix MCP](https://docs.arize.com/phoenix/mcp)
