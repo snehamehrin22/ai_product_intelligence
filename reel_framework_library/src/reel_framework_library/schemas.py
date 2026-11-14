@@ -1,7 +1,7 @@
 """Pydantic models: the single source of truth for what valid data looks like."""
 
 import re
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -65,8 +65,32 @@ class AccountStatus(BaseModel):
     monthly_cap_usd: float
     spent_usd: float
     price_per_reel_usd: float
+    price_per_profile_usd: float
+    start_fee_usd: float
 
     @property
     def remaining_usd(self) -> float:
         """Credit left this billing month."""
         return round(self.monthly_cap_usd - self.spent_usd, 4)
+
+
+class Reel(BaseModel):
+    """One reel as returned by the Apify reel scraper, reduced to what we use.
+
+    Views are required: the first analyzer silently wrote empty views because it
+    read a field Apify leaves null. A reel without views can't be ranked, so it
+    must fail validation, not pass through as a blank.
+    """
+
+    shortcode: str
+    url: str
+    username: str
+    views: int = Field(..., ge=0, description="videoPlayCount (videoViewCount is always null)")
+    likes: Optional[int] = None
+    comments: Optional[int] = None
+    duration_seconds: Optional[float] = None
+    posted_at: str
+    caption: str = ""
+    audio_url: Optional[str] = None
+    video_url: Optional[str] = None
+    product_type: Optional[str] = None

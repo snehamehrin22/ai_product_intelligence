@@ -113,11 +113,19 @@ estimate shown first, so I never overspend the cap.
   would pass the remaining budget.
 - Saves raw JSON per creator to `data/raw/{handle}.json` as each finishes;
   re-running skips creators already saved.
+- Skips pinned reels and trial reels, so the window is the creator's 30 most
+  recent regular reels.
+- Creators go to the scraper in batches of 10 (one start fee per batch).
 - Fails loudly on null views; writes failures to `data/errors.jsonl`.
 - Also records follower count (profile scraper) for context.
 
 ### US-3: Score performance
 - Per creator: median views, then `outlier_ratio` for each reel.
+- **Recency caveat (found in the real data):** the 30-reel window includes reels
+  posted in the last few days, still gaining views. Scoring them against the
+  median makes them look like failures. Decide the rule before scoring: either
+  exclude reels younger than N days (start with 7) from selection, or compare
+  views per day since posting. Check what the data says before picking.
 - Output `data/reels_scored.csv`; sanity check that no creator has all-null views.
 
 ### US-4: Transcribe and select the top 10 per creator

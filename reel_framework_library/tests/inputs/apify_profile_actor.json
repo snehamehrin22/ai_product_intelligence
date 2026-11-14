@@ -1,0 +1,3 @@
+{"data": {"pricingInfos": [{"pricingPerEvent": {"actorChargeEvents": {
+  "profile": {"eventTieredPricingUsd": {"FREE": {"tieredEventPriceUsd": 0.0026}, "BRONZE": {"tieredEventPriceUsd": 0.0023}}}
+}}}]}}

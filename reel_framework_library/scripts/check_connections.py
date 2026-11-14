@@ -36,6 +36,8 @@ def main() -> int:
     print(f"Spent so far:    ${status.spent_usd:.4f}")
     print(f"Remaining:       ${status.remaining_usd:.2f}")
     print(f"Price per reel:  ${status.price_per_reel_usd}")
+    print(f"Price/profile:   ${status.price_per_profile_usd}")
+    print(f"Run start fee:   ${status.start_fee_usd}")
 
     if status.remaining_usd < MIN_REMAINING_BUDGET_USD:
         print(f"FAIL: remaining budget is under ${MIN_REMAINING_BUDGET_USD:.2f}")
