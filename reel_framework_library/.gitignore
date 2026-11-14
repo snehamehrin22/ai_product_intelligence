@@ -1,0 +1,13 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+logs/
+.DS_Store
+.pytest_cache/
+
+# Run output and raw scraper dumps stay local. The creator list is the one
+# hand-curated input, so it (and its seed files) stay tracked.
+data/*
+!data/creators.csv
+!data/seed/
