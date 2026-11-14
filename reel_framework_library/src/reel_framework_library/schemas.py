@@ -114,3 +114,29 @@ class ScoredReel(BaseModel):
     eligible: bool = Field(..., description="False if the reel is too new to score fairly")
     exclude_reason: str = ""
     creator_low_sample: bool = Field(False, description="creator has too few mature reels for a stable median")
+
+
+class TranscriptSegment(BaseModel):
+    """One timed stretch of speech from Whisper."""
+
+    start: float
+    end: float
+    text: str
+    no_speech_prob: Optional[float] = Field(None, description="Whisper's chance this stretch is not speech")
+    avg_logprob: Optional[float] = None
+
+
+class Transcript(BaseModel):
+    """A validated Whisper transcript for one reel.
+
+    Segments are kept (not just the text) so later steps can measure how much of
+    the video is speech and place each line in time.
+    """
+
+    handle: str
+    shortcode: str
+    model: str
+    language: Optional[str] = None
+    audio_duration_seconds: Optional[float] = None
+    text: str
+    segments: List[TranscriptSegment] = []

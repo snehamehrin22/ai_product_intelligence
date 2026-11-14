@@ -26,3 +26,13 @@ ERRORS_JSONL = DATA_DIR / "errors.jsonl"
 # Creators per scraper run. Each run costs a flat start fee, so bigger batches
 # are cheaper; but a run that dies loses its whole batch, so not too big.
 BATCH_SIZE = 10
+
+TRANSCRIPTS_DIR = DATA_DIR / "transcripts"
+SCORED_CSV = DATA_DIR / "reels_scored.csv"
+TRANSCRIPTION_MODEL = "whisper-1"
+
+# From memory of OpenAI's published price, not read from an API: check
+# https://openai.com/api/pricing before a big run. Only used for the estimate
+# and the --max-usd guard.
+WHISPER_USD_PER_MINUTE = 0.006
+TRANSCRIBE_WORKERS = 4

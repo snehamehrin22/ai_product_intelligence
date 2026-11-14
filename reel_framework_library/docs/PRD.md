@@ -128,35 +128,26 @@ estimate shown first, so I never overspend the cap.
   views per day since posting. Check what the data says before picking.
 - Output `data/reels_scored.csv`; sanity check that no creator has all-null views.
 
-### US-4: Transcribe and select the top 10 per creator
-Speech is the only filter. No face detection and no video download: the
-reel scraper returns an `audioUrl` (about 1 MB vs 25 MB+ for the video), which
-is what the old analyzer already sent to Whisper.
-1. Rank a creator's 30 reels by outlier ratio, highest first.
-2. Walk down the list; transcribe each reel's audio with Whisper (segment
-   timestamps kept).
-3. A reel counts as having speech throughout if the transcript covers most of
-   the video: speech coverage = total length of Whisper segments (ignoring
-   segments with a high `no_speech_prob`, since Whisper invents text over
-   music and silence) divided by the reel's duration from the scraper. Starting
-   point: coverage of at least 70%. Thresholds get tuned on the first creators'
-   output.
-4. Stop as soon as the creator has 10 reels with speech.
-- Creators with fewer than 10 such reels keep what they have, and the shortfall
-  is reported.
-- Each selected reel stores: transcript, segment timestamps, words, duration,
-  outlier ratio, views, URL.
-- Failed transcriptions go to `data/errors.jsonl`, never into the corpus.
-- Output `data/selected_reels.csv`.
-- Use OpenAI Whisper on `audioUrl`, not the scraper's `includeTranscript`
-  add-on: Apify charges $0.041 per minute for it (BRONZE tier, from the actor's
-  pricing events), roughly 7x Whisper's $0.006.
-- The reel scraper also charges $0.001 per run start, so pass many creators in
-  one run instead of one run per creator.
-- Cost note: Whisper bills per minute of audio and we transcribe in rank order,
-  so this only pays for roughly 10-12 reels per creator, not all 30.
+### US-4: Transcribe every reel
+Decided: transcribe all fetched reels (about 1,370, 1,484 minutes of audio,
+about $8.90 at Whisper's $0.006/min, price from memory and not verified), with
+no analysis yet. Selecting the top 10 per creator, and any speech-coverage
+filter, move to a later story that works from the saved transcripts.
+- Source is each reel's `audioUrl` from the raw scraper files (about 1 MB, vs
+  25 MB+ for video). Instagram CDN links expire within days, so this runs soon
+  after the fetch.
+- Whisper `verbose_json`: text plus timed segments, each with `no_speech_prob`,
+  so later steps can measure how much of a reel is speech.
+- One validated file per reel: `data/transcripts/{handle}/{shortcode}.json`.
+- Order: highest outlier ratio first, too-new reels last, so an interrupted run
+  has finished the most useful reels.
+- Resumable (saved reels are skipped); failures go to `data/errors.jsonl` and
+  never stop the run.
+- Cost guard: estimate shown first, refuses above `--max-usd` (default $10).
 
-### US-5: Format labels
+### US-5: Select top reels and label formats
+- Select the top 10 per creator from the transcripts (speech-coverage rule and
+  ranking method to be decided: rank within creator, or capped ratio).
 - Label each selected reel's format (for example: talking head, voiceover over
   footage, text-on-screen with voiceover, interview) from the transcript plus
   sampled frames. The label set is decided from what the first creators'

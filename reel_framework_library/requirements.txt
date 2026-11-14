@@ -2,3 +2,5 @@ python-dotenv
 pydantic
 requests
 pytest
+apify-client
+openai

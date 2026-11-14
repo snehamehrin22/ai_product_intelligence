@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from reel_framework_library.apify_status import AccountCheckError, fetch_account_status  # noqa: E402
 from reel_framework_library.config import MIN_REMAINING_BUDGET_USD, PROJECT_ROOT  # noqa: E402
+from reel_framework_library.openai_status import check_openai  # noqa: E402
 
 
 def main() -> int:
@@ -41,6 +42,16 @@ def main() -> int:
 
     if status.remaining_usd < MIN_REMAINING_BUDGET_USD:
         print(f"FAIL: remaining budget is under ${MIN_REMAINING_BUDGET_USD:.2f}")
+        return 1
+
+    openai_key = os.environ.get("OPENAI_API_KEY")
+    if not openai_key:
+        print("FAIL: OPENAI_API_KEY is not set (needed for transcription)")
+        return 1
+    try:
+        print(f"OpenAI:          {check_openai(openai_key)}")
+    except RuntimeError as exc:
+        print(f"FAIL: {exc}")
         return 1
     print("OK")
     return 0
