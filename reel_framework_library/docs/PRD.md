@@ -26,10 +26,10 @@ data. Frameworks themselves are a later phase; this PRD builds the corpus first.
 
 ## 3. Inputs and constraints
 
-**Creator list** (52 to start): the 48 creators in Notion "Instagram Reference"
+**Creator list** (51 to start): the 47 creators in Notion "Instagram Reference"
 (my saved collections) plus 4 added by hand: `eyes_of_apoorva`,
 `andrea_mizrahi`, `iliya.sharifat`, `mi.raga_mi.saga`. Full list in Appendix A.
-Target is 100; the other 48 are found later (US-8).
+Target is 100; the other 49 are found later (US-8).
 
 **Per creator:** 10 reels that (a) have speech in them (a talking head or a voiceover both
 count) and (b) are performing well.
@@ -50,7 +50,7 @@ way and should be re-checked before the run.
 
 | Scope | Reels | Approx. cost |
 |---|---|---|
-| 52 seed creators x 30 | 1,560 | ~$3.6 + ~$0.12 profiles |
+| 51 seed creators x 30 | 1,530 | ~$3.5 + ~$0.12 profiles (actual: ~$3.41 for 51) |
 | 100 creators x 30 | 3,000 | ~$6.9 + ~$0.23 profiles |
 
 Whisper (OpenAI) for ~1,000 selected reels is a separate cost, roughly $9
@@ -90,7 +90,7 @@ Acceptance criteria:
    exits non-zero if the token is invalid or remaining budget is under $1.00.
    It also reads the live per-reel price for the account's tier from the actor
    listing, so cost estimates never use a hardcoded price.
-5. `data/creators.csv` holds the 52 creators from Appendix A with columns
+5. `data/creators.csv` holds the 51 creators from Appendix A with columns
    `handle, source, notion_category, notes`. Handles are lowercase, with no
    `@`, spaces or parentheses, and unique.
 6. `schemas.py` has a Pydantic `Creator` model; a loader reads the CSV through
@@ -103,7 +103,7 @@ Acceptance criteria:
 9. README has the three commands to run: create venv, check connections, run tests.
 
 Done when: `pytest` is green, `check_connections.py` exits 0, and
-`creators.csv` loads 52 valid rows.
+`creators.csv` loads 51 valid rows.
 
 ### US-2: Fetch reels
 As the owner, I want the reel scraper run for every creator with a cost
@@ -188,15 +188,15 @@ Still open:
 2. **Budget for Whisper** (about $9 for 1,000 reels at my earlier estimate, not
    re-checked). OK to spend that from your OpenAI account?
 
-## Appendix A: creator seed list (52)
+## Appendix A: creator seed list (51)
 
 Added by hand (4): eyes_of_apoorva, andrea_mizrahi, iliya.sharifat, mi.raga_mi.saga
 
-From Notion "Instagram Reference" (48, handles normalized):
+From Notion "Instagram Reference" (47, handles normalized):
 
 - Business Audit Styles: thoughtfully_designed, storieswithkiki, trythissj,
   aevytvdaily, bobbyinspace, byalisonwang, carmscrolls, eugbrandstrat,
-  isabelradford_, jade.got.curious, jason_swet, jeyessays, jun_yuh,
+  jade.got.curious, jason_swet, jeyessays, jun_yuh,
   mikayla.deg, mindfulnesswithdesiree, naomi.huth, reidseddon,
   sincerelyjennifergrace, synsation_, telephonepyar, travelingtoretirement,
   wellbysabzi
@@ -207,6 +207,8 @@ From Notion "Instagram Reference" (48, handles normalized):
   inzeenius
 - AI Teaching: nataliefratto, nick_saraev, uiuxmanuel, byaditimishra,
   chasehughesofficial, prajplays, vvanedwards
+
+`isabelradford_` was dropped after the fetch (account returned no reels and an empty profile).
 
 Creators appearing in two categories (`jason_swet`, `sincerelyjennifergrace`,
 `eugbrandstrat`) are listed once.

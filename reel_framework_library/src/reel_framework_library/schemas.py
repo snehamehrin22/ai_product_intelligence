@@ -94,3 +94,23 @@ class Reel(BaseModel):
     audio_url: Optional[str] = None
     video_url: Optional[str] = None
     product_type: Optional[str] = None
+
+
+class ScoredReel(BaseModel):
+    """A reel with its performance relative to its own creator's normal."""
+
+    handle: str
+    shortcode: str
+    url: str
+    posted_at: str
+    age_days: float
+    views: int
+    likes: Optional[int] = None
+    comments: Optional[int] = None
+    duration_seconds: Optional[float] = None
+    followers: Optional[int] = None
+    creator_median_views: Optional[float] = Field(None, description="median over mature reels only")
+    outlier_ratio: Optional[float] = Field(None, description="views / creator_median_views; None if too new")
+    eligible: bool = Field(..., description="False if the reel is too new to score fairly")
+    exclude_reason: str = ""
+    creator_low_sample: bool = Field(False, description="creator has too few mature reels for a stable median")

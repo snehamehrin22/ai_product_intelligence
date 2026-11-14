@@ -34,7 +34,6 @@ Carried over from `instagram_hook_analyzer` (see PRD section 4).
 - Never hardcode per-reel prices; they vary by plan tier.
 - Reel scraper charges $0.001 per run start: batch creators into one run.
 
-## Open data questions
-- `chasehughesofficial` and `vvanedwards` came back from a Notion SQL query on 2026-11-14 but are absent from the
-  default view when read afterwards (view: 52 rows, SQL: 55). Kept in `data/seed/notion_raw.csv`. Re-check the
-  Notion database and remove them from the seed file if they were deleted, then run `scripts/build_creators.py`.
+## Data notes
+- `chasehughesofficial` and `vvanedwards` were missing from a Notion view read but are real accounts (fetched OK).
+- `isabelradford_` was dropped: the reel scraper returned nothing and the profile came back all-null.

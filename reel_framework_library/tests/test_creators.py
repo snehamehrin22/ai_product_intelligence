@@ -57,10 +57,10 @@ def test_load_rejects_bad_files(filename: str) -> None:
 
 
 def test_real_creators_csv_matches_prd() -> None:
-    """The committed seed list: 52 valid creators, 48 from Notion plus 4 by hand."""
+    """The committed seed list: 51 valid creators, 47 from Notion plus 4 by hand."""
     creators = load_creators(CREATORS_CSV).creators
-    assert len(creators) == 52
-    assert sum(c.source == "notion" for c in creators) == 48
+    assert len(creators) == 51
+    assert sum(c.source == "notion" for c in creators) == 47
     assert {"eyes_of_apoorva", "andrea_mizrahi", "iliya.sharifat", "mi.raga_mi.saga"} <= {
         c.handle for c in creators
     }
