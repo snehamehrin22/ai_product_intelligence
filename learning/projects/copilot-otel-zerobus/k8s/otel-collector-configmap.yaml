@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: copilot-otel
+  labels:
+    app: otel-collector
+data:
+  otel-config.yaml: |
+    # oauth2clientauthextension handles token refresh automatically.
+    # One extension per signal type (each needs its own table-scoped token).
+    extensions:
+      health_check:
+        endpoint: 0.0.0.0:13133
+
+      oauth2client/spans:
+        client_id: ${env:DATABRICKS_CLIENT_ID}
+        client_secret: ${env:DATABRICKS_CLIENT_SECRET}
+        token_url: https://${env:DATABRICKS_WORKSPACE_HOST}/oidc/v1/token
+        scopes: ['all-apis']
+        endpoint_params:
+          resource: "api://databricks/workspaces/${env:DATABRICKS_WORKSPACE_ID}/zerobusDirectWriteApi"
+          authorization_details:
+            - '[{"type":"unity_catalog_privileges","privileges":["USE CATALOG"],"object_type":"CATALOG","object_full_path":"signaltogrowth_zerobus"},{"type":"unity_catalog_privileges","privileges":["USE SCHEMA"],"object_type":"SCHEMA","object_full_path":"signaltogrowth_zerobus.bronze"},{"type":"unity_catalog_privileges","privileges":["SELECT","MODIFY"],"object_type":"TABLE","object_full_path":"signaltogrowth_zerobus.bronze.copilot_otel_spans"}]'
+
+      oauth2client/logs:
+        client_id: ${env:DATABRICKS_CLIENT_ID}
+        client_secret: ${env:DATABRICKS_CLIENT_SECRET}
+        token_url: https://${env:DATABRICKS_WORKSPACE_HOST}/oidc/v1/token
+        scopes: ['all-apis']
+        endpoint_params:
+          resource: "api://databricks/workspaces/${env:DATABRICKS_WORKSPACE_ID}/zerobusDirectWriteApi"
+          authorization_details:
+            - '[{"type":"unity_catalog_privileges","privileges":["USE CATALOG"],"object_type":"CATALOG","object_full_path":"signaltogrowth_zerobus"},{"type":"unity_catalog_privileges","privileges":["USE SCHEMA"],"object_type":"SCHEMA","object_full_path":"signaltogrowth_zerobus.bronze"},{"type":"unity_catalog_privileges","privileges":["SELECT","MODIFY"],"object_type":"TABLE","object_full_path":"signaltogrowth_zerobus.bronze.copilot_otel_logs"}]'
+
+      oauth2client/metrics:
+        client_id: ${env:DATABRICKS_CLIENT_ID}
+        client_secret: ${env:DATABRICKS_CLIENT_SECRET}
+        token_url: https://${env:DATABRICKS_WORKSPACE_HOST}/oidc/v1/token
+        scopes: ['all-apis']
+        endpoint_params:
+          resource: "api://databricks/workspaces/${env:DATABRICKS_WORKSPACE_ID}/zerobusDirectWriteApi"
+          authorization_details:
+            - '[{"type":"unity_catalog_privileges","privileges":["USE CATALOG"],"object_type":"CATALOG","object_full_path":"signaltogrowth_zerobus"},{"type":"unity_catalog_privileges","privileges":["USE SCHEMA"],"object_type":"SCHEMA","object_full_path":"signaltogrowth_zerobus.bronze"},{"type":"unity_catalog_privileges","privileges":["SELECT","MODIFY"],"object_type":"TABLE","object_full_path":"signaltogrowth_zerobus.bronze.copilot_otel_metrics"}]'
+
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      batch:
+        timeout: 5s
+        send_batch_size: 50
+
+    exporters:
+      debug:
+        verbosity: basic
+
+      otlp/spans:
+        endpoint: ${env:ZEROBUS_HOST}:443
+        auth:
+          authenticator: oauth2client/spans
+        headers:
+          x-databricks-zerobus-table-name: signaltogrowth_zerobus.bronze.copilot_otel_spans
+
+      otlp/logs:
+        endpoint: ${env:ZEROBUS_HOST}:443
+        auth:
+          authenticator: oauth2client/logs
+        headers:
+          x-databricks-zerobus-table-name: signaltogrowth_zerobus.bronze.copilot_otel_logs
+
+      otlp/metrics:
+        endpoint: ${env:ZEROBUS_HOST}:443
+        auth:
+          authenticator: oauth2client/metrics
+        headers:
+          x-databricks-zerobus-table-name: signaltogrowth_zerobus.bronze.copilot_otel_metrics
+
+    service:
+      extensions: [health_check, oauth2client/spans, oauth2client/logs, oauth2client/metrics]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug, otlp/spans]
+        logs:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug, otlp/logs]
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug, otlp/metrics]
