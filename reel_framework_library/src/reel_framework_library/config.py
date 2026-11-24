@@ -36,3 +36,24 @@ TRANSCRIPTION_MODEL = "whisper-1"
 # and the --max-usd guard.
 WHISPER_USD_PER_MINUTE = 0.006
 TRANSCRIBE_WORKERS = 4
+
+SELECTED_CSV = DATA_DIR / "selected_reels.csv"
+SPEECH_CSV = DATA_DIR / "reels_speech.csv"
+REELS_PER_CREATOR_SELECTED = 10
+
+# "Has speech" thresholds, chosen from the real distribution (see PRD US-5):
+# 1,001 of 1,357 reels run at 160+ words/min; a tail sits below 80. Whisper's own
+# no_speech_prob wrongly discards real speech over background music, so it is
+# not used for coverage.
+MIN_SPEECH_COVERAGE = 0.70   # share of the video covered by transcript segments
+MIN_WORDS = 40               # shorter than this is too little to learn structure from
+MIN_WORDS_PER_MINUTE = 100   # below this it is sparse text or music, not narration
+
+# Framework extraction pilot (see docs/PRD.md US-6/US-7). Small on purpose:
+# find out whether frameworks exist before running on the whole corpus.
+BEATS_DIR = DATA_DIR / "beats"
+FRAMEWORKS_DIR = DATA_DIR / "frameworks"
+PROMPTS_DIR = PROJECT_ROOT / "prompts"
+EXTRACTION_MODEL = "gpt-4o"
+PILOT_CREATORS = 10
+PILOT_REELS_PER_CREATOR = 4

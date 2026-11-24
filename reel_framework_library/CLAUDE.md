@@ -28,6 +28,8 @@ Carried over from `instagram_hook_analyzer` (see PRD section 4).
 | Raw run lost after 7 days | Apify dataset retention | Save raw JSON per creator as soon as a run finishes |
 | Wrong env var name in a check (`APIFY_API_TOKEN`) | Assumed the name instead of reading `.env` | The variable is `APIFY_API_KEY` |
 | Cost estimate wrong by 2x | Guessed the Starter plan price from memory | Read price and plan from the Apify API; `check_connections.py` does this |
+| LLM invented beat labels (`problem`, `question`, `decision`) | Closed vocabulary was missing a real beat; model improvised | Validate against the enum, feed the error back on retry; add the label if it recurs (`problem` added) |
+| Clustering call silently dropped 21 of 40 reels | LLM won't reliably partition a list | Check every id is placed exactly once; leftovers go to `Unclustered` visibly, never dropped |
 
 ## Conventions
 - Handles are lowercase, no `@`. Clean them with `normalize_handle()` at import; `Creator` rejects anything dirty.

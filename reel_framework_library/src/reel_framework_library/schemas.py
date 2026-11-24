@@ -140,3 +140,74 @@ class Transcript(BaseModel):
     audio_duration_seconds: Optional[float] = None
     text: str
     segments: List[TranscriptSegment] = []
+
+
+# --- Framework extraction (pilot) -------------------------------------------
+
+BEAT_FUNCTIONS = [
+    "hook",       # opening line(s) that earn the next five seconds
+    "setup",      # context or stakes before the point lands
+    "problem",    # a tension or pain point the viewer recognises
+    "claim",      # the main assertion / thesis
+    "anecdote",   # a personal or specific story moment
+    "example",    # one concrete instance supporting the claim
+    "list_item",  # one entry in an enumerated list
+    "mechanism",  # the explanation of why/how something works
+    "evidence",   # data, history, a source
+    "turn",       # a pivot: "but", "here's the thing", a reversal
+    "reframe",    # the idea restated in a new light
+    "landing",    # the closing line that sums up
+    "cta",        # explicit ask: follow, comment, save
+]
+
+HOOK_TYPES = [
+    "bold_claim", "question", "curiosity_gap", "personal_story",
+    "list_promise", "contrarian", "direct_address", "scene_setting", "other",
+]
+
+
+class Beat(BaseModel):
+    """One functional chunk of a reel, as a contiguous run of Whisper segments."""
+
+    function: str = Field(..., description="one of BEAT_FUNCTIONS")
+    first_segment: int = Field(..., ge=0)
+    last_segment: int = Field(..., ge=0)
+    purpose: str = Field(..., min_length=3, max_length=140, description="what this beat does for the viewer")
+
+    @field_validator("function")
+    @classmethod
+    def _known_function(cls, v: str) -> str:
+        if v not in BEAT_FUNCTIONS:
+            raise ValueError(f"unknown beat function {v!r}")
+        return v
+
+
+class ReelBeats(BaseModel):
+    """LLM output: a reel's structure. Times are derived later, not trusted from the LLM."""
+
+    hook_type: str
+    beats: List[Beat] = Field(..., min_length=2)
+    thesis: str = Field(..., min_length=3, max_length=200, description="the reel's point in one sentence")
+
+    @field_validator("hook_type")
+    @classmethod
+    def _known_hook(cls, v: str) -> str:
+        if v not in HOOK_TYPES:
+            raise ValueError(f"unknown hook type {v!r}")
+        return v
+
+
+class FrameworkDraft(BaseModel):
+    """One proposed framework from clustering."""
+
+    name: str = Field(..., min_length=3, max_length=40)
+    beat_pattern: List[str] = Field(..., description="ordered beat functions (empty only for Unclustered)")
+    beat_notes: List[str] = Field(..., description="one line per beat: what it must do")
+    suits_content: str = Field(..., min_length=5, max_length=200, description="what kind of research fits")
+    reel_ids: List[str] = Field(..., min_length=1, description="'handle/shortcode' of member reels")
+
+
+class FrameworkSet(BaseModel):
+    """LLM output of the clustering step."""
+
+    frameworks: List[FrameworkDraft] = Field(..., min_length=2)
