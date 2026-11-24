@@ -1,0 +1,9 @@
+apify-client
+yt-dlp
+pytesseract
+openai
+python-dotenv
+opencv-python
+pillow
+pandas
+pydub  # For audio extraction

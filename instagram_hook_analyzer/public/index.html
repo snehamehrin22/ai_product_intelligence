@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Hook Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen">
+    <div class="container mx-auto px-4 py-12 max-w-4xl">
+        <div class="text-center mb-12">
+            <h1 class="text-5xl font-bold text-gray-900 mb-4">Instagram Hook Analyzer</h1>
+            <p class="text-xl text-gray-600">Analyze viral Instagram Reels - extract hooks, frameworks, and CTAs</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Instagram Username</label>
+                    <input
+                        type="text"
+                        id="username"
+                        placeholder="thoughtfully_designed"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Number of Reels</label>
+                    <input
+                        type="number"
+                        id="numReels"
+                        value="5"
+                        min="1"
+                        max="20"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                </div>
+
+                <button
+                    onclick="analyzeProfile()"
+                    id="analyzeBtn"
+                    class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-4 px-6 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105"
+                >
+                    Analyze Profile
+                </button>
+            </div>
+
+            <div id="error" class="hidden mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700"></div>
+        </div>
+
+        <div id="loading" class="hidden text-center">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
+            <p class="mt-4 text-gray-600">Analyzing reels...</p>
+            <p class="text-sm text-gray-500 mt-2">This may take 2-3 minutes</p>
+        </div>
+
+        <div id="results" class="hidden bg-white rounded-2xl shadow-xl p-8">
+            <h2 class="text-2xl font-bold mb-6">Analysis Results</h2>
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        async function analyzeProfile() {
+            const username = document.getElementById('username').value;
+            const numReels = parseInt(document.getElementById('numReels').value);
+            const errorDiv = document.getElementById('error');
+            const loadingDiv = document.getElementById('loading');
+            const resultsDiv = document.getElementById('results');
+            const btn = document.getElementById('analyzeBtn');
+
+            if (!username) {
+                showError('Please enter an Instagram username');
+                return;
+            }
+
+            errorDiv.classList.add('hidden');
+            resultsDiv.classList.add('hidden');
+            loadingDiv.classList.remove('hidden');
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, numReels })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Analysis failed');
+                }
+
+                displayResults(data);
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                loadingDiv.classList.add('hidden');
+                btn.disabled = false;
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('results');
+            const content = document.getElementById('resultsContent');
+
+            let html = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                        <div class="text-3xl font-bold text-purple-600">${data.summary.totalReels}</div>
+                        <div class="text-sm text-gray-600">Reels Analyzed</div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <div class="text-3xl font-bold text-blue-600">${data.summary.avgHookScore}</div>
+                        <div class="text-sm text-gray-600">Avg Hook Score</div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <div class="text-3xl font-bold text-green-600">${data.summary.topPattern}</div>
+                        <div class="text-sm text-gray-600">Top Hook Pattern</div>
+                    </div>
+                </div>
+                <div class="space-y-6">
+            `;
+
+            data.reels.forEach((reel, idx) => {
+                html += `
+                    <div class="border border-gray-200 rounded-lg p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <a href="${reel.url}" target="_blank" class="text-lg font-semibold text-purple-600 hover:text-purple-700">
+                                Reel #${idx + 1}
+                            </a>
+                            <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                                Score: ${reel.hookScore}/100
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+                            <div><span class="font-medium">Hook Pattern:</span> ${reel.hookPattern}</div>
+                            <div><span class="font-medium">Body Framework:</span> ${reel.bodyFramework}</div>
+                            <div><span class="font-medium">CTA Type:</span> ${reel.ctaType}</div>
+                            <div><span class="font-medium">Views:</span> ${reel.views?.toLocaleString() || 'N/A'}</div>
+                        </div>
+                        <div class="space-y-3">
+                            <div>
+                                <span class="font-medium text-sm text-gray-700">Hook:</span>
+                                <p class="text-gray-600 mt-1">${reel.hookExtracted}</p>
+                            </div>
+                            <div>
+                                <span class="font-medium text-sm text-gray-700">Full Transcript:</span>
+                                <p class="text-gray-600 mt-1 text-sm">${reel.transcript}</p>
+                            </div>
+                            <div>
+                                <span class="font-medium text-sm text-gray-700">Key Takeaway:</span>
+                                <p class="text-gray-600 mt-1">${reel.keyTakeaway}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            content.innerHTML = html;
+            resultsDiv.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

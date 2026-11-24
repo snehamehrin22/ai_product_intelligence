@@ -1,0 +1,14 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.mp4
+*.mov
+downloads/
+output/
+*.csv
+*.json
+logs/
+.DS_Store
+.vercel
