@@ -1,185 +1,51 @@
 # AI Product Intelligence
 
-A collection of AI agents, shared utilities, and infrastructure for product intelligence and content generation.
+AI agents, shared utilities and small apps for researching consumer products and turning observations into content.
 
-## Project Structure
+## Structure
 
 ```
 ai_product_intelligence/
-├── agents/                    # AI agent projects
-│   ├── journal-classifier    # Journal classification (Notion → Supabase)
+├── agents/                        # AI agent projects (see agents/README.md)
+│   ├── cafe-review-intelligence   # Google reviews of Toronto cafes -> retention experiments
 │   ├── reddit_sentiment_analyzer  # Brand sentiment from Reddit
-│   ├── carousel-generator    # Content carousel generation
-│   ├── app-analyzer          # Deep app case studies
-│   └── knowledge_brain       # Multi-disciplinary thinking system
-│
-├── shared/                    # Reusable utilities
-│   ├── agent_utils           # Token calculator, LLM wrappers, validation
-│   └── project_bootstrap     # CLI to scaffold new agent projects
-│
-├── infrastructure/            # MCP servers, deployment guides
-│   ├── supabase_mcp_server   # Claude Desktop + Supabase integration
-│   ├── open_claw_installation # VPS AI setup guides
-│   └── migration-scripts      # Database migration tools
-│
-├── CLAUDE.md                  # Global development guidelines
-├── prd.json                   # Project requirements
-└── progress.txt               # Development progress log
+│   └── research_agent             # Observation -> 10-15 research angles
+├── reel_framework_library/        # Corpus of top Instagram reels -> script frameworks
+├── instagram_hook_analyzer/       # Instagram hook scraper/analyzer (untracked, local only)
+├── forno_subscription_ssr/        # Semantic Similarity Rating study for Forno Cultura
+├── shared/
+│   ├── agent_utils                # Token calculator, validation helpers
+│   └── project_bootstrap          # CLI to scaffold new agent projects
+├── infrastructure/                # See infrastructure/README.md
+│   ├── open_claw_installation     # VPS setup guides for OpenClaw / Claude Code
+│   └── wispr-flow-mcp             # MCP server for Wispr Flow dictation history
+├── CLAUDE.md / AGENTS.md          # Agent instructions (Ralph loop)
+└── prd.json / progress.txt        # Ralph PRD and progress log
 ```
 
-## Quick Start
+## Working on a project
 
-### Working with Agents
+Each project is self-contained with its own `requirements.txt` and `.env` (never committed).
 
 ```bash
-# Navigate to specific agent
-cd agents/journal-classifier
-
-# Setup
-python3 -m venv .venv
+cd agents/<project>
+/usr/local/bin/python3.13 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-
-# Configure
-cp .env.example .env  # Add your API keys
-
-# Run
-python scripts/run_agent.py
+cp .env.example .env   # if present, then add API keys
 ```
 
-### Using Shared Utilities
+See each project's `README.md` for how to run it.
 
-```bash
-# Install agent_utils
-cd shared/agent_utils
-pip install -e .
+## Conventions
 
-# Use in your project
-from agent_utils import calculate_cost
-```
+- **Schemas first**: Pydantic models are the source of truth; never trust raw LLM output.
+- **Prompts as files**: `prompts/*.txt`, version controlled.
+- **Logic vs execution**: logic in `src/<name>/` (no `main()`), entry points in `scripts/`.
+- **Observability**: log inputs, decisions, confidence and errors before running on real data.
+- **Tests**: 10-15 varied samples in `tests/inputs/`.
 
-### Creating New Agents
+## Adding a project
 
-```bash
-# Use project_bootstrap CLI
-cd shared/project_bootstrap
-pip install -e .
-
-# Generate new agent
-project-bootstrap my-new-agent --template ai-agent
-```
-
-## Philosophy
-
-### Agent Design Principles
-1. **Schemas first** - Pydantic models as single source of truth
-2. **Prompts as files** - Store in `prompts/*.txt` for version control
-3. **Token awareness** - Always track and log LLM costs
-4. **Type safety** - Use type hints and validation throughout
-5. **Observability** - Log decisions, confidence scores, errors
-
-### Code Organization
-- **Logic** → `src/agent_name/` (pure functions, NO `main()`)
-- **Execution** → `scripts/` (has `main()`, imports from src)
-- **Prompts** → `prompts/` (easy to edit, version controlled)
-- **Tests** → `tests/inputs/` (10-15 diverse samples)
-
-### Project Structure
-Every agent follows this template:
-```
-agent-name/
-├── .env                    # Secrets (gitignored)
-├── requirements.txt
-├── prompts/               # LLM prompts as .txt files
-├── src/agent_name/
-│   ├── schemas.py         # Pydantic models
-│   ├── tools.py           # API integrations
-│   └── main_loop.py       # Orchestration
-├── scripts/
-│   └── run_agent.py       # Entry point
-└── tests/
-    └── inputs/            # Test data
-```
-
-## Development Guidelines
-
-See `CLAUDE.md` for detailed guidelines including:
-- Project setup workflow
-- Pydantic validation patterns
-- LLM provider selection (OpenAI vs Anthropic vs DeepSeek)
-- Token tracking requirements
-- Testing best practices
-- Environment variable management
-
-## Key Learnings
-
-From retros (see `~/.claude/retros/`):
-- **56-89% of time** is spent on boilerplate → Solution: `project_bootstrap`
-- **52% of debugging** is credentials/permissions → Solution: `agent_utils` validators
-- **Token tracking** should be mandatory, not optional
-- **Pydantic validation** prevents 99.8% of data corruption issues
-
-## Tech Stack
-
-**LLM Providers:**
-- OpenAI (GPT-4o) - Structured JSON output
-- Anthropic (Claude 3.5 Sonnet) - Complex reasoning
-- DeepSeek - Cost-effective alternative
-
-**Storage:**
-- Supabase (PostgreSQL)
-- Notion (journal entries)
-- Google Sheets (data staging)
-
-**APIs:**
-- PhantomBuster (data scraping)
-- Reddit API (brand monitoring)
-- Perplexity (enrichment)
-
-## Active Projects
-
-**Production:**
-- journal-classifier (journal classification)
-- carousel-generator (carousel generation)
-
-**Development:**
-- Client acquisition pipeline (lead scoring)
-- Triage agent (cognitive categorization)
-
-**Utilities:**
-- Token cost calculator ✅
-- Project bootstrap CLI ✅
-- LLM client wrappers 🚧
-- Pydantic validation decorators 🚧
-
-## Contributing
-
-When adding new projects:
-
-1. **Determine category:**
-   - Agent? → `agents/`
-   - Reusable utility? → `shared/`
-   - Infrastructure/deployment? → `infrastructure/`
-
-2. **Follow structure:**
-   - Use standard project layout
-   - Include README.md
-   - Add .env.example (never commit .env)
-   - Write tests with diverse inputs
-
-3. **Update docs:**
-   - Add to category README
-   - Update this root README
-   - Document learnings in CLAUDE.md
-
-## Documentation
-
-- `/agents/README.md` - Agent catalog
-- `/shared/README.md` - Shared utilities guide
-- `/infrastructure/README.md` - Infrastructure projects
-- `CLAUDE.md` - Development methodology
-- `~/.claude/retros/` - Session retrospectives
-
----
-
-**Last updated:** February 11, 2026
+- Agent -> `agents/`; reusable utility -> `shared/`; deployment or MCP server -> `infrastructure/`.
+- Include a README and `.env.example`, and add it to the tree above.
