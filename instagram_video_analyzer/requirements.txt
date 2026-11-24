@@ -1,0 +1,6 @@
+openai>=1.50
+pydantic>=2.7
+pillow>=10.3
+numpy>=1.26
+scikit-learn>=1.5
+pytesseract>=0.3.10
