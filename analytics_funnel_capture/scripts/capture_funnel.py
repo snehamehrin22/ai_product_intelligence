@@ -9,12 +9,14 @@ Clicks refuse payment-like text so the run never completes a purchase, and
 nothing here fills forms.
 """
 import argparse
+import json
 import re
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
-from playwright.sync_api import Page, sync_playwright
+from playwright.sync_api import BrowserContext, Page, sync_playwright
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from funnel_capture.recorder import Recorder  # noqa: E402
@@ -43,6 +45,31 @@ def click_by_text(page: Page, text: str) -> None:
             except Exception:
                 continue
     print(f"  ! could not find clickable text {text!r}", file=sys.stderr)
+
+
+def audit_storage(context: BrowserContext, page: Page, path: Path) -> None:
+    """Save which cookies/localStorage keys the site set (names only, never values).
+
+    Answers "what do they store about the visitor" without writing identifiers to disk.
+    """
+    now = time.time()
+    cookies = [
+        {
+            "name": c["name"],
+            "domain": c["domain"],
+            "days": round((c["expires"] - now) / 86400) if c["expires"] > 0 else "session",
+        }
+        for c in context.cookies()
+    ]
+    local_keys = {}
+    for frame in page.frames:
+        try:
+            keys = frame.evaluate("Object.keys(localStorage)")
+        except Exception:  # about:blank / sandboxed frames
+            continue
+        if keys:
+            local_keys[frame.url.split("?")[0]] = keys
+    path.write_text(json.dumps({"cookies": cookies, "local_storage_keys": local_keys}, indent=2))
 
 
 def decline_cookies(page: Page) -> None:
@@ -125,6 +152,7 @@ def main() -> None:
             page.wait_for_timeout(3000)
 
         rec.save()
+        audit_storage(context, page, out.with_suffix(".storage.json"))
         browser.close()
 
     print(rec.summary())

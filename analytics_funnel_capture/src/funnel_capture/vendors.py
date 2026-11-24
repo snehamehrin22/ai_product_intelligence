@@ -2,6 +2,7 @@
 
 Pure functions, no I/O. Rules are ordered; first match wins.
 """
+import base64
 import json
 import re
 from typing import Any, Dict, List, Optional, Tuple
@@ -25,6 +26,17 @@ VENDOR_RULES: List[Tuple[str, str, Optional[str]]] = [
     ("snap_pixel", r"(^|\.)snapchat\.com$", None),
     ("statsig", r"(^|\.)statsig(api)?\.com$", None),
     ("launchdarkly", r"(^|\.)launchdarkly\.com$", None),
+    # Mobile-first vendors (mostly seen when proxying an iOS app)
+    ("firebase", r"(^|\.)(app-measurement\.com|firebaselogging[a-z-]*\.googleapis\.com|firebaseremoteconfig\.googleapis\.com)$", None),
+    ("appsflyer", r"(^|\.)appsflyer\.com$", None),
+    ("adjust", r"(^|\.)adjust\.(com|io|world)$", None),
+    ("branch", r"(^|\.)branch\.io$", None),
+    ("revenuecat", r"(^|\.)revenuecat\.com$", None),
+    ("braze", r"(^|\.)braze\.(com|eu)$", None),
+    ("onesignal", r"(^|\.)onesignal\.com$", None),
+    ("singular", r"(^|\.)singular\.net$", None),
+    ("kochava", r"(^|\.)kochava\.com$", None),
+    ("sentry", r"(^|\.)sentry\.io$", r"/envelope|/store"),
 ]
 
 _COMPILED = [
@@ -104,12 +116,26 @@ def parse_json_events(body: Optional[str]) -> Tuple[List[str], Dict[str, Any]]:
     return names, {}
 
 
+def parse_mixpanel(url: str, body: Optional[str]) -> Tuple[List[str], Dict[str, Any]]:
+    """Parse Mixpanel /track, where events are base64 JSON in a `data` form/query field."""
+    raw = parse_qs(body or "").get("data") or parse_qs(urlparse(url).query).get("data")
+    if not raw:
+        return parse_json_events(body)
+    try:
+        decoded = base64.b64decode(raw[0] + "=" * (-len(raw[0]) % 4)).decode("utf-8")
+    except (ValueError, UnicodeDecodeError):
+        return [], {}
+    return parse_json_events(decoded)
+
+
 def parse(vendor: str, url: str, body: Optional[str]) -> Tuple[List[str], Dict[str, Any]]:
     """Dispatch to the right parser for a vendor. Unknown vendors return no events."""
     if vendor == "ga4":
         return parse_ga4(url, body)
     if vendor == "meta_pixel":
         return parse_meta(url)
-    if vendor in ("segment", "amplitude", "posthog", "tiktok_pixel", "mixpanel"):
+    if vendor == "mixpanel":
+        return parse_mixpanel(url, body)
+    if vendor in ("segment", "amplitude", "posthog", "tiktok_pixel", "braze", "revenuecat"):
         return parse_json_events(body)
     return [], {}

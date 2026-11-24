@@ -23,6 +23,10 @@ Clicks refuse payment-like text; the script never fills forms.
 - `src/funnel_capture/recorder.py` - context-level listener (captures iframes)
 - `scripts/capture_funnel.py` - CLI
 - `scripts/show_events.py` - print named events + properties from a capture
+- `scripts/inspect_page.py` - list clickable items/overlays per frame + screenshot
+- `scripts/ios_proxy.sh`, `ios_mark.sh`, `mitm_addon.py` - iPhone capture (see `guides/ios-setup.md`)
+- `skills/analytics-teardown/` - Claude Code skill (symlinked into `~/.claude/skills/`)
+- every web run also writes `data/<run>.storage.json` (cookie + localStorage names only)
 - `findings/` - written teardowns per site (`othership.md`)
 - `tests/` - `pytest tests`
 
