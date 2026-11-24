@@ -17,7 +17,10 @@ Chromium visitor (macOS, 1440x900, en-US). Raw JSONL is in `data/` (gitignored).
 | Heybrio | `api.heybrio.ai` | AI chat widget |
 | Xplor forms | `api.prd.xplorcs.com` | Lead/contact forms |
 | Perkville | localStorage `perkville.*` | Loyalty / rewards |
-| EmbedReach | `api.embedreach.com` cookie `svid` | Marketing automation (inferred) |
+| EmbedReach | `public.embedreach.com/.../analytics.js`, `api.embedreach.com/public/visits` | Visitor tracking + email capture on signup forms (config read, see below) |
+| Booko | `bookoapp.com/widget/booko-marianatek-overlay.js` | Likely dynamic pricing overlay for Mariana Tek (inferred; no price change observed) |
+| OpenAI pixel | `bzrcdn.openai.com/sdk/oaiq.min.js`, config `automatic_advanced_matching_enabled: true` | Ad-measurement pixel (inferred); advanced matching is on |
+| Webflow | generator meta, `website-files.com` | Marketing site; GSAP/ScrollSmoother animations via jsDelivr |
 | Shopify | `_shopify_y/_s` cookies | Online store |
 | Cloudflare Turnstile | `challenges.cloudflare.com` | Bot protection on forms |
 
@@ -56,6 +59,36 @@ not Othership's own.
   Declining optional cookies in Mariana's banner did not stop GA4 afterwards. That banner may
   only govern the widget's own cookies.
 - Mariana's consent modal overlays the studio buttons and blocks clicks until a choice is made.
+
+## Mariana Tek (booking system of record)
+
+Boutique fitness studio software (scheduling, memberships, POS, branded app, marketing
+tools), now sold under the Xplor name per vendor/review pages. Othership's schedule widget
+is its iframe, and class/studio data loads from `othership.marianatek.com/api/customer/v1/*`.
+Bookings, memberships and attendance almost certainly live there, so retention data is not
+visible from the browser. The Xplor forms host is probably the same vendor family (inferred).
+Not identified: `othership.brandbot-checkout.com` (search found nothing).
+
+## EmbedReach identity capture (from its public config script; no form was submitted)
+
+The script registers click listeners on submit buttons and reads email / first name (and
+phone on one page) into an `identification` event, joined to anonymous visits via a `_rid`
+visitor ID. It also reads UTM params, `gclid` and `fbclid`. Forms covered: referral invite,
+homepage signup, cold-plunge-challenge, app page, `yorkville-meta` (looks like a paid
+landing page), and a Luke Storey course page. Implication: submitting an email on these
+pages ties that email to the visitor's prior browsing and ad-click history.
+
+## What they know about a visitor (logged out, headless, macOS)
+
+- Device/browser: screen and viewport, ARM 64-bit, macOS version, browser version via client
+  hints, language. Behaviour: page URLs/titles, referrer chain, scroll depth, widget actions
+  (studio chosen), session ID.
+- Persistent IDs: `_ga` 400 days, DoubleClick `IDE` 400, LinkedIn `bcookie` 365, Clarity
+  `CLID` 365, `_gcl_au` 90, `_shopify_y` 400. Unidentified: `__obref` (365), `_r_id_*`.
+- Session replay: Clarity and Hotjar (masking not verified).
+- Cross-site: Google Ads remarketing-list calls, LinkedIn cookie sync + IPv6 probe, TikTok
+  pixel. Google Ads requests carry empty `em`/`emd` params (names only; values unseen).
+- Not testable here: linkage to a visitor's logged-in Google/LinkedIn/TikTok accounts.
 
 ## Not captured
 

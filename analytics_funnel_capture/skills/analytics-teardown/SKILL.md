@@ -22,6 +22,14 @@ Always `cd` there and `source .venv/bin/activate` first.
 1. **Recon**: `python scripts/inspect_page.py <url> --step dismiss`. Read the printed links,
    overlays and the screenshot (`data/inspect.png`). Identify the funnel: pricing/plans,
    signup, booking/schedule, checkout, app download, location/product pages.
+1b. **Fingerprint the stack**: `python scripts/fingerprint_stack.py <url> --path /pricing --path /schedule`.
+   It labels third-party hosts by vendor/category. Then:
+   - Research each **UNKNOWN host** (WebSearch; cite sources; say "not found" if nothing).
+   - The **form-reading suspects** list is a noisy heuristic (it flags gtag, Webflow, accessiBe
+     too). Only claim a script reads form fields after you actually read it (`curl` the public
+     JS and look at its config/selectors). Public config scripts often reveal identity capture,
+     referral programs and landing pages.
+   - Say which vendors are confirmed (host/ID seen) vs inferred (purpose guessed).
 2. **Capture**: `python scripts/capture_funnel.py <url> --step ... ` with steps
    `dismiss | decline_cookies | click:<text> | goto:<url> | scroll | wait:<s>`.
    Capture the home page, then 3-6 funnel pages. One run = one visitor session.
