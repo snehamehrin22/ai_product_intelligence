@@ -11,7 +11,7 @@ ai_product_intelligence/
 │   ├── reddit_sentiment_analyzer  # Brand sentiment from Reddit
 │   └── research_agent             # Observation -> 10-15 research angles
 ├── reel_framework_library/        # Corpus of top Instagram reels -> script frameworks
-├── instagram_hook_analyzer/       # Instagram hook scraper/analyzer (untracked, local only)
+├── instagram_hook_analyzer/       # Instagram hook scraper/analyzer (Vercel app)
 ├── forno_subscription_ssr/        # Semantic Similarity Rating study for Forno Cultura
 ├── shared/
 │   ├── agent_utils                # Token calculator, validation helpers
