@@ -41,10 +41,15 @@ sudo apt-get install tesseract-ocr
 
 ### 4. Configure API Keys
 
+Secrets live in Infisical (`APIFY_API_KEY`, `OPENAI_API_KEY`). Log in once, then run every command through `infisical run --`:
+
 ```bash
-cp .env.example .env
-# Edit .env and add your API keys
+infisical login
+infisical init   # links the repo to the project
+infisical run -- python test_api_keys.py
 ```
+
+No `.env` file is needed. `.env.example` is kept only as a list of required variable names.
 
 Get API keys:
 - Apify: https://console.apify.com/account/integrations
@@ -55,7 +60,7 @@ Get API keys:
 ### Quick Start
 
 ```bash
-python scripts/analyze_creators.py
+infisical run -- python scripts/analyze_creators.py
 ```
 
 This will:
@@ -111,7 +116,7 @@ CSV with columns:
 
 ```
 instagram_hook_analyzer/
-├── .env                    # API keys (gitignored)
+├── .env.example            # Required variable names (secrets live in Infisical)
 ├── requirements.txt
 ├── README.md
 ├── src/

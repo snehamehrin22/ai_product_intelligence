@@ -20,7 +20,7 @@ def test_apify():
     api_key = os.getenv("APIFY_API_KEY")
 
     if not api_key:
-        print("❌ APIFY_API_KEY not found in .env")
+        print("❌ APIFY_API_KEY not set (run via `infisical run --`)")
         return False
 
     try:
@@ -39,7 +39,7 @@ def test_openai():
     api_key = os.getenv("OPENAI_API_KEY")
 
     if not api_key:
-        print("❌ OPENAI_API_KEY not found in .env")
+        print("❌ OPENAI_API_KEY not set (run via `infisical run --`)")
         return False
 
     try:
@@ -63,5 +63,5 @@ if __name__ == "__main__":
         print("✅ All API keys working!")
         print("\nReady to run: python scripts/analyze_creators.py")
     else:
-        print("❌ Some API keys failed. Check your .env file.")
+        print("❌ Some API keys failed. Check Infisical secrets.")
         sys.exit(1)
